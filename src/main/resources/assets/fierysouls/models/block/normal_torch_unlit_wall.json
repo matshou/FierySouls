@@ -1,0 +1,6 @@
+{
+    "parent": "fierysouls:block/torch_unlit_wall",
+    "textures": {
+        "torch_unlit": "fierysouls:blocks/torch_unlit"
+    }
+}

@@ -1,0 +1,27 @@
+Fiery Souls - Version 1.0.1, Build 105 
+ 
+Changelog: 
+ 
+- Introduced client and server proxies. The mod should be multiplayer friendly now. 
+- Implemented custom object handler that takes care of item and block initialization and registration for us. 
+- Our custom torches are now both blocks and tile entities. 
+ 
+- Matchbox can no longer light torches on fire when the torch is directly exposed to rain. 
+- Torches can be extinguished by activating them with no item equipped in our hands or directly exposing them to rain  
+  and ignited with either a matchbox or a lit torch equipped in our hands. 
+- Torches can only be extinguished by strong rain and no longer extinguish exactly the moment they are placed on rain. 
+- After being extinguished, torches will emit small smoke particles for a short period of time.  
+ 
+- Added recipes for our custom torches and removed vanilla torch recipes. 
+- Ignited torches now have a probability (based on block flammability data) to set blocks above them on fire.
+
+Notes: 
+This project originally started as a fork of another project founded and actively developed by ChaosTheDude on GitHub. 
+The project was aiming at improving the functionality and realism of vanilla torches. Since the author of the mentioned 
+project did not want to co-develop the project with me and shares a different vision of open source development I decided 
+to expand my own project and migrate to a new repository. 
+ 
+I've copied the last version in the fork and worked on it until it was stable enough to be a good base. 
+Since at the moment I am the only one developing this mod and this is a fresh start a good idea would be to establish 
+various development conventions: each commit should contain a changelog like this, version number convention should be  
+(Major version).(Minor version).(Revision iteration)-(Build number). 

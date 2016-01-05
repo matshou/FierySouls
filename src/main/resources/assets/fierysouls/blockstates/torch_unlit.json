@@ -1,0 +1,9 @@
+{
+    "variants": {
+        "facing=up": { "model": "fierysouls:normal_torch_unlit" },
+        "facing=east": { "model": "fierysouls:normal_torch_unlit_wall" },
+        "facing=south": { "model": "fierysouls:normal_torch_unlit_wall", "y": 90 },
+        "facing=west": { "model": "fierysouls:normal_torch_unlit_wall", "y": 180 },
+        "facing=north": { "model": "fierysouls:normal_torch_unlit_wall", "y": 270 }
+    }
+}
