@@ -90,7 +90,9 @@ public class BlockTorchUnlit extends BlockTorch implements ITileEntityProvider
 		
 		if (equippedItem.getItem() ==  ResourceLibrary.TORCH_LIT.getItemInstance())
 		{
-			this.lightTorch(worldIn, pos);
+			TileEntity entityTorch = worldIn.getTileEntity(pos);
+    		if (entityTorch != null && entityTorch instanceof TileEntityTorchUnlit)
+    		   ((TileEntityTorchUnlit)entityTorch).lightTorch();
 			
 			return true;      // Let the calling function know that this block was successfully used,
 			                  // and there is no need to spawn the activation item as a block.
@@ -107,16 +109,6 @@ public class BlockTorchUnlit extends BlockTorch implements ITileEntityProvider
 	 */
 	public static boolean lightTorch(World world, BlockPos pos)
 	{
-		if (world.getBlockState(pos).getBlock() != ResourceLibrary.TORCH_UNLIT.getBlockInstance())
-		{
-			FierySouls.logger.info("ERROR: Tried to light a non-existent torch at " + " x:" + pos.getX() + " y:" + pos.getY() + " z:" + pos.getZ());
-			return false;
-		}
-		
-		// In case the torch is soaking wet it cannot be lit, no need to go further.
-		if (world.isRaining() && world.canBlockSeeSky(pos) /**&& world.rainingStrength > ?*/) // TODO: Add rain strength check here
-			return false;
-		
 		// Find out the direction the torch is facing
 		EnumFacing facing = (EnumFacing)world.getBlockState(pos).getValue(BlockTorch.FACING);
 					
@@ -132,8 +124,6 @@ public class BlockTorchUnlit extends BlockTorch implements ITileEntityProvider
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta)
 	{
-		FierySouls.logger.info("Created an unlit torch entity!");
-		return new TileEntityTorchUnlit();
+		return new TileEntityTorchUnlit(worldIn.getWorldTime());
 	}
 }
-

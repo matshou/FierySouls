@@ -13,6 +13,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.gui.IUpdatePlayerListBox;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockPos;
@@ -21,82 +22,84 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class TileEntityTorchLit extends TileEntity implements IUpdatePlayerListBox
+public class TileEntityTorchLit extends TileEntityTorch
 {
-	// Time in the world this tile entity was created
-	private final long timeCreated;
+	// Should we call server to extinguish the torch on it's side?
+	private boolean extinguishTorchOnServer;
 	
-	// Timeout here is expressed in ticks. How long should we ideally wait for the client?
-	private static int clientSyncTimeout = 20;
+	// Should we check if torch flame could spread fire?
+	private static boolean updateFlameHazard;
 	
 	public TileEntityTorchLit(final long totalWorldTime) 
 	{
-		this.timeCreated = totalWorldTime;
+		super(totalWorldTime);
+		this.extinguishTorchOnServer = false;
+		this.updateFlameHazard = true;
 	}
-	
-	// This updates every tileEntity tick on both client and server side
+	@Override
 	public final void update()
 	{
-		// When it's raining and the torch is directly exposed to rain it should get extinguished.
-		// Make sure to not change blockstate until the client has done so first.
+		// When it's raining and the torch is directly exposed to rain it will start collecting humidity.
+		// Update humidity only on SERVER, we don't really need to do this on client.
 		
-		if ((getWorld().getWorldInfo().isRaining() && this.getWorld().canBlockSeeSky(pos)))
+		if (!getWorld().isRemote && getWorld().getWorldInfo().isRaining() && this.getWorld().canBlockSeeSky(pos))
 		{
-			
-			// TODO: Make these values more dynamic and move them into a #define or a configuration file.
-			
-			// Don't extinguish the torch until the rain is strong enough to do so.
-			// After we place the torch on rain, wait a bit before extinguishing it.
-			
-			if (getWorld().getRainStrength(1) > 0.85F && (getWorld().getTotalWorldTime() - this.timeCreated) > 80)
-			    this.extinguishTorch(true);
-		}	
-		else if (this.updateFlameHazard == true)
+			if (this.updateHumidityLevel(HUMIDITY_AMOUNT_PER_TICK) > HUMIDITY_THRESHOLD)
+				this.extinguishTorch(true);
+		}
+		if (this.updateFlameHazard == true)
 		{
+			this.setRoofOnFire(getWorld(), pos);
 			this.updateFlameHazard = false;
-			if (!getWorld().canBlockSeeSky(pos))
-				this.setRoofOnFire(getWorld(), pos);
 		}
 	}
-	// Should we check if torch flame could spread fire?
-	private static boolean updateFlameHazard = true;
-	
+	// When this update is requested we check if the torch should set the object above it on fire.
 	public void scheduleHazardUpdate()
 	{
 		this.updateFlameHazard = true;
 	}
 	
-	/** Replace it with an unlit one and activate the smoldering effect 
-	 *  Do this on both side.SERVER and side.CLIENT
+	/** Replace this torch with an unlit one and activate the smoldering effect.
+	 *  This method acts like a proxy for a clone method in BlockTorchLit, always call this one first!
+	 *  The way we handle the client and server side here is interesting, take a look at the code. 
 	 *  
-	 *  @param waitForClient Should we delay this a bit and wait for client to sync? This is done when raining.
+	 *  @param waitForClient Should we wait for the client to call this method first? Quite useful to enable
+	 *                       client side smoke particle spawning. If true; SERVER - client - SERVER connection.
 	 */
 	public void extinguishTorch(final boolean waitForClient)
-	{
-		// TODO: Find a more elegant solution to solve this. A client-server sync via custom packet payload would be ideal!
-		//
-		// Once our torch meets the conditions to be extinguished the first one to find out is the SERVER.
-		// The problem is that if we change the block it will remove both client and server tile entities,
-		// which means the client tile entity will be destroyed without getting in sync and doing it's stuff client side.
-		//
-		// A bit of a dirty workaround here is to delay extinguishing the torch server side until (hopefully) the client comes back in sync.
-		// How are they out of sync? When the weather changes (rain starts falling) the client gets notified about this AFTER the SERVER.
-		// We will just have to wait a little bit until the client finds out it's raining.
-		
-		if (waitForClient && !getWorld().isRemote && this.clientSyncTimeout > 0)
-			this.clientSyncTimeout -= 1; 
+	{	
+	    if (!waitForClient || (waitForClient && getWorld().isRemote))
+	    {
+	    	// This is the part where the blockstate gets updated and client entities are handled.
+	    	// When we extinguish the torch the new tile entity should be initialized and we can pass our data to it.
+	  
+	    	if (BlockTorchLit.extinguishTorch(getWorld(), pos))
+	    	{
+	    		TileEntity torchEntity = getWorld().getTileEntity(pos);
+		        if (torchEntity == null || !(torchEntity instanceof TileEntityTorchUnlit))
+		        	return;
 
-		// Again, make sure that the torch is first extinguished on CLIENT side; 
-		// otherwise we will not see those smoke particle effects in play.
-		
-	    else if (BlockTorchLit.extinguishTorch(getWorld(), pos))
-		{
-			TileEntity torchEntity = getWorld().getTileEntity(pos);
-		    if (torchEntity != null && torchEntity instanceof TileEntityTorchUnlit)
-		    	((TileEntityTorchUnlit)torchEntity).shouldAddSmolderingEffect = true;
-		}
+		    	TileEntityTorchUnlit torchUnlit = (TileEntityTorchUnlit)torchEntity;
+		    	
+		    	// Notify tile entity that it should start spawning smoke particles only on client side.
+		    	// After that extinguish the torch server-side. This will finalize current tile entity destruction 
+		    	// and update the new tile entity with needed info.
+		    	
+		    	if (getWorld().isRemote)
+		    	{
+		    		torchUnlit.scheduleSmolderingEffect();
+		    		World server = MinecraftServer.getServer().getEntityWorld();
+		            ((TileEntityTorchLit)server.getTileEntity(pos)).extinguishTorch(false);
+		    	}
+		    	else    // <-- This will be called on SERVER side.
+		    	{
+		    		torchUnlit.updateHumidityLevel(this.getHumidityLevel());
+	    		    torchUnlit.torchAge = getWorld().getTotalWorldTime() - this.timeCreated;     
+		    	}
+	    	}       // Notify the client that it should extinguish the torch on it's side and call back.
+	    }             
+	    else { this.extinguishTorchOnServer = true; this.markForUpdate(); }
 	}
-	
 	/** Check to see if we should force the block above us to catch on fire.
 	 *  If we roll positive the torch will assume the function of a fire block with limited spreading movement.
 	 */
@@ -104,7 +107,10 @@ public class TileEntityTorchLit extends TileEntity implements IUpdatePlayerListB
 	{
 		BlockPos neighbourPos = new BlockPos(pos.getX(), pos.getY() +1, pos.getZ());
 		Block neighbourBlock = worldIn.getBlockState(neighbourPos).getBlock();
-			
+		
+		if (neighbourBlock == Blocks.air)   // More sensible then calling 'canBlockSeeSky'...
+			return false;
+		
 		// TODO: Create more advanced parameters like taking into account 
 		//       air humidity, strength of torch flame etc.
 			
@@ -113,50 +119,47 @@ public class TileEntityTorchLit extends TileEntity implements IUpdatePlayerListB
 		Random rand = new Random();
 		int natural_roll = rand.nextInt(100) + 1;     // 0% - 100% (1 - 100 roll)
 	
-		// If a saving throw failed set the top block on fire
+		// If a saving throw failed, set the top block on fire
 		if (chancesToCatchFire >= natural_roll)
-		{
-			worldIn.setBlockState(neighbourPos, Blocks.fire.getDefaultState());	
-			return true;
-		}
+			return worldIn.setBlockState(neighbourPos, Blocks.fire.getDefaultState());
+		
 		else return false;
 	}	
 	
-	/** These functions are used to update, write and read packets sent from SERVER to CLIENT. 
-	 *  For now we don't have any use for these, might want to use them in the future.
-	 
+	/** These functions are used to update, write and read packets sent from SERVER to CLIENT. */ 
 	// This will make the server call 'getDescriptionPacket' for a full data sync
 	private void markForUpdate()
 	{
-		// It would seem these updates only work SERVER - CLLIENT,
-		// so there is no need to do this on a client	
-		
-		if (!getWorld().isRemote)
-		{
-			getWorld().markBlockForUpdate(pos);
-		    this.markDirty();
-		}
+		getWorld().markBlockForUpdate(pos);
+		this.markDirty();
 	}
 	@Override
+	// Gathers data into a packet that is to be sent to the client. Called on server only. 
 	public Packet getDescriptionPacket() 
 	{
 		 NBTTagCompound nbtTag = new NBTTagCompound();
-		 this.writeToNBT(nbtTag);
+		 nbtTag.setBoolean("extinguishTorchOnServer", this.extinguishTorchOnServer);
 		 return new S35PacketUpdateTileEntity(this.pos, 1, nbtTag);
 	}
+	// Extracts data from a packet that was sent from the server. Called on client only.
+	// Minecraft automatically sends a 'description packet' for the tile entity when it is first 
+	// loaded on the client, and you can force it to resend one afterwards
 	@Override
 	public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity packet) 
 	{
-		 readFromNBT(packet.getNbtCompound());
-	}
+		//readFromNBT(packet.getNbtCompound());
+		if (getWorld().isRemote && packet.getNbtCompound().getBoolean("extinguishTorchOnServer"))
+			this.extinguishTorch(true);
+	} 
+	/**
 	@Override
 	public void writeToNBT(NBTTagCompound par1)
 	{
-		 par1.setBoolean("torchExtinguished", this.torchExtinguished);
+		// Write something to NBT...
 	}  
 	@Override
 	public void readFromNBT(NBTTagCompound par1)
 	{  
-		this.torchExtinguished = par1.getBoolean("torchExtinguished");
+		// Read something from NBT...
 	}*/
 }

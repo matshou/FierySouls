@@ -13,6 +13,7 @@ import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
@@ -20,6 +21,8 @@ import net.minecraft.world.World;
 import com.yooksi.fierysouls.block.BlockTorchUnlit;
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.ResourceLibrary;
+import com.yooksi.fierysouls.tileentity.TileEntityTorchLit;
+import com.yooksi.fierysouls.tileentity.TileEntityTorchUnlit;
 
 public class ItemMatchbox extends Item
 {
@@ -38,14 +41,13 @@ public class ItemMatchbox extends Item
 		// The player uses one match to try to light something on fire:
 		stack.damageItem(1, playerIn);
 		
-		// Can't start a fire on wet ground
-		if (worldIn.getWorldInfo().isRaining() && worldIn.canSeeSky(pos))
-		   return true;
-		
 		// If used on torch, light it on fire
 		if (worldIn.getBlockState(pos).getBlock() == ResourceLibrary.TORCH_UNLIT.getBlockInstance())
-			BlockTorchUnlit.lightTorch(worldIn, pos);
-			
+		{
+			TileEntity entityTorch = worldIn.getTileEntity(pos);
+    		if (entityTorch != null && entityTorch instanceof TileEntityTorchUnlit)
+    		   ((TileEntityTorchUnlit)entityTorch).lightTorch();
+		}			
 		return true;  // Always allow the item to be used
 	}
 }

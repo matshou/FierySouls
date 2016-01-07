@@ -42,9 +42,11 @@ public class BlockTorchLit extends BlockTorch implements ITileEntityProvider
 		ItemStack equippedItem = playerIn.getCurrentEquippedItem();
 	    if (equippedItem == null)
 	    {
+	    	FierySouls.logger.info("Called to extinguish  22222222222!");
+	    	
 	    	TileEntity torchEntity = worldIn.getTileEntity(pos);
 	        if (torchEntity != null && torchEntity instanceof TileEntityTorchLit)
-	        	((TileEntityTorchLit)worldIn.getTileEntity(pos)).extinguishTorch(false);
+	        	((TileEntityTorchLit)worldIn.getTileEntity(pos)).extinguishTorch(true);
 	        
 	        return true;
 	    }
@@ -74,14 +76,6 @@ public class BlockTorchLit extends BlockTorch implements ITileEntityProvider
 	 */
 	public static boolean extinguishTorch(World world, BlockPos pos)
 	{
-		FierySouls.logger.info("ExtinguishTorch!");
-		
-		if (world.getBlockState(pos).getBlock() != ResourceLibrary.TORCH_LIT.getBlockInstance())
-		{
-			FierySouls.logger.info("ERROR: Tried to extinguish a non-existent torch at " + " x:" + pos.getX() + " y:" + pos.getY() + " z:" + pos.getZ());
-			return false;
-		}
-		
 		// Find out the direction the torch is facing
 		EnumFacing facing = (EnumFacing)world.getBlockState(pos).getValue(BlockTorch.FACING);
 					

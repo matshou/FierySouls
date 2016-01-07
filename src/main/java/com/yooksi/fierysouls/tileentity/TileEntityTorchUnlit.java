@@ -2,55 +2,87 @@ package com.yooksi.fierysouls.tileentity;
 
 import java.util.Random;
 
+import com.yooksi.fierysouls.block.BlockTorchUnlit;
 import com.yooksi.fierysouls.common.FierySouls;
 
 import net.minecraft.server.gui.IUpdatePlayerListBox;
 import net.minecraft.tileentity.TileEntity;
 
-public class TileEntityTorchUnlit extends TileEntity implements IUpdatePlayerListBox
+public class TileEntityTorchUnlit extends TileEntityTorch
 { 
-	// TODO: Move this to a configuration file sooner or later:
-	private static final int SMOLDERING_RANDOM = 125;
-	
-	private static int currentHumidityLevel;
-	
-	// This updates every tileEntity tick on both client and server side
-	public void update()
+	private boolean addSmolderingEffect;        // When this is true we need to start spawning smoke particles.
+	private long timeTorchStartedSmoldering;    // Time  in the world when the torch started smoldering.
+	private int torchSmolderingDuration;        // How long should the torch be producing smoke?
+
+	public TileEntityTorchUnlit(long totalWorldTime)
 	{
-		if (getWorld().isRaining() && getWorld().canBlockSeeSky(pos))
+		super(totalWorldTime);
+		this.addSmolderingEffect = false;
+		this.timeTorchStartedSmoldering = 0;
+		this.torchSmolderingDuration = 0;
+	}
+	@Override
+	public void update()
+	{	
+		if (!getWorld().isRemote)
 		{
-			this.currentHumidityLevel += 1;
+			// When it's raining and the torch is directly exposed to rain it will start collecting humidity.
+			// Update humidity only on SERVER, we don't really need to do this on client.
 			
+			if (getWorld().isRaining() && !this.isHighHumidity() && getWorld().canBlockSeeSky(pos))
+				this.updateHumidityLevel(this.HUMIDITY_AMOUNT_PER_TICK);
 		}
-		if (this.shouldAddSmolderingEffect && getWorld().isRemote)
+		else if (this.addSmolderingEffect == true)
 			this.setTorchSmoldering(true, getWorld().getWorldTime());
 	}
-	public boolean shouldAddSmolderingEffect = false;   // When this is true we need to start spawning smoke particles
-	private long timeTorchStartedSmoldering = 0;       // Time time in the world when the torch started smoldering 
-	private long torchSmolderingSDuration = 0;        // How long should the torch be producing smoke?
 	
+	/** Set the torch on fire by updating 'blockstate' at world coordinates. This method serves 
+	 *  as a proxy for the duplicate method in BlockTorchUnlit, checking humidity 
+	 *  and handling data inheritance. Always call this function first!
+	 */
+    public void lightTorch()
+    {
+    	if (!getWorld().isRemote && !this.isHighHumidity() && BlockTorchUnlit.lightTorch(getWorld(), pos))
+    	{
+    		TileEntity entityTorch = getWorld().getTileEntity(pos);
+    		if (entityTorch != null && entityTorch instanceof TileEntityTorchLit)
+    		{
+    			TileEntityTorchLit torchLit = (TileEntityTorchLit)entityTorch;
+    			torchLit.torchAge = getWorld().getTotalWorldTime() - this.timeCreated;
+    			torchLit.updateHumidityLevel(this.getHumidityLevel());
+    		}
+    	}
+    }
 	// Tells us if our torch is emitting smoke particles due to recently being extinguished
 	public final boolean isTorchSmoldering()
 	{
 		return (timeTorchStartedSmoldering != 0);
 	}
+	/** Activate or deactivate smoke particles spawning above the torch.
+     * When torch smoldering has been activated, the particles will be created in it's block class.
+     */
 	public void setTorchSmoldering(boolean smolderingState, long worldTime)
 	{
 		if (smolderingState == true)
 		{
+			FierySouls.logger.info("Setting torch smoldering!");
 			// Make the smoldering duration somewhat random to add more realism
 			Random rand = new Random();
 			
-			this.torchSmolderingSDuration = rand.nextInt(SMOLDERING_RANDOM) + 50;
+			this.torchSmolderingDuration = rand.nextInt(SMOLDERING_RANDOM) + 50;
 			this.timeTorchStartedSmoldering = worldTime;
-			this.shouldAddSmolderingEffect = false;
+			this.addSmolderingEffect = false;
 		}
 		else this.timeTorchStartedSmoldering =  0;
 	}
-	
 	// Check to see if we should stop the torch from smoldering
 	public final boolean didSmolderingExpire(long worldTime)
 	{
-		return (worldTime - this.timeTorchStartedSmoldering > this.torchSmolderingSDuration);
+		return (worldTime - this.timeTorchStartedSmoldering > this.torchSmolderingDuration);
+	}
+	/** Let the torch know that it should start smoldering on the next tick update */
+	public void scheduleSmolderingEffect()
+	{
+		this.addSmolderingEffect = true;
 	}
 }
