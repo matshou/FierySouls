@@ -1,24 +1,18 @@
 package com.yooksi.fierysouls.tileentity;
 
-import java.util.Random;
-
+import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.block.BlockTorchLit;
 import com.yooksi.fierysouls.block.BlockTorchUnlit;
-import com.yooksi.fierysouls.common.FierySouls;
-import com.yooksi.fierysouls.common.ResourceLibrary;
 
-import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.gui.IUpdatePlayerListBox;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.EnumFacing;
+
 import net.minecraft.world.World;
+import net.minecraft.block.Block;
+import net.minecraft.util.BlockPos;
+import net.minecraft.tileentity.TileEntity;
+
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -30,6 +24,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 	// Should we check if torch flame could spread fire?
 	private static boolean updateFlameHazard;
 	
+	public TileEntityTorchLit() {}	
 	public TileEntityTorchLit(final long totalWorldTime) 
 	{
 		super(totalWorldTime);
@@ -88,8 +83,9 @@ public class TileEntityTorchLit extends TileEntityTorch
 		    	if (getWorld().isRemote)
 		    	{
 		    		torchUnlit.scheduleSmolderingEffect();
-		    		World server = MinecraftServer.getServer().getEntityWorld();
-		            ((TileEntityTorchLit)server.getTileEntity(pos)).extinguishTorch(false);
+		    		TileEntity torchLit = net.minecraft.server.MinecraftServer.getServer().getEntityWorld().getTileEntity(pos);  
+		            if (torchLit != null && torchLit instanceof TileEntityTorchLit)
+		            	((TileEntityTorchLit)torchLit).extinguishTorch(false);
 		    	}
 		    	else    // <-- This will be called on SERVER side.
 		    	{
@@ -108,26 +104,29 @@ public class TileEntityTorchLit extends TileEntityTorch
 		BlockPos neighbourPos = new BlockPos(pos.getX(), pos.getY() +1, pos.getZ());
 		Block neighbourBlock = worldIn.getBlockState(neighbourPos).getBlock();
 		
-		if (neighbourBlock == Blocks.air)   // More sensible then calling 'canBlockSeeSky'...
+		if (neighbourBlock == net.minecraft.init.Blocks.air)   // More sensible then calling 'canBlockSeeSky'...
 			return false;
 		
 		// TODO: Create more advanced parameters like taking into account 
 		//       air humidity, strength of torch flame etc.
 			
-		final int chancesToCatchFire = neighbourBlock.getFlammability(worldIn, neighbourPos, EnumFacing.DOWN);
+		final int chancesToCatchFire = neighbourBlock.getFlammability(worldIn, neighbourPos, net.minecraft.util.EnumFacing.DOWN);
 		
-		Random rand = new Random();
+		java.util.Random rand = new java.util.Random();
 		int natural_roll = rand.nextInt(100) + 1;     // 0% - 100% (1 - 100 roll)
 	
 		// If a saving throw failed, set the top block on fire
 		if (chancesToCatchFire >= natural_roll)
-			return worldIn.setBlockState(neighbourPos, Blocks.fire.getDefaultState());
+			return worldIn.setBlockState(neighbourPos, net.minecraft.init.Blocks.fire.getDefaultState());
 		
 		else return false;
 	}	
 	
+	// ====================================== NETWORK UTILITIES ==============================================
+	
 	/** These functions are used to update, write and read packets sent from SERVER to CLIENT. */ 
 	// This will make the server call 'getDescriptionPacket' for a full data sync
+	@SideOnly(Side.SERVER)
 	private void markForUpdate()
 	{
 		getWorld().markBlockForUpdate(pos);
@@ -137,29 +136,21 @@ public class TileEntityTorchLit extends TileEntityTorch
 	// Gathers data into a packet that is to be sent to the client. Called on server only. 
 	public Packet getDescriptionPacket() 
 	{
-		 NBTTagCompound nbtTag = new NBTTagCompound();
-		 nbtTag.setBoolean("extinguishTorchOnServer", this.extinguishTorchOnServer);
-		 return new S35PacketUpdateTileEntity(this.pos, 1, nbtTag);
+		NBTTagCompound nbtTag = new NBTTagCompound();
+		nbtTag.setBoolean("extinguishTorchOnServer", this.extinguishTorchOnServer);	
+		
+		super.writeToNBT(nbtTag);  // <-- This will only update entity pos, writeToNBT here to do a full sync.
+		
+		return new S35PacketUpdateTileEntity(this.pos, 1, nbtTag);
 	}
 	// Extracts data from a packet that was sent from the server. Called on client only.
 	// Minecraft automatically sends a 'description packet' for the tile entity when it is first 
 	// loaded on the client, and you can force it to resend one afterwards
 	@Override
-	public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity packet) 
+	public void onDataPacket(net.minecraft.network.NetworkManager net, S35PacketUpdateTileEntity packet) 
 	{
-		//readFromNBT(packet.getNbtCompound());
+		readFromNBT(packet.getNbtCompound());
 		if (getWorld().isRemote && packet.getNbtCompound().getBoolean("extinguishTorchOnServer"))
 			this.extinguishTorch(true);
 	} 
-	/**
-	@Override
-	public void writeToNBT(NBTTagCompound par1)
-	{
-		// Write something to NBT...
-	}  
-	@Override
-	public void readFromNBT(NBTTagCompound par1)
-	{  
-		// Read something from NBT...
-	}*/
 }

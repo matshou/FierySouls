@@ -1,4 +1,29 @@
-Fiery Souls - Version 1.0.1, Build 105 
+Version 1.1.1
+
+Changelog:
+
+- Added a client version limiter.
+- Cleaned up redundant imports in Item and TileEntity packages.
+- Tile entities are now able to read and write data using NBT.
+- Added a missing entry in the changelog.
+- Updated the Git license file.
+
+Version 1.1.0
+
+Changelog:
+
+- Did some considerable changes to torch tile entity code.
+- Introduced new mechanics for torches, humidity. When directly exposed to rain torches start to collect humidity
+  and extinguish if enough humidity is accumulated. After getting considerably wet they are unable to be ignited again with fire sources.
+
+- Fiery Souls creative tab is now displaying the correct name.
+- Fixed a formatting mistake in the license part of the readme.
+
+Notes:
+The tile entities are still not able to save data, I will implement this in the next update.
+
+
+Version 1.0.1, Build 105 
  
 Changelog: 
  

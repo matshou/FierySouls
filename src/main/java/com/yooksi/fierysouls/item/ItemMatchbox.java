@@ -1,28 +1,16 @@
 package com.yooksi.fierysouls.item;
 
-import java.util.Random;
+import com.yooksi.fierysouls.common.ResourceLibrary;
+import com.yooksi.fierysouls.tileentity.TileEntityTorchUnlit;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockTorch;
-import net.minecraft.block.state.BlockState;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.item.Item;
+import net.minecraft.world.World;
+import net.minecraft.util.BlockPos;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemTool;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.world.World;
-
-import com.yooksi.fierysouls.block.BlockTorchUnlit;
-import com.yooksi.fierysouls.common.FierySouls;
-import com.yooksi.fierysouls.common.ResourceLibrary;
-import com.yooksi.fierysouls.tileentity.TileEntityTorchLit;
-import com.yooksi.fierysouls.tileentity.TileEntityTorchUnlit;
 
 public class ItemMatchbox extends Item
 {

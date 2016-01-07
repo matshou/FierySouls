@@ -19,12 +19,12 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-@Mod(modid = FierySouls.MODID, version = FierySouls.VERSION, name= FierySouls.NAME)
+@Mod(modid = FierySouls.MODID, version = FierySouls.VERSION, name= FierySouls.NAME, acceptedMinecraftVersions = "[1.8.0]")
 public class FierySouls 
 {
 	public static final String MODID = "fierysouls";
 	public static final String NAME = "Fiery Souls";
-	public static final String VERSION = "1.1.0";
+	public static final String VERSION = "1.1.1";
 
 	// Use this thingy to print in the console:
 	public static final Logger logger = LogManager.getLogger(MODID);

@@ -1,10 +1,10 @@
 package com.yooksi.fierysouls.tileentity;
 
 import com.yooksi.fierysouls.common.FierySouls;
-
-import net.minecraft.server.gui.IUpdatePlayerListBox;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
+
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.gui.IUpdatePlayerListBox;
 
 public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
 {
@@ -14,9 +14,10 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
 	protected static final byte SMOLDERING_RANDOM = 125;        // Random factor in determining how long is the torch going to smolder.
 
 	private short humidityLevel;
-	protected final long timeCreated;    // Time in the world this tile entity was created
+	protected long timeCreated;    // Time in the world this tile entity was created
 	protected long torchAge;
 	
+	public TileEntityTorch() { this(0); };
 	protected TileEntityTorch(long totalWorldTime) 
 	{
 		this.humidityLevel = 0;
@@ -43,5 +44,22 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
     protected boolean isHighHumidity()
     {
     	return (this.humidityLevel > this.HUMIDITY_THRESHOLD);
+    }
+    
+	@Override
+    public void writeToNBT(NBTTagCompound par1)
+    {
+		super.writeToNBT(par1);
+	    par1.setLong("timeCreated", this.timeCreated);
+	    par1.setShort("humidityLevel", this.getHumidityLevel());
+        par1.setLong("torchAge", this.torchAge);
+    }
+    @Override
+    public void readFromNBT(NBTTagCompound par1)
+    {  
+	    super.readFromNBT(par1);
+        this.timeCreated = par1.getLong("timeCreated");
+        this.updateHumidityLevel(par1.getShort("humidityLevel"));
+        this.torchAge = par1.getLong("torchAge");
     }
 }

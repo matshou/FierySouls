@@ -1,11 +1,7 @@
 package com.yooksi.fierysouls.tileentity;
 
-import java.util.Random;
-
-import com.yooksi.fierysouls.block.BlockTorchUnlit;
 import com.yooksi.fierysouls.common.FierySouls;
-
-import net.minecraft.server.gui.IUpdatePlayerListBox;
+import com.yooksi.fierysouls.block.BlockTorchUnlit;
 import net.minecraft.tileentity.TileEntity;
 
 public class TileEntityTorchUnlit extends TileEntityTorch
@@ -14,6 +10,7 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 	private long timeTorchStartedSmoldering;    // Time  in the world when the torch started smoldering.
 	private int torchSmolderingDuration;        // How long should the torch be producing smoke?
 
+	public TileEntityTorchUnlit() {}
 	public TileEntityTorchUnlit(long totalWorldTime)
 	{
 		super(totalWorldTime);
@@ -67,7 +64,7 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 		{
 			FierySouls.logger.info("Setting torch smoldering!");
 			// Make the smoldering duration somewhat random to add more realism
-			Random rand = new Random();
+			java.util.Random rand = new java.util.Random();
 			
 			this.torchSmolderingDuration = rand.nextInt(SMOLDERING_RANDOM) + 50;
 			this.timeTorchStartedSmoldering = worldTime;
