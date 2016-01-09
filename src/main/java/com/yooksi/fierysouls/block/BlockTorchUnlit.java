@@ -1,48 +1,36 @@
 package com.yooksi.fierysouls.block;
 
-import java.util.Random;
-
-import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.ResourceLibrary;
-import com.yooksi.fierysouls.tileentity.TileEntityTorchLit;
 import com.yooksi.fierysouls.tileentity.TileEntityTorchUnlit;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockTorch;
-import net.minecraft.block.ITileEntityProvider;
-import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.EntityLivingBase;
+
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
+
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class BlockTorchUnlit extends BlockTorch implements ITileEntityProvider
+public class BlockTorchUnlit extends BlockTorch implements net.minecraft.block.ITileEntityProvider
 {	
 	public BlockTorchUnlit() 
 	{
-		this.setCreativeTab(CreativeTabs.tabDecorations);
+		this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabDecorations);
 	}
-	
 	@Override
 	// This will disable objects from being able to be place on top of our torch
 	public boolean isFullCube()
     {
 		return false;
     }
-	
 	@Override
     @SideOnly(Side.CLIENT)
-    public void randomDisplayTick(World worldIn, BlockPos pos, IBlockState state, Random rand)
+    public void randomDisplayTick(World worldIn, BlockPos pos, IBlockState state, java.util.Random rand)
     {
 		// TODO: - Add some options from here to the configuration file
 		//       - Try to make the smoke appear more like it's coming from an extinguished torch then fire.
@@ -52,17 +40,16 @@ public class BlockTorchUnlit extends BlockTorch implements ITileEntityProvider
 		// Find the right tile entity and check if we should stop smoldering
 		
 		TileEntity torchEntity = worldIn.getTileEntity(pos);
-        if (torchEntity != null && torchEntity instanceof TileEntityTorchUnlit)
-        {
-        	TileEntityTorchUnlit unlitTorchEntity = (TileEntityTorchUnlit)torchEntity;
-        	if (unlitTorchEntity.isTorchSmoldering() == false)
-        		return;
+        if (torchEntity == null || !(torchEntity instanceof TileEntityTorchUnlit))
+        	return;
+        	
+        TileEntityTorchUnlit unlitTorchEntity = (TileEntityTorchUnlit)torchEntity;
+        if (unlitTorchEntity.isTorchSmoldering() == false)
+        	return;
 
-        	if (unlitTorchEntity.didSmolderingExpire(worldIn.getWorldTime()))
-        		unlitTorchEntity.setTorchSmoldering(false, 0);
-		}
-		else return;
-
+        if (unlitTorchEntity.didSmolderingExpire(worldIn.getWorldTime()))
+        	unlitTorchEntity.setTorchSmoldering(false, 0);
+	
         EnumFacing enumfacing = (EnumFacing)state.getValue(FACING);
         double d0 = (double)pos.getX() + 0.5D;
         double d1 = (double)pos.getY() + 0.7D;
@@ -74,9 +61,9 @@ public class BlockTorchUnlit extends BlockTorch implements ITileEntityProvider
         if (enumfacing.getAxis().isHorizontal())
         {
             EnumFacing enumfacing1 = enumfacing.getOpposite();
-            worldIn.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, d0 - d4, d1 + d3, d2, 0.0D, 0.0D, 0.0D);//d0 + d4 * (double)enumfacing1.getFrontOffsetX(), d1 + d3, d2 + d4 * (double)enumfacing1.getFrontOffsetZ(), 0.0D, 0.0D, 0.0D, new int[0]);
+            worldIn.spawnParticle(net.minecraft.util.EnumParticleTypes.SMOKE_NORMAL, d0 + d4 * (double)enumfacing1.getFrontOffsetX(), d1 + d3, d2 + d4 * (double)enumfacing1.getFrontOffsetZ(), 0.0D, 0.0D, 0.0D, new int[0]);
         }
-        else worldIn.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);
+        else worldIn.spawnParticle(net.minecraft.util.EnumParticleTypes.SMOKE_NORMAL, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);
     }
 	
 	@Override
@@ -85,8 +72,9 @@ public class BlockTorchUnlit extends BlockTorch implements ITileEntityProvider
 		// An unlit torch can be lit on fire by activating it with an already lit torch
 		// No need to handle tile entities here, just replace the block
 		
-		ItemStack equippedItem = playerIn.getCurrentEquippedItem();
-		if (equippedItem == null) return false;
+		net.minecraft.item.ItemStack equippedItem = playerIn.getCurrentEquippedItem();
+		if (equippedItem == null) 
+			return false;
 		
 		if (equippedItem.getItem() ==  ResourceLibrary.TORCH_LIT.getItemInstance())
 		{

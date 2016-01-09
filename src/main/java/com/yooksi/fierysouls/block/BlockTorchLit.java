@@ -1,40 +1,32 @@
 package com.yooksi.fierysouls.block;
 
-import java.util.Random;
-
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.ResourceLibrary;
 import com.yooksi.fierysouls.tileentity.TileEntityTorchLit;
-import com.yooksi.fierysouls.tileentity.TileEntityTorchUnlit;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockTorch;
-import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.creativetab.CreativeTabs;
+
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 // This block replaces the original Minecraft torch with a more realistic one. 
 
-public class BlockTorchLit extends BlockTorch implements ITileEntityProvider
+public class BlockTorchLit extends BlockTorch implements net.minecraft.block.ITileEntityProvider
 {
 	public BlockTorchLit() 
 	{	
-		this.setCreativeTab(CreativeTabs.tabDecorations);
+		this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabDecorations);
 		this.setLightLevel(0.9375F);
 	}
 
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumFacing side, float hitX, float hitY, float hitZ) 
+	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, net.minecraft.entity.player.EntityPlayer playerIn, EnumFacing side, float hitX, float hitY, float hitZ) 
 	{
 		// A lit torch can be extinguished if activated (right clicked) with no item equipped.
 		// An unlit torch can be set on fire by activating it on an already lit torch. 
@@ -110,7 +102,7 @@ public class BlockTorchLit extends BlockTorch implements ITileEntityProvider
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta)
 	{
-		 FierySouls.logger.info("Created a lit torch entity!");
+		FierySouls.logger.info("Created a lit torch entity!");
 		return new TileEntityTorchLit(worldIn.getTotalWorldTime());
 	}
 }

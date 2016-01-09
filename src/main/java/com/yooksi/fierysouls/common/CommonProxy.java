@@ -1,15 +1,6 @@
 package com.yooksi.fierysouls.common;
 
-import java.util.List;
-
-import com.yooksi.fierysouls.tileentity.TileEntityTorchUnlit;
-
-import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -57,7 +48,7 @@ public class CommonProxy
     {	
 		// Remove vanilla recipes here
 		int recipesRemovedCount = 0;
-		recipesRemovedCount += removeRecipe(Item.getItemFromBlock(Blocks.torch));
+		recipesRemovedCount += removeRecipe(Item.getItemFromBlock(net.minecraft.init.Blocks.torch));
 		FierySouls.logger.info("Removed " + recipesRemovedCount + " vanilla recipes.");
 		
 		// Initialize the recipe library and add recipes to the resource library
@@ -84,7 +75,7 @@ public class CommonProxy
 	private static int removeRecipe(Item toRemove)
 	{
 		int recipesRemoved = 0;
-		List<IRecipe> recipeList = CraftingManager.getInstance().getRecipeList();
+		java.util.List<IRecipe> recipeList = net.minecraft.item.crafting.CraftingManager.getInstance().getRecipeList();
 		
 		// Iterate through the recipe list and find the recipes we're looking for.
 		// Search using iterators instead of manual indexing to increase reliability.
@@ -92,7 +83,7 @@ public class CommonProxy
 	    java.util.Iterator<IRecipe> recipeEntry = recipeList.iterator();
 	    while (recipeEntry.hasNext())
 	    {
-			ItemStack outputItem = recipeEntry.next().getRecipeOutput();
+	    	net.minecraft.item.ItemStack outputItem = recipeEntry.next().getRecipeOutput();
 			if (outputItem != null && outputItem.getItem() == toRemove)
 			{
 				recipeEntry.remove();

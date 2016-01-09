@@ -1,15 +1,10 @@
 package com.yooksi.fierysouls.client;
 
-import com.yooksi.fierysouls.common.CommonProxy;
 import com.yooksi.fierysouls.common.FierySouls;
+import com.yooksi.fierysouls.common.CommonProxy;
 import com.yooksi.fierysouls.common.ResourceLibrary;
 
-import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ItemModelMesher;
-import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.item.Item;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class ClientProxy extends CommonProxy
@@ -23,10 +18,9 @@ public class ClientProxy extends CommonProxy
 		// Register all item and block RENDERERS from the resource library with Forge */	
 		for (ResourceLibrary resource : ResourceLibrary.values())
 		{
-			RenderItem renderItem = Minecraft.getMinecraft().getRenderItem();
-			
-			if (renderItem == null) FierySouls.logger.info("wtf....");
-			
+			net.minecraft.client.renderer.entity.RenderItem renderItem =
+					net.minecraft.client.Minecraft.getMinecraft().getRenderItem();
+
 			// IMPORTANT: Removing "tile." string for blocks and "item." string for items is crucial here.
 			// If we don't do this Forge will search their textures under names different then those defined by our mod and listed in json files.
 			// As a result your resource textures will not be loaded into the game.
@@ -34,7 +28,7 @@ public class ClientProxy extends CommonProxy
 			if (resource.isInstanceBlock())
 			{
 				ModelResourceLocation location = new ModelResourceLocation(FierySouls.MODID + ":" + (resource.getBlockInstance()).getUnlocalizedName().replaceFirst("tile.", ""), "inventory");
-				renderItem.getItemModelMesher().register(Item.getItemFromBlock(resource.getBlockInstance()), 0, location);
+				renderItem.getItemModelMesher().register(net.minecraft.item.Item.getItemFromBlock(resource.getBlockInstance()), 0, location);
 				objectsRegistered += 1;
 			}
 			else if (resource.isInstanceItem())
