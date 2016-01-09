@@ -12,7 +12,8 @@ public enum RecipeLibrary
 {
 	MATCHBOX_RECIPE(new ItemStack(ResourceLibrary.MATCHBOX.getItemInstance(), 1), new Object[] { Items.gunpowder, Items.stick, Items.paper  }, true, ResourceLibrary.MATCHBOX),
 	GLOWSTONE_CRYSTAL_RECIPE(new ItemStack(ResourceLibrary.GLOWSTONE_CRYSTAL.getItemInstance(), 1), new Object[] { "x", "xyx", "x", 'x', Items.glowstone_dust, 'y', Items.coal }, false, ResourceLibrary.GLOWSTONE_CRYSTAL),
-	TORCH_UNLIT_RECIPE(new ItemStack(ResourceLibrary.TORCH_UNLIT.getItemInstance(), 1), new Object[] { "x", "y", 'x', Items.coal, 'y', Items.stick }, false, ResourceLibrary.TORCH_UNLIT);
+	TORCH_UNLIT_RECIPE_1(new ItemStack(ResourceLibrary.TORCH_UNLIT.getItemInstance(), 1), new Object[] { "x", "y", 'x', Items.coal, 'y', Items.stick }, false, ResourceLibrary.TORCH_UNLIT),
+	TORCH_UNLIT_RECIPE_2(new ItemStack(ResourceLibrary.TORCH_UNLIT.getItemInstance(), 1), new Object[] { "x", "y", 'x', new ItemStack(Items.coal, 1, 1), 'y', Items.stick }, false, ResourceLibrary.TORCH_UNLIT);  // Charcoal version
 	
 	private final ItemStack product;       // Item that the recipe produces when crafted
 	private final Object[] chart;         // Recipe pattern that will be used to register the recipe

@@ -1,0 +1,49 @@
+# Forge Documents #
+###################
+
+.gradle
+.settings
+bin
+build
+eclipse
+gradle
+run
+.classpath
+.project
+build.gradle
+CREDITS-fml.txt
+forge-1.8-11.14.4.1563-changelog.txt
+gradlew
+gradlew.bat
+LICENSE-fml.txt
+MinecraftForge-Credits.txt
+MinecraftForge-License.txt
+Paulscode IBXM Library License.txt
+Paulscode SoundSystem CodecIBXM License.txt
+README.txt
+
+# Original Forge rules #
+########################
+
+# eclipse
+bin
+*.launch
+.settings
+.metadata
+.classpath
+.project
+
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
+
+# gradle
+build
+.gradle
+
+# other
+eclipse
+run

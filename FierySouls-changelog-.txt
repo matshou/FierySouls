@@ -1,3 +1,18 @@
+Version 1.1.2
+
+Changelog:
+
+- Added a new recipe for unlit torches. They can now be crafted with charcoal.
+- Any custom resource can now be crafted with more then one recipes.
+- All vanilla torch recipes are now correctly removed from the list.
+- Added .gitignore rules to the project, the repository can now be hosted inside Forge DE.
+
+Notes:
+This version resolves the issue of a charcoal torch recipe not being removed from the CraftingManager recipe list.
+It took me quite a while to figure out what was causing this, and in the end it turned out it was just a problem of accessing the wrong index.
+This topic on the Forge forum helped me solve this: 
+http://www.minecraftforge.net/forum/index.php/topic,34940
+
 Version 1.1.1
 
 Changelog:

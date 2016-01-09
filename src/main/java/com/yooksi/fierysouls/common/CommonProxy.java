@@ -56,7 +56,9 @@ public class CommonProxy
 	private void handleRecipes() 
     {	
 		// Remove vanilla recipes here
-		removeRecipe(Item.getItemFromBlock(Blocks.torch));
+		int recipesRemovedCount = 0;
+		recipesRemovedCount += removeRecipe(Item.getItemFromBlock(Blocks.torch));
+		FierySouls.logger.info("Removed " + recipesRemovedCount + " vanilla recipes.");
 		
 		// Initialize the recipe library and add recipes to the resource library
 		FierySouls.logger.info("Recipe library loaded, " + RecipeLibrary.values().length + " custom recipes have been loaded.");
@@ -64,9 +66,10 @@ public class CommonProxy
 		// Add our custom recipes here
 		for (ResourceLibrary resource : ResourceLibrary.values())
 		{
-			RecipeLibrary recipe = resource.resourceIsMadeFrom();
-			if (recipe != null)
+			java.util.Iterator<RecipeLibrary> recipeList = resource.recipeList.iterator();
+			while (recipeList.hasNext())
 			{
+				RecipeLibrary recipe = recipeList.next();
 				if (recipe.isRecipeShapeless())
 					GameRegistry.addShapelessRecipe(recipe.getProductItemStack(), recipe.getRecipePattern());
 			    	
@@ -74,23 +77,28 @@ public class CommonProxy
 			}
 		}
     }
-	
-	/** Removes recipes crafting a certain item from Forge recipe list */ 
-	private int removeRecipe(Item item)
+	/** Removes vanilla recipes from CraftingManager recipe list.
+	 *  @param toRemove Item corresponding to the output of the recipe we want to remove.
+	 *  @return Number of recipes we removed from the recipe list.
+	 */ 
+	private static int removeRecipe(Item toRemove)
 	{
 		int recipesRemoved = 0;
 		List<IRecipe> recipeList = CraftingManager.getInstance().getRecipeList();
-		for (int i = 0; i < recipeList.size(); i++) 
-		{
-			ItemStack output = recipeList.get(i).getRecipeOutput();
-			if (output != null && output.getItem() == item) 
-			{	
-				recipeList.remove(i);
+		
+		// Iterate through the recipe list and find the recipes we're looking for.
+		// Search using iterators instead of manual indexing to increase reliability.
+		
+	    java.util.Iterator<IRecipe> recipeEntry = recipeList.iterator();
+	    while (recipeEntry.hasNext())
+	    {
+			ItemStack outputItem = recipeEntry.next().getRecipeOutput();
+			if (outputItem != null && outputItem.getItem() == toRemove)
+			{
+				recipeEntry.remove();
 				recipesRemoved++;
 			}
-		}
-		// Let the calling function know how much recipes we removed
-		return recipesRemoved;
+	    }   return recipesRemoved;
 	}
 	
 	public void init(FMLInitializationEvent event) 

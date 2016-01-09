@@ -26,8 +26,8 @@ public enum ResourceLibrary
 	private final Class tileEntityClass;
 	public final String name;
 	
-	// It's much more convenient if we write the recipe here, otherwise we have to run loop searches
-	private RecipeLibrary recipe;
+	// It's much more convenient if we write the recipes here, otherwise we have to run loop searches
+	public java.util.List<RecipeLibrary> recipeList;
 	
 	/** This constructor will be called when any Enum constants are first called or referenced in code.	 
 	 *  
@@ -37,6 +37,7 @@ public enum ResourceLibrary
 	 * */
 	private ResourceLibrary(Object resourceInstance, String resourceName, Class entityClass)
 	{
+		this.recipeList = new java.util.ArrayList();
 		this.tileEntityClass = entityClass;
 		this.instance = resourceInstance;
 		this.name = resourceName;
@@ -54,7 +55,7 @@ public enum ResourceLibrary
 	// before we're properly initialized it. Have to call it from there after we initialize first.
 	public final void addRecipeToLibrary(RecipeLibrary recipeToAdd)
 	{
-		this.recipe = recipeToAdd;
+		this.recipeList.add(recipeToAdd);
 	}
 	public final Class getTileEntityClass()
 	{
@@ -82,9 +83,5 @@ public enum ResourceLibrary
     	// For example this would be needed when adding recipes.
     	
     	return (isInstanceItem()) ? (Item)instance : Item.getItemFromBlock((Block)instance);
-    }
-    public RecipeLibrary resourceIsMadeFrom()
-    {
-    	return this.recipe;
     }
 }
