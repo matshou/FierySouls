@@ -34,13 +34,17 @@ public class TileEntityTorchLit extends TileEntityTorch
 	@Override
 	public final void update()
 	{
-		// When it's raining and the torch is directly exposed to rain it will start collecting humidity.
-		// Update humidity only on SERVER, we don't really need to do this on client.
-		
-		if (!getWorld().isRemote && getWorld().getWorldInfo().isRaining() && this.getWorld().canBlockSeeSky(pos))
+		if (!getWorld().isRemote)
 		{
-			if (this.updateHumidityLevel(HUMIDITY_AMOUNT_PER_TICK) > HUMIDITY_THRESHOLD)
-				this.extinguishTorch(true);
+			if (this.updateCombustionDuration(UPDATE_VALUE_PER_TICK * -1) <= 0)
+				this.extinguishTorch(false);
+		
+		    // When it's raining and the torch is directly exposed to rain it will start collecting humidity.
+		    if (getWorld().getWorldInfo().isRaining() && this.getWorld().canBlockSeeSky(pos))
+		    {
+			    if (this.updateHumidityLevel(UPDATE_VALUE_PER_TICK) > HUMIDITY_THRESHOLD)
+				    this.extinguishTorch(true);
+		    }
 		}
 		if (this.updateFlameHazard == true)
 		{
@@ -63,6 +67,8 @@ public class TileEntityTorchLit extends TileEntityTorch
 	 */
 	public void extinguishTorch(final boolean waitForClient)
 	{	
+		// TODO: Think about further restructuring the following section:
+		
 	    if (!waitForClient || (waitForClient && getWorld().isRemote))
 	    {
 	    	// This is the part where the blockstate gets updated and client entities are handled.
@@ -80,20 +86,22 @@ public class TileEntityTorchLit extends TileEntityTorch
 		    	// After that extinguish the torch server-side. This will finalize current tile entity destruction 
 		    	// and update the new tile entity with needed info.
 		    	
-		    	if (getWorld().isRemote)
+		    	if (!getWorld().isRemote)
+		    	{
+		    		torchUnlit.setCombustionDuration(this.getCombustionDuration());
+		    		torchUnlit.updateHumidityLevel(this.getHumidityLevel());
+	    		    torchUnlit.torchAge = getWorld().getTotalWorldTime() - this.timeCreated;     	
+		    	}
+		    	else if (waitForClient)
 		    	{
 		    		torchUnlit.scheduleSmolderingEffect();
 		    		TileEntity torchLit = net.minecraft.server.MinecraftServer.getServer().getEntityWorld().getTileEntity(pos);  
 		            if (torchLit != null && torchLit instanceof TileEntityTorchLit)
 		            	((TileEntityTorchLit)torchLit).extinguishTorch(false);
 		    	}
-		    	else    // <-- This will be called on SERVER side.
-		    	{
-		    		torchUnlit.updateHumidityLevel(this.getHumidityLevel());
-	    		    torchUnlit.torchAge = getWorld().getTotalWorldTime() - this.timeCreated;     
-		    	}
-	    	}       // Notify the client that it should extinguish the torch on it's side and call back.
-	    }             
+		    	else torchUnlit.scheduleSmolderingEffect();
+	    	}      
+	    }  // Notify the client that it should extinguish the torch on it's side and call back.   
 	    else { this.extinguishTorchOnServer = true; this.markForUpdate(); }
 	}
 	/** Check to see if we should force the block above us to catch on fire.
@@ -126,7 +134,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 	
 	/** These functions are used to update, write and read packets sent from SERVER to CLIENT. */ 
 	// This will make the server call 'getDescriptionPacket' for a full data sync
-	@SideOnly(Side.SERVER)
+	//@SideOnly(Side.SERVER)
 	private void markForUpdate()
 	{
 		getWorld().markBlockForUpdate(pos);

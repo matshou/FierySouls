@@ -27,26 +27,30 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 			// Update humidity only on SERVER, we don't really need to do this on client.
 			
 			if (getWorld().isRaining() && !this.isHighHumidity() && getWorld().canBlockSeeSky(pos))
-				this.updateHumidityLevel(this.HUMIDITY_AMOUNT_PER_TICK);
+				this.updateHumidityLevel(UPDATE_VALUE_PER_TICK);
 		}
 		else if (this.addSmolderingEffect == true)
 			this.setTorchSmoldering(true, getWorld().getWorldTime());
 	}
 	
 	/** Set the torch on fire by updating 'blockstate' at world coordinates. This method serves 
-	 *  as a proxy for the duplicate method in BlockTorchUnlit, checking humidity 
-	 *  and handling data inheritance. Always call this function first!
+	 *  as a proxy for the duplicate method in BlockTorchUnlit, checking humidity and combustion duration 
+	 *  as well as handling data inheritance. Always call this function first!
 	 */
     public void lightTorch()
     {
-    	if (!getWorld().isRemote && !this.isHighHumidity() && BlockTorchUnlit.lightTorch(getWorld(), pos))
+    	if (!getWorld().isRemote && !this.isHighHumidity() && this.getCombustionDuration() > 0)
     	{
+    		if (!BlockTorchUnlit.lightTorch(getWorld(), pos))
+    			return;
+    			
     		TileEntity entityTorch = getWorld().getTileEntity(pos);
     		if (entityTorch != null && entityTorch instanceof TileEntityTorchLit)
     		{
     			TileEntityTorchLit torchLit = (TileEntityTorchLit)entityTorch;
     			torchLit.torchAge = getWorld().getTotalWorldTime() - this.timeCreated;
     			torchLit.updateHumidityLevel(this.getHumidityLevel());
+    		    torchLit.setCombustionDuration(this.getCombustionDuration());
     		}
     	}
     }
