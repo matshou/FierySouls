@@ -1,5 +1,6 @@
 package com.yooksi.fierysouls.tileentity;
 
+import com.yooksi.fierysouls.block.BlockTorchLit;
 import com.yooksi.fierysouls.common.FierySouls;
 import net.minecraft.tileentity.TileEntity;
 
@@ -8,28 +9,31 @@ import net.minecraft.server.gui.IUpdatePlayerListBox;
 
 public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
 {
-	protected static final byte UPDATE_VALUE_PER_TICK = 1;
-	
-	protected static final short MAX_TORCH_FLAME_DURATION = 3000;   // What is the longest this torch will be able to be on fire?
+	protected static final byte MAIN_UPDATE_INTERVAL = 10;            // Number of ticks that need to elapse before we update. 
+
+	protected static final short MAX_TORCH_FLAME_DURATION = 4500;   // What is the longest this torch will be able to be on fire?
 	protected static final short HUMIDITY_THRESHOLD = 300;         // How wet must the torch be before it cannot burn anymore?
 	
 	protected static final float RAIN_STR_THRESHOLD = 0.85F;     // How strong must the rain be falling to extinguish the torch?
 	protected static final byte SMOLDERING_RANDOM = 125;        // Random factor in determining how long is the torch going to smolder.
-
+      
+	protected byte updateTickCount;       // Ticks passed since last update
+	
+	private short combustionDuration;     // How much time does the torch have before extinguishing?
 	private short humidityLevel;
-	private short combustionDuration;        // How much time does the torch have before extinguishing?
-
-	protected long timeCreated;              // Time in the world this tile entity was created
+	
+	protected long timeCreated;           // Time in the world this tile entity was created
 	protected long torchAge;
 
 	public TileEntityTorch() { this(0); };
 	protected TileEntityTorch(long totalWorldTime) 
 	{
+		this.torchAge = 0;
 		this.humidityLevel = 0;
-		this.combustionDuration = MAX_TORCH_FLAME_DURATION;
+		this.updateTickCount = 0;  
 		
 		this.timeCreated = totalWorldTime;
-		this.torchAge = 0;
+		this.combustionDuration = MAX_TORCH_FLAME_DURATION;
 	}
 	@Override
 	public void update() {};  // This updates every tileEntity tick on both client and server side

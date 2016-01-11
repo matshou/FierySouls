@@ -18,46 +18,66 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class TileEntityTorchLit extends TileEntityTorch
 {
-	// Should we call server to extinguish the torch on it's side?
-	private boolean extinguishTorchOnServer;
+	private static final short DIMINISH_LIGHT_TIME_MARK = 1500;        // Diminishing light after remaining combustion equals this number.
+	private static final double DIMINISH_LIGHT_PER_INTERVAL = 0.2;    // Amount of light to diminish each update interval.
 	
-	// Should we check if torch flame could spread fire?
-	private static boolean updateFlameHazard;
+	private boolean extinguishTorchOnServer;   // Should we call server to extinguish torch instance
+	private boolean updatingLightData;         // Used by server to notify client to start updating light value
+	private boolean updateFlameHazard;         // Should we check if torch flame could spread fire?
+	private double torchLightLevel;            // How much light does the torch emit?
 	
 	public TileEntityTorchLit() {}	
 	public TileEntityTorchLit(final long totalWorldTime) 
 	{
 		super(totalWorldTime);
 		this.extinguishTorchOnServer = false;
+		this.updatingLightData = false;
 		this.updateFlameHazard = true;
+		
+		this.torchLightLevel = BlockTorchLit.MAXIMUM_TORCH_LIGHT_LEVEL;
+		/** DIMINISH_LIGHT_PER_INTERVAL = torchLightLevel / (DIMINISH_LIGHT_TIME_MARK / MAIN_UPDATE_INTERVAL); */
 	}
 	@Override
 	public final void update()
 	{
-		if (!getWorld().isRemote)
-		{
-			if (this.updateCombustionDuration(UPDATE_VALUE_PER_TICK * -1) <= 0)
-				this.extinguishTorch(false);
+		// Update only at set intervals to reduce performance hits.
+		if (this.updateTickCount++ < this.MAIN_UPDATE_INTERVAL)
+			return; else this.updateTickCount = 0;
 		
+		if (!getWorld().isRemote)
+		{ 
+			// Once the torch has been ignited it will begin burning and producing light. 
+			// The combustion process has a limited defined duration, after which the torch will extinguish.
+			
+			if (this.updateCombustionDuration(MAIN_UPDATE_INTERVAL * -1) <= 0)
+				this.extinguishTorch(false);
+			
+			// Since we're not updating this data on client tell him that he should start
+			// handling light updates on his side now, we're done here.
+			
+			else if (this.getCombustionDuration() <= DIMINISH_LIGHT_TIME_MARK && !this.updatingLightData)
+			{
+				this.updatingLightData = true;
+				this.markForUpdate();
+			}
 		    // When it's raining and the torch is directly exposed to rain it will start collecting humidity.
+			// Once it has collected enough humidity it will extinguish.
+			
 		    if (getWorld().getWorldInfo().isRaining() && this.getWorld().canBlockSeeSky(pos))
 		    {
-			    if (this.updateHumidityLevel(UPDATE_VALUE_PER_TICK) > HUMIDITY_THRESHOLD)
+			    if (this.updateHumidityLevel(MAIN_UPDATE_INTERVAL) > HUMIDITY_THRESHOLD)
 				    this.extinguishTorch(true);
 		    }
 		}
+		else if (this.updatingLightData)
+			this.updateLightLevel(this.DIMINISH_LIGHT_PER_INTERVAL);
+		
 		if (this.updateFlameHazard == true)
 		{
 			this.setRoofOnFire(getWorld(), pos);
 			this.updateFlameHazard = false;
 		}
 	}
-	// When this update is requested we check if the torch should set the object above it on fire.
-	public void scheduleHazardUpdate()
-	{
-		this.updateFlameHazard = true;
-	}
-	
 	/** Replace this torch with an unlit one and activate the smoldering effect.
 	 *  This method acts like a proxy for a clone method in BlockTorchLit, always call this one first!
 	 *  The way we handle the client and server side here is interesting, take a look at the code. 
@@ -69,7 +89,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 	{	
 		// TODO: Think about further restructuring the following section:
 		
-	    if (!waitForClient || (waitForClient && getWorld().isRemote))
+	    if (!waitForClient || getWorld().isRemote)
 	    {
 	    	// This is the part where the blockstate gets updated and client entities are handled.
 	    	// When we extinguish the torch the new tile entity should be initialized and we can pass our data to it.
@@ -130,6 +150,31 @@ public class TileEntityTorchLit extends TileEntityTorch
 		else return false;
 	}	
 	
+	/** Decrease the level of light the torch emits in it's environment 
+	 *  @param value this will be subtracted from the light level value. 
+	 *  The more iterations of subtracting this value from the total light level it takes to fully round the number
+	 *  the more it will take before the world get's notified that we changed the light value. Choose your base carefully.
+	 * */
+	protected void updateLightLevel(double value)
+	{
+		// Update data after truncating it to 2 decimals and then check if the value is a round number.
+		// When block calls for level data we return an integer because float and double are not accepted.
+		// To increase performance send render updates in world only if data is already rounded before casting int. 
+		
+		this.torchLightLevel = Math.round((torchLightLevel - value) * 100.0) / 100.0;  
+		if (torchLightLevel == Math.floor(torchLightLevel))
+			this.worldObj.checkLight(this.pos);
+	}
+	public int getLightLevel()
+	{
+		return (int)Math.round(this.torchLightLevel);
+	}
+	/** When this update is requested we check if the torch should set the object above it on fire. */
+	public void scheduleHazardUpdate()
+	{
+		this.updateFlameHazard = true;
+	}
+	
 	// ====================================== NETWORK UTILITIES ==============================================
 	
 	/** These functions are used to update, write and read packets sent from SERVER to CLIENT. */ 
@@ -145,9 +190,13 @@ public class TileEntityTorchLit extends TileEntityTorch
 	public Packet getDescriptionPacket() 
 	{
 		NBTTagCompound nbtTag = new NBTTagCompound();
-		nbtTag.setBoolean("extinguishTorchOnServer", this.extinguishTorchOnServer);	
+		super.writeToNBT(nbtTag);
 		
-		super.writeToNBT(nbtTag);  // <-- This will only update entity pos, writeToNBT here to do a full sync.
+		// These variables are used to notify the client that it should do something on it's side. 
+		// They are also exclusive to TileEntityTorchLit, that's why they are here and not in writeToNBT.
+		
+		nbtTag.setBoolean("extinguishTorchOnServer", this.extinguishTorchOnServer);
+		nbtTag.setBoolean("startUpdatingLight", this.updatingLightData);
 		
 		return new S35PacketUpdateTileEntity(this.pos, 1, nbtTag);
 	}
@@ -158,7 +207,10 @@ public class TileEntityTorchLit extends TileEntityTorch
 	public void onDataPacket(net.minecraft.network.NetworkManager net, S35PacketUpdateTileEntity packet) 
 	{
 		readFromNBT(packet.getNbtCompound());
-		if (getWorld().isRemote && packet.getNbtCompound().getBoolean("extinguishTorchOnServer"))
+		
+		if (packet.getNbtCompound().getBoolean("extinguishTorchOnServer"))
 			this.extinguishTorch(true);
+	  
+		this.updatingLightData = packet.getNbtCompound().getBoolean("startUpdatingLight");
 	} 
 }

@@ -13,18 +13,26 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-
-// This block replaces the original Minecraft torch with a more realistic one. 
 
 public class BlockTorchLit extends BlockTorch implements net.minecraft.block.ITileEntityProvider
 {
+	// TODO: Move this value to a configuration file.
+	public static final byte MAXIMUM_TORCH_LIGHT_LEVEL = 15;
+	
 	public BlockTorchLit() 
 	{	
 		this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabDecorations);
-		this.setLightLevel(0.9375F);
+		this.setLightLevel((float)(MAXIMUM_TORCH_LIGHT_LEVEL / 15.00F));
 	}
 
+	@Override
+	public int getLightValue(IBlockAccess world, BlockPos pos)
+    {
+        TileEntityTorchLit torchEntity = (TileEntityTorchLit)world.getTileEntity(pos);
+        return (torchEntity != null) ? torchEntity.getLightLevel() : super.getLightValue(world, pos);
+    }
 	@Override
 	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, net.minecraft.entity.player.EntityPlayer playerIn, EnumFacing side, float hitX, float hitY, float hitZ) 
 	{
@@ -34,8 +42,6 @@ public class BlockTorchLit extends BlockTorch implements net.minecraft.block.ITi
 		ItemStack equippedItem = playerIn.getCurrentEquippedItem();
 	    if (equippedItem == null)
 	    {
-	    	FierySouls.logger.info("Called to extinguish  22222222222!");
-	    	
 	    	TileEntity torchEntity = worldIn.getTileEntity(pos);
 	        if (torchEntity != null && torchEntity instanceof TileEntityTorchLit)
 	        	((TileEntityTorchLit)worldIn.getTileEntity(pos)).extinguishTorch(true);
@@ -89,20 +95,17 @@ public class BlockTorchLit extends BlockTorch implements net.minecraft.block.ITi
 	
 	@Override
 	public void onNeighborBlockChange(World worldIn, BlockPos pos, IBlockState state, Block neighborBlock) 
-	{
-		// When a block around has changed we should check if it should be set on fire
-		
+	{		
 		TileEntity torchEntity = worldIn.getTileEntity(pos);
         if (torchEntity != null && torchEntity instanceof TileEntityTorchLit)
         	((TileEntityTorchLit)torchEntity).scheduleHazardUpdate();
-		
-		this.onNeighborChangeInternal(worldIn, pos, state);  // Vanilla Forge code, DON'T remove it!
+
+		super.onNeighborBlockChange(worldIn, pos, state, neighborBlock);
 	}
 	
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta)
 	{
-		FierySouls.logger.info("Created a lit torch entity!");
 		return new TileEntityTorchLit(worldIn.getTotalWorldTime());
 	}
 }

@@ -1,3 +1,15 @@
+Version 1.1.4
+
+Changelog:
+
+- The strength of light ignited torches emit in their environment is now parameterized.
+  It will slowly start to diminish when the torch is nearing the end of it's life cycle. 
+
+- Implemented defined update intervals for torch tile entities.
+  This should improve the performance quality of these entities.
+  
+- Removed redundant comments and code blocks from BlockTorchLit.
+
 Version 1.1.3
 
 Changelog:
