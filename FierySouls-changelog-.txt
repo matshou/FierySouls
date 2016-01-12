@@ -1,3 +1,15 @@
+Version 1.1.5
+
+Changelog:
+
+- Changed torch light level value to the one vanilla torches use.
+- Fixed a bug that would crash the game when lit torches entities would expire.
+- Improved custom torch light values and the way these values are calculated. Light will start diminishing after a fixed period of elapsed time.
+  It will also look a bit more pretty now because it does not completely diminish, after reaching a line where it starts to look weird it stops.
+
+- Torch light is now properly applied to lit torches after loading the world with existing entities.
+  Since light data was not recalculated after re-loading the world light data would just initialize a with default value.
+
 Version 1.1.4
 
 Changelog:

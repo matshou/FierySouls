@@ -92,5 +92,8 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
         this.updateHumidityLevel(par1.getShort("humidityLevel"));
         this.updateCombustionDuration(par1.getShort("combustionDuration"));
         this.torchAge = par1.getLong("torchAge");
+        
+        if (getWorld() != null && getWorld().isRemote && this instanceof TileEntityTorchLit)
+        	((TileEntityTorchLit)this).recalculateLightLevel(getCombustionDuration());
     }
 }

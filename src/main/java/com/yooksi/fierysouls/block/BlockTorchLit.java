@@ -15,23 +15,26 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class BlockTorchLit extends BlockTorch implements net.minecraft.block.ITileEntityProvider
 {
 	// TODO: Move this value to a configuration file.
-	public static final byte MAXIMUM_TORCH_LIGHT_LEVEL = 15;
+	public static final byte MAXIMUM_TORCH_LIGHT_LEVEL = 14;
 	
 	public BlockTorchLit() 
 	{	
 		this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabDecorations);
-		this.setLightLevel((float)(MAXIMUM_TORCH_LIGHT_LEVEL / 15.00F));
+		this.setLightLevel((float)(MAXIMUM_TORCH_LIGHT_LEVEL / 0.93F));
 	}
 
 	@Override
 	public int getLightValue(IBlockAccess world, BlockPos pos)
     {
-        TileEntityTorchLit torchEntity = (TileEntityTorchLit)world.getTileEntity(pos);
-        return (torchEntity != null) ? torchEntity.getLightLevel() : super.getLightValue(world, pos);
+		TileEntity torchEntity = world.getTileEntity(pos);
+        return (torchEntity != null && torchEntity instanceof TileEntityTorchLit) ? 
+        		((TileEntityTorchLit)torchEntity).getLightLevel() : super.getLightValue(world, pos);
     }
 	@Override
 	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, net.minecraft.entity.player.EntityPlayer playerIn, EnumFacing side, float hitX, float hitY, float hitZ) 
@@ -94,6 +97,7 @@ public class BlockTorchLit extends BlockTorch implements net.minecraft.block.ITi
     }
 	
 	@Override
+	//@SideOnly(Side.SERVER)
 	public void onNeighborBlockChange(World worldIn, BlockPos pos, IBlockState state, Block neighborBlock) 
 	{		
 		TileEntity torchEntity = worldIn.getTileEntity(pos);

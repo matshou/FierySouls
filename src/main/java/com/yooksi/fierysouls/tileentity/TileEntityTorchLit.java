@@ -6,6 +6,7 @@ import com.yooksi.fierysouls.block.BlockTorchUnlit;
 
 import net.minecraft.network.Packet;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 
 import net.minecraft.world.World;
@@ -18,8 +19,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class TileEntityTorchLit extends TileEntityTorch
 {
-	private static final short DIMINISH_LIGHT_TIME_MARK = 1500;        // Diminishing light after remaining combustion equals this number.
-	private static final double DIMINISH_LIGHT_PER_INTERVAL = 0.2;    // Amount of light to diminish each update interval.
+	private static final short DIMINISH_LIGHT_TIME_MARK = 1600;        // Diminishing light after remaining combustion equals this number.
+	private static final double DIMINISH_LIGHT_PER_INTERVAL = 0.025;   // Amount of light to diminish each update interval.
 	
 	private boolean extinguishTorchOnServer;   // Should we call server to extinguish torch instance
 	private boolean updatingLightData;         // Used by server to notify client to start updating light value
@@ -155,20 +156,39 @@ public class TileEntityTorchLit extends TileEntityTorch
 	 *  The more iterations of subtracting this value from the total light level it takes to fully round the number
 	 *  the more it will take before the world get's notified that we changed the light value. Choose your base carefully.
 	 * */
+	@SideOnly(Side.CLIENT)
 	protected void updateLightLevel(double value)
 	{
-		// Update data after truncating it to 2 decimals and then check if the value is a round number.
-		// When block calls for level data we return an integer because float and double are not accepted.
+		// Update data after truncating to 3 decimals and then check if the value is a round number.
 		// To increase performance send render updates in world only if data is already rounded before casting int. 
 		
-		this.torchLightLevel = Math.round((torchLightLevel - value) * 100.0) / 100.0;  
-		if (torchLightLevel == Math.floor(torchLightLevel))
+		this.torchLightLevel = Math.round((torchLightLevel - value) * 1000.0) / 1000.0;	
+		if (torchLightLevel == Math.ceil(torchLightLevel))
 			this.worldObj.checkLight(this.pos);
 	}
 	public int getLightLevel()
 	{
-		return (int)Math.round(this.torchLightLevel);
+		// NOTE: Always round this value up not down to prevent unexpected updates until we're ready to send. 
+		return (int)Math.floor(this.torchLightLevel);
 	}
+	
+	/** Initialize light level data on client and start regularly updating it.
+	 *  The initialization will only happen if light data needs to be updated.
+	 *  Also request from world to update light renderer with new data.
+	 */ 
+	@SideOnly(Side.CLIENT)
+	protected void recalculateLightLevel(short combustionDuration)
+	{
+		if (combustionDuration < DIMINISH_LIGHT_TIME_MARK)
+		{
+			int ticksElapsed = DIMINISH_LIGHT_TIME_MARK - combustionDuration;
+			updateLightLevel(Math.floor(ticksElapsed / MAIN_UPDATE_INTERVAL * DIMINISH_LIGHT_PER_INTERVAL));
+			
+			this.worldObj.checkLight(this.pos);
+			updatingLightData = true;
+		}
+	}
+	
 	/** When this update is requested we check if the torch should set the object above it on fire. */
 	public void scheduleHazardUpdate()
 	{
