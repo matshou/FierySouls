@@ -48,7 +48,7 @@ public class TileEntityTorchUnlit extends TileEntityTorch
     		if (entityTorch != null && entityTorch instanceof TileEntityTorchLit)
     		{
     			TileEntityTorchLit torchLit = (TileEntityTorchLit)entityTorch;
-    			torchLit.postInit(getCombustionDuration(), getHumidityLevel(), timeCreated);
+    			torchLit.postInit(getCombustionDuration(), getHumidityLevel(), timeCreated, getWorld().getTotalWorldTime());
     		}
     	}
     }

@@ -28,11 +28,11 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
 	{
 		timeCreated = totalWorldTime;
 	}
-	public void postInit(short combustion, short humidity, long created)
+	public void postInit(short combustion, short humidity, long timeCreated, long worldTime)
 	{
 		this.humidityLevel = humidity;
 	    this.combustionDuration = combustion;
-	    this.torchAge = getWorld().getTotalWorldTime() - created;
+	    this.torchAge = worldTime - timeCreated;
 	}
 	
 	@Override
@@ -44,7 +44,7 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
 	 */
 	protected short updateCombustionDuration(final int value)
 	{ 
-		return combustionDuration += ((combustionDuration + value > 0) ? value : 0);  // Keep the value unsigned;
+		return combustionDuration += ((combustionDuration + value > 0) ? value : combustionDuration * -1);  // Keep the value unsigned;
 	}
 	protected short getCombustionDuration()
 	{
@@ -88,9 +88,6 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
         
         /** DEBUG LOG - Tracking issue #3 */
         if (this instanceof TileEntityTorchLit)
-        	FierySouls.logger.debug("Reading from NBT for TileEntityTorchLit.");
-        
-        if (getWorld() != null && getWorld().isRemote && this instanceof TileEntityTorchLit)
-        	((TileEntityTorchLit)this).recalculateLightLevel(combustionDuration);
+        	FierySouls.logger.info("Reading from NBT for TileEntityTorchLit, combustion: " + this.combustionDuration);
     }
 }

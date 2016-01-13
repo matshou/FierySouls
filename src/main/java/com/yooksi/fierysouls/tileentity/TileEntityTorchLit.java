@@ -46,7 +46,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 				tryCatchFireOnNeighbour();
 			
 			if (updateCombustionDuration(MAIN_UPDATE_INTERVAL * -1) <= 0)
-				extinguishTorch(false);
+				extinguishTorch(true);
 			
 			// Since we're not updating this data here handle light updates on client, we're done here.
 			else if (getCombustionDuration() <= DIMINISH_LIGHT_TIME_MARK && !updatingLightData)
@@ -70,40 +70,46 @@ public class TileEntityTorchLit extends TileEntityTorch
 	 *  The way we handle the client and server side here is interesting, take a look at the code. 
 	 *  
 	 *  @param waitForClient Should we wait for the client to call this method first? Quite useful to enable
-	 *                       client side smoke particle spawning. If true; SERVER - client - SERVER connection.
+	 *                       client side smoke particle spawning. If true do a SERVER - client - SERVER connection.
 	 */
 	public void extinguishTorch(final boolean waitForClient)
-	{	
-		// TODO: Think about further restructuring the following section:
+	{
+		// In case we want the smoldering effect we need to activate it on the client first.
+		// If the server handles blockstates first, it will remove tile entity and sync clients.
+		// This means that we will not have the chance to spawn smoke particles.
 		
-	    if (!waitForClient || getWorld().isRemote)
-	    {
-	    	// This is the part where the blockstate gets updated and client entities are handled.
-	    	// When we extinguish the torch the new tile entity should be initialized and we can pass our data to it.
+		if (!getWorld().isRemote && waitForClient)
+		{
+			this.extinguishTorchOnServer = true; 
+			this.markForUpdate(); return;
+		}
+		
+	    // This is the part where the blockstate gets updated and client entities are handled.
+	    // When we extinguish the torch the new tile entity should be initialized and we can pass our data to it.
 	  
-	    	if (BlockTorchLit.extinguishTorch(getWorld(), pos))
-	    	{
-	    		TileEntityTorchUnlit torchUnlit = (TileEntityTorchUnlit)getWorld().getTileEntity(pos);
+	    if (BlockTorchLit.extinguishTorch(getWorld(), pos))
+	    {
+	    	TileEntityTorchUnlit torchUnlit = (TileEntityTorchUnlit)getWorld().getTileEntity(pos);
 		    	
-		    	// Notify tile entity that it should start spawning smoke particles only on client side.
-		    	// After that extinguish the torch server-side. This will finalize current tile entity destruction 
-		    	// and update the new tile entity with needed info.
+		    // Notify tile entity that it should start spawning smoke particles only on client side.
+		    // After that extinguish the torch server-side. This will finalize current tile entity destruction 
+		    // and update the new tile entity with needed info.
 		    	
-		    	if (!getWorld().isRemote)
-		    		torchUnlit.postInit(getCombustionDuration(), getHumidityLevel(), timeCreated);
+		    if (!getWorld().isRemote)
+		    	torchUnlit.postInit(getCombustionDuration(), getHumidityLevel(), timeCreated, getWorld().getTotalWorldTime());
 		    		
-		    	else if (waitForClient)
-		    	{
-		    		torchUnlit.setTorchSmoldering(true);
-		    		MinecraftServer server = net.minecraft.server.MinecraftServer.getServer();
-		    		TileEntityTorchLit torchLit = (TileEntityTorchLit)server.getEntityWorld().getTileEntity(pos);  
-		            torchLit.extinguishTorch(false);
-		    	}
-		    	else torchUnlit.setTorchSmoldering(true);
-	    	}      
-	    }  
-	    else { this.extinguishTorchOnServer = true; this.markForUpdate(); }
-	}
+		    else if (waitForClient)
+		    {
+		    	MinecraftServer server = net.minecraft.server.MinecraftServer.getServer();
+		    	TileEntityTorchLit torchLit = (TileEntityTorchLit)server.getEntityWorld().getTileEntity(pos);  
+		            
+		    	torchLit.extinguishTorch(false);
+		        torchUnlit.setTorchSmoldering(true);
+		    }
+		    else torchUnlit.setTorchSmoldering(true);
+	    }      
+	}  
+	
 	/** Check to see if we should force the block above us to catch on fire.
 	 *  If we roll positive the torch will assume the function of a fire block with limited spreading movement.
 	 */
@@ -142,7 +148,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 	{
 		// Update data after truncating to 3 decimals and then check if the value is a round number.
 		// To increase performance send render updates in world only if data is already rounded before casting int. 
-		
+
 		torchLightLevel = Math.round((torchLightLevel - value) * 1000.0) / 1000.0;	
 		if (torchLightLevel == Math.ceil(torchLightLevel))
 			worldObj.checkLight(this.pos);
@@ -158,12 +164,12 @@ public class TileEntityTorchLit extends TileEntityTorch
 	 *  Also request from world to update light renderer with new data.
 	 */ 
 	@SideOnly(Side.CLIENT)
-	protected void recalculateLightLevel(short combustionDuration)
+	protected void recalculateLightLevel()
 	{
-		if (combustionDuration < DIMINISH_LIGHT_TIME_MARK)
+		if (getCombustionDuration() < DIMINISH_LIGHT_TIME_MARK)
 		{
-			int ticksElapsed = DIMINISH_LIGHT_TIME_MARK - combustionDuration;
-			updateLightLevel(Math.floor(ticksElapsed / MAIN_UPDATE_INTERVAL * DIMINISH_LIGHT_PER_INTERVAL));
+			int ticksElapsed = DIMINISH_LIGHT_TIME_MARK - getCombustionDuration();
+			updateLightLevel(ticksElapsed / MAIN_UPDATE_INTERVAL * DIMINISH_LIGHT_PER_INTERVAL);
 			
 			worldObj.checkLight(this.pos);
 			updatingLightData = true;
@@ -177,6 +183,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 	//@SideOnly(Side.SERVER)
 	private void markForUpdate()
 	{
+		FierySouls.logger.info("Mark For Update");
 		getWorld().markBlockForUpdate(pos);
 		this.markDirty();
 	}
@@ -203,9 +210,12 @@ public class TileEntityTorchLit extends TileEntityTorch
 	public void onDataPacket(net.minecraft.network.NetworkManager net, S35PacketUpdateTileEntity packet) 
 	{
 		this.readFromNBT(packet.getNbtCompound());
-		updatingLightData = packet.getNbtCompound().getBoolean("startUpdatingLight");
 
 		if (packet.getNbtCompound().getBoolean("extinguishTorchOnServer"))	
 			extinguishTorch(true);
+
+		// Recalculate light data and send it to world once each time the world loads.
+		else if (updatingLightData == false && (updatingLightData = packet.getNbtCompound().getBoolean("startUpdatingLight")))
+			this.recalculateLightLevel();
 	}
 }

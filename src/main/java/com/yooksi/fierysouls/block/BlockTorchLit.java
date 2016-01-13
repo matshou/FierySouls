@@ -54,7 +54,7 @@ public class BlockTorchLit extends BlockTorch implements net.minecraft.block.ITi
 	    {
 	    	TileEntity torchEntity = worldIn.getTileEntity(pos);
 	        if (torchEntity != null && torchEntity instanceof TileEntityTorchLit)
-	        	((TileEntityTorchLit)worldIn.getTileEntity(pos)).extinguishTorch(true);
+	        	((TileEntityTorchLit)worldIn.getTileEntity(pos)).extinguishTorch(false);
 	        
 	        return true;
 	    }
@@ -111,7 +111,7 @@ public class BlockTorchLit extends BlockTorch implements net.minecraft.block.ITi
 	public TileEntity createNewTileEntity(World worldIn, int meta)
 	{
 		/** DEBUG LOG - Tracking issue #3 */
-		FierySouls.logger.debug("Created new TileEntityTorchLit tile entity.");
+		FierySouls.logger.info("Created new TileEntityTorchLit tile entity.");
 		
 		return new TileEntityTorchLit(worldIn.getTotalWorldTime());
 	}

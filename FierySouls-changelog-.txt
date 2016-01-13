@@ -1,3 +1,9 @@
+Version 1.1.7
+
+- Fixed a recently created bug where torches were not emitting smoke particles after expiring or being extinguished by rain.
+- Removed a miscalculation that prevented lit torches from correctly updating combustion duration values.
+- The light data is now actually calculated with accuracy and the recalculation seems to work.
+
 Version 1.1.6
 
 - Removed default initialization of most torch tile entity variables from class constructors.
