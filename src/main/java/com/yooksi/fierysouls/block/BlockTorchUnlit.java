@@ -40,16 +40,12 @@ public class BlockTorchUnlit extends BlockTorch implements net.minecraft.block.I
 		// Find the right tile entity and check if we should stop smoldering
 		
 		TileEntity torchEntity = worldIn.getTileEntity(pos);
-        if (torchEntity == null || !(torchEntity instanceof TileEntityTorchUnlit))
+		TileEntityTorchUnlit torchUnlit = ((torchEntity != null && torchEntity instanceof TileEntityTorchUnlit) 
+				? (TileEntityTorchUnlit)torchEntity : null);
+		
+        if (torchUnlit == null || !torchUnlit.isTorchSmoldering())
         	return;
         	
-        TileEntityTorchUnlit unlitTorchEntity = (TileEntityTorchUnlit)torchEntity;
-        if (unlitTorchEntity.isTorchSmoldering() == false)
-        	return;
-
-        if (unlitTorchEntity.didSmolderingExpire(worldIn.getWorldTime()))
-        	unlitTorchEntity.setTorchSmoldering(false, 0);
-	
         EnumFacing enumfacing = (EnumFacing)state.getValue(FACING);
         double d0 = (double)pos.getX() + 0.5D;
         double d1 = (double)pos.getY() + 0.7D;

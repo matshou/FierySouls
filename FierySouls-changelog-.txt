@@ -1,3 +1,8 @@
+Version 1.1.6
+
+- Removed default initialization of most torch tile entity variables from class constructors.
+- Fixed formatting, improved comments and made the code a bit more readable.
+
 Version 1.1.5
 
 Changelog:

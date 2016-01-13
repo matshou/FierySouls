@@ -30,6 +30,13 @@ public class BlockTorchLit extends BlockTorch implements net.minecraft.block.ITi
 	}
 
 	@Override
+	// This will disable objects from being able to be place on top of our torch
+	public boolean isFullCube()
+    {
+		return false;
+    }
+	
+	@Override
 	public int getLightValue(IBlockAccess world, BlockPos pos)
     {
 		TileEntity torchEntity = world.getTileEntity(pos);
@@ -88,21 +95,14 @@ public class BlockTorchLit extends BlockTorch implements net.minecraft.block.ITi
 	
 		else return world.setBlockState(pos, ResourceLibrary.TORCH_UNLIT.getBlockInstance().getDefaultState());
 	}
-	
-	@Override
-	// This will disable objects from being able to be place on top of our torch
-	public boolean isFullCube()
-    {
-		return false;
-    }
-	
+
 	@Override
 	//@SideOnly(Side.SERVER)
 	public void onNeighborBlockChange(World worldIn, BlockPos pos, IBlockState state, Block neighborBlock) 
 	{		
-		TileEntity torchEntity = worldIn.getTileEntity(pos);
+	    TileEntity torchEntity = worldIn.getTileEntity(pos);
         if (torchEntity != null && torchEntity instanceof TileEntityTorchLit)
-        	((TileEntityTorchLit)torchEntity).scheduleHazardUpdate();
+        	((TileEntityTorchLit)torchEntity).torchFireHazardUpdate = true;
 
 		super.onNeighborBlockChange(worldIn, pos, state, neighborBlock);
 	}
@@ -110,6 +110,9 @@ public class BlockTorchLit extends BlockTorch implements net.minecraft.block.ITi
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta)
 	{
+		/** DEBUG LOG - Tracking issue #3 */
+		FierySouls.logger.debug("Created new TileEntityTorchLit tile entity.");
+		
 		return new TileEntityTorchLit(worldIn.getTotalWorldTime());
 	}
 }
