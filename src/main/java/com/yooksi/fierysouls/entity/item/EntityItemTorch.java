@@ -2,7 +2,7 @@ package com.yooksi.fierysouls.entity.item;
 
 import com.yooksi.fierysouls.item.ItemTorch;
 import com.yooksi.fierysouls.common.Utilities;
-import com.yooksi.fierysouls.tileentity.TileEntityTorch;
+import com.yooksi.fierysouls.common.SharedDefines;
 
 import net.minecraft.world.World;
 import net.minecraft.item.ItemStack;
@@ -46,11 +46,11 @@ public class EntityItemTorch extends EntityItem
 		// Update only at set intervals to reduce performance hits.   
 		// When it's raining and the torch is directly exposed to rain it will start collecting humidity.
 		
-		if (updateTickCount++ < TileEntityTorch.MAIN_UPDATE_INTERVAL)    
+		if (updateTickCount++ < SharedDefines.MAIN_UPDATE_INTERVAL)    
 			return; else updateTickCount = 0;
 		
 		if (worldObj.isRaining() && !isHighHumidity() && worldObj.canBlockSeeSky(getPosition()))
-			humidity += TileEntityTorch.MAIN_UPDATE_INTERVAL;
+			humidity += SharedDefines.MAIN_UPDATE_INTERVAL;
 	}
 	
 	/**
@@ -106,12 +106,12 @@ public class EntityItemTorch extends EntityItem
     	String firstSegment, secondSegment;
     	int lengthDiff;
     	
-    	String a = Utilities.convertToZeroDigits(TileEntityTorch.HUMIDITY_THRESHOLD);
+    	String a = Utilities.convertToZeroDigits(SharedDefines.HUMIDITY_THRESHOLD);
         lengthDiff = a.length() - Utilities.getSizeOfInteger(humidityData);
         
     	firstSegment = (lengthDiff > 0) ? a.substring(0, lengthDiff) + humidityData : Integer.toString(humidityData);
 
-    	String b = Utilities.convertToZeroDigits(TileEntityTorch.MAX_TORCH_FLAME_DURATION);
+    	String b = Utilities.convertToZeroDigits(SharedDefines.MAX_TORCH_FLAME_DURATION);
     	lengthDiff = b.length() - Utilities.getSizeOfInteger(durationData);
     	
     	secondSegment = (lengthDiff > 0) ? b.substring(0, lengthDiff) + durationData : Integer.toString(durationData);
@@ -132,8 +132,8 @@ public class EntityItemTorch extends EntityItem
     public static int[] disassembleMetadata(int metadata) 
     {
     	final String sMetadata = Integer.toString(metadata);
-    	int maxHumiditySize = Utilities.getSizeOfInteger(TileEntityTorch.HUMIDITY_THRESHOLD);
-    	int maxDurationSize = Utilities.getSizeOfInteger(TileEntityTorch.MAX_TORCH_FLAME_DURATION);
+    	int maxHumiditySize = Utilities.getSizeOfInteger(SharedDefines.HUMIDITY_THRESHOLD);
+    	int maxDurationSize = Utilities.getSizeOfInteger(SharedDefines.MAX_TORCH_FLAME_DURATION);
 
     	if (sMetadata.length() != 1 + maxHumiditySize + maxDurationSize)
     		return null;
@@ -152,7 +152,7 @@ public class EntityItemTorch extends EntityItem
 	 */
     private boolean isHighHumidity()
     {
-    	return (humidity > TileEntityTorch.HUMIDITY_THRESHOLD);
+    	return (humidity > SharedDefines.HUMIDITY_THRESHOLD);
     }
 	
     /** 

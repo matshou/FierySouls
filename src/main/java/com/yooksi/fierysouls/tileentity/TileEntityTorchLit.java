@@ -1,6 +1,7 @@
 package com.yooksi.fierysouls.tileentity;
 
 import com.yooksi.fierysouls.common.FierySouls;
+import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.block.BlockTorchLit;
 import com.yooksi.fierysouls.block.BlockTorchUnlit;
 
@@ -37,7 +38,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 	public final void update()
 	{
 		// Update only at set intervals to reduce performance hits.
-		if (updateTickCount++ < MAIN_UPDATE_INTERVAL)
+		if (updateTickCount++ < SharedDefines.MAIN_UPDATE_INTERVAL)
 			return; else updateTickCount = 0;
 		
 		if (!getWorld().isRemote)
@@ -45,7 +46,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 			if (torchFireHazardUpdate == true)
 				tryCatchFireOnNeighbour();
 			
-			if (updateCombustionDuration(MAIN_UPDATE_INTERVAL * -1) <= 0)
+			if (updateCombustionDuration(SharedDefines.MAIN_UPDATE_INTERVAL * -1) <= 0)
 				extinguishTorch(true);
 			
 			// Since we're not updating this data here handle light updates on client, we're done here.
@@ -57,7 +58,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 		    // When it's raining and the torch is directly exposed to rain it will start collecting humidity.
 		    if (getWorld().getWorldInfo().isRaining() && getWorld().canBlockSeeSky(pos))
 		    {
-			    if (updateHumidityLevel(MAIN_UPDATE_INTERVAL) >= HUMIDITY_THRESHOLD)		   
+			    if (updateHumidityLevel(SharedDefines.MAIN_UPDATE_INTERVAL) >= SharedDefines.HUMIDITY_THRESHOLD)		   
 			    	extinguishTorch(true);
 		    }
 		}
@@ -169,7 +170,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 		if (getCombustionDuration() < DIMINISH_LIGHT_TIME_MARK)
 		{
 			int ticksElapsed = DIMINISH_LIGHT_TIME_MARK - getCombustionDuration();
-			updateLightLevel(ticksElapsed / MAIN_UPDATE_INTERVAL * DIMINISH_LIGHT_PER_INTERVAL);
+			updateLightLevel(ticksElapsed / SharedDefines.MAIN_UPDATE_INTERVAL * DIMINISH_LIGHT_PER_INTERVAL);
 			
 			worldObj.checkLight(this.pos);
 			updatingLightData = true;

@@ -1,3 +1,8 @@
+Version 1.2.2
+
+- Create a new class for publicly shared defines.
+- Moved all defines from TileTorchEntity.
+
 Version 1.2.1
 
 - Renamed "getItemInstance" method to "getItem" in 'ResourceLibrary'.

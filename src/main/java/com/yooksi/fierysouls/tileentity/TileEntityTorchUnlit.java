@@ -1,6 +1,7 @@
 package com.yooksi.fierysouls.tileentity;
 
 import com.yooksi.fierysouls.common.FierySouls;
+import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.block.BlockTorchUnlit;
 
 import net.minecraft.nbt.NBTTagCompound;
@@ -10,6 +11,9 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class TileEntityTorchUnlit extends TileEntityTorch
 { 
+	private static final float RAIN_STR_THRESHOLD = 0.85F;   // How strong must the rain be falling to extinguish the torch?
+	private static final byte SMOLDERING_RANDOM = 125;      // Random factor in determining how long is the torch going to smolder.
+	
 	private int torchSmolderingDuration = 0;        // How long should the torch be producing smoke?
 	private long timeTorchStartedSmoldering = 0;    // Time  in the world when the torch started smoldering.
 
@@ -23,7 +27,7 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 	public void update()
 	{	
 		// Update only at set intervals to reduce performance hits.
-		if (updateTickCount++ < MAIN_UPDATE_INTERVAL)
+		if (updateTickCount++ < SharedDefines.MAIN_UPDATE_INTERVAL)
 			return; else updateTickCount = 0;
 		
 		if (!getWorld().isRemote)
@@ -32,7 +36,7 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 			// Update humidity only on SERVER, we don't really need to do this on client.
 			
 			if (getWorld().isRaining() && !isHighHumidity() && getWorld().canBlockSeeSky(pos))
-				updateHumidityLevel(MAIN_UPDATE_INTERVAL);
+				updateHumidityLevel(SharedDefines.MAIN_UPDATE_INTERVAL);
 		}
 		else if (didSmolderingExpire())	
 			setTorchSmoldering(false);

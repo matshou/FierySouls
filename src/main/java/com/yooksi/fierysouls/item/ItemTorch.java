@@ -1,5 +1,6 @@
 package com.yooksi.fierysouls.item;
 
+import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 
 import net.minecraft.item.ItemBlock;
@@ -46,7 +47,7 @@ public class ItemTorch extends ItemBlock
 		NBTTagCompound tagCompound = new NBTTagCompound();
 		
 		tagCompound.setShort("humidityLevel", (short)0);
-		tagCompound.setShort("combustionDuration", TileEntityTorch.MAX_TORCH_FLAME_DURATION);
+		tagCompound.setShort("combustionDuration", SharedDefines.MAX_TORCH_FLAME_DURATION);
 		
 		stack.setTagCompound(tagCompound);
 	}
