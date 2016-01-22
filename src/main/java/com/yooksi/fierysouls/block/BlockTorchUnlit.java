@@ -16,7 +16,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class BlockTorchUnlit extends BlockTorch implements net.minecraft.block.ITileEntityProvider
+public class BlockTorchUnlit extends com.yooksi.fierysouls.block.BlockTorch
 {	
 	public BlockTorchUnlit() 
 	{

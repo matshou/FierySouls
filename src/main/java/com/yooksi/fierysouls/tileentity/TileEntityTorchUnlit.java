@@ -2,6 +2,8 @@ package com.yooksi.fierysouls.tileentity;
 
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.block.BlockTorchUnlit;
+
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -48,7 +50,7 @@ public class TileEntityTorchUnlit extends TileEntityTorch
     		if (entityTorch != null && entityTorch instanceof TileEntityTorchLit)
     		{
     			TileEntityTorchLit torchLit = (TileEntityTorchLit)entityTorch;
-    			torchLit.postInit(getCombustionDuration(), getHumidityLevel(), timeCreated, getWorld().getTotalWorldTime());
+                torchLit.readFromNBT(saveDataToPacket());
     		}
     	}
     }

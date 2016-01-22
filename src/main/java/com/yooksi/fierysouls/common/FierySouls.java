@@ -1,6 +1,8 @@
 package com.yooksi.fierysouls.common;
 
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.player.EntityPlayer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,7 +22,7 @@ public class FierySouls
 {
 	public static final String MODID = "fierysouls";
 	public static final String NAME = "Fiery Souls";
-	public static final String VERSION = "1.1.7";
+	public static final String VERSION = "1.2.0";
 
 	// Use this thingy to print in the console:
 	public static final Logger logger = LogManager.getLogger(MODID);
@@ -57,6 +59,6 @@ public class FierySouls
 	public void postInit(FMLPostInitializationEvent event)
 	{
 		// The majority of events use the MinecraftForge event bus:
-		//MinecraftForge.EVENT_BUS.register(new EventHandles());
+		net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new EventHandler());
 	}
 }

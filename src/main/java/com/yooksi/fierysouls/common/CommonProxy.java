@@ -28,7 +28,13 @@ public class CommonProxy
 			
 			if (resource.isInstanceBlock())
 			{
-				GameRegistry.registerBlock(resource.getBlockInstance(), resource.getBlockInstance().getUnlocalizedName().replaceFirst("tile.", ""));
+				net.minecraft.block.Block resourceBlock = resource.getBlockInstance(); 
+				String blockName = resourceBlock.getUnlocalizedName().replaceFirst("tile.", "");
+				
+				if (resource.itemBlockClass != null)
+					GameRegistry.registerBlock(resourceBlock, resource.itemBlockClass, blockName);
+				
+				else GameRegistry.registerBlock(resource.getBlockInstance(), blockName);
 				objectsRegistered += 1;
 			}
 			else if (resource.isInstanceItem())
@@ -100,9 +106,9 @@ public class CommonProxy
 			// In order to register them we need to pass the entity class as an argument.
 			// This info should be stored in the resource library. If nothing is found, don't registered.
 			
-			if (resource.getTileEntityClass() != null)
+			if (resource.tileEntityClass != null)
 			{
-				GameRegistry.registerTileEntity(resource.getTileEntityClass(), resource.name);
+				GameRegistry.registerTileEntity(resource.tileEntityClass, resource.name);
 			    tileEntitiesRegistered += 1;
 			}
 		}

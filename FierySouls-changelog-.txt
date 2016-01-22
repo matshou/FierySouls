@@ -1,3 +1,32 @@
+Version 1.2.0
+
+- Added a custom class for both torch blocks and torch items.
+- Events can now be intercepted with a new class called EventHandler in "fierysouls\common".
+- The resource library has a few new methods to handle initialization of item and block resources.
+- Created a new class called "Utilities" for all those miscelaneous methods floating around.
+
+- Torches now have a custom EntityItem class. When they are dropped or tossed from player 
+  inventory or dropped by a block they will also collect humidity just like tile entities.
+
+- Torch items (item stacks) now also hold custom NBT data, just like tile entities.
+  This data will be inherited from both tile entities and entity items and vice versa.
+
+Notes:
+I've spent a lot of time working on this update, trying to figure out an elegant way of implementing data inheritance.
+First step was simple, create a custom item and entity item class and properly set them up so they work. The following step
+was fairly simple as well, connecting these classes to the rest of the code and making it all work together.
+
+The tricky part was (as I said before) figuring out an elegant and efficient way of taking custom NBT data from a tile entity,
+and giving it to an entity item. My first thought was to use NBTTagCompounds, however the problem there was that the Item class
+was static and the only way for it to hold data was through the use of "metadata" a single integer. So I've spent two days studying 
+how item metadata works and writing methods for storing and loading data from it. When you have more then one number and you're 
+limited to using a single integer as a storage container things get a bit complicated. I'm still learning Java so this was a bit of
+a challenge for me, however I think I did a good job making it work. This was of course before I found out that ItemStacks could
+store custom NBT data for items, which means this was a superior alternative to trying to push all our info in an integer.
+
+Data inheritance seems to work for now, the torch can be placed as a block, harvested, tossed or dropped in to the world, picked up again
+and placed as a block all without losing it's custom NBT data. One thing that's missing is that torch items do not yet update these values on their own.
+
 Version 1.1.7
 
 - Fixed a recently created bug where torches were not emitting smoke particles after expiring or being extinguished by rain.

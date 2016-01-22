@@ -95,9 +95,9 @@ public class TileEntityTorchLit extends TileEntityTorch
 		    // After that extinguish the torch server-side. This will finalize current tile entity destruction 
 		    // and update the new tile entity with needed info.
 		    	
-		    if (!getWorld().isRemote)
-		    	torchUnlit.postInit(getCombustionDuration(), getHumidityLevel(), timeCreated, getWorld().getTotalWorldTime());
-		    		
+		    if (!getWorld().isRemote)		    
+                torchUnlit.readFromNBT(saveDataToPacket());
+		    
 		    else if (waitForClient)
 		    {
 		    	MinecraftServer server = net.minecraft.server.MinecraftServer.getServer();
@@ -183,7 +183,6 @@ public class TileEntityTorchLit extends TileEntityTorch
 	//@SideOnly(Side.SERVER)
 	private void markForUpdate()
 	{
-		FierySouls.logger.info("Mark For Update");
 		getWorld().markBlockForUpdate(pos);
 		this.markDirty();
 	}

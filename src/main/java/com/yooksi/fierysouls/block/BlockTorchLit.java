@@ -2,15 +2,18 @@ package com.yooksi.fierysouls.block;
 
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.ResourceLibrary;
+import com.yooksi.fierysouls.entity.item.EntityItemTorch;
+import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 import com.yooksi.fierysouls.tileentity.TileEntityTorchLit;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockTorch;
 import net.minecraft.block.state.IBlockState;
-
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.IBlockAccess;
@@ -18,7 +21,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class BlockTorchLit extends BlockTorch implements net.minecraft.block.ITileEntityProvider
+public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch 
 {
 	// TODO: Move this value to a configuration file.
 	public static final byte MAXIMUM_TORCH_LIGHT_LEVEL = 14;

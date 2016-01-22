@@ -9,30 +9,25 @@ import net.minecraft.server.gui.IUpdatePlayerListBox;
 
 public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
 {
-	protected static final short MAX_TORCH_FLAME_DURATION = 4500;   // What is the longest this torch will be able to be on fire?
-	protected static final short HUMIDITY_THRESHOLD = 300;         // How wet must the torch be before it cannot burn anymore?
+	protected static final float RAIN_STR_THRESHOLD = 0.85F;       // How strong must the rain be falling to extinguish the torch?
+	protected static final byte SMOLDERING_RANDOM = 125;          // Random factor in determining how long is the torch going to smolder.
 	
-	protected static final byte MAIN_UPDATE_INTERVAL = 10;       // Number of ticks that need to elapse before we update. 
-	protected static final float RAIN_STR_THRESHOLD = 0.85F;    // How strong must the rain be falling to extinguish the torch?
-	protected static final byte SMOLDERING_RANDOM = 125;       // Random factor in determining how long is the torch going to smolder.
-      
-	private short combustionDuration = MAX_TORCH_FLAME_DURATION;
+	public static final short MAX_TORCH_FLAME_DURATION = 4500;   // What is the longest this torch will be able to be on fire?
+	public static final byte MAIN_UPDATE_INTERVAL = 10;         // Number of ticks that need to elapse before we update. 
+	public static final short HUMIDITY_THRESHOLD = 300;        // How wet must the torch be before it cannot burn anymore?
+	
+	private short combustionDuration;
 	private short humidityLevel = 0;
 	
 	protected byte updateTickCount = 0;
-	protected long timeCreated = 0;
 	protected long torchAge = 0;
+	protected long timeCreated;
 	
-	public TileEntityTorch() {};
+	public TileEntityTorch() { this(0); };
 	protected TileEntityTorch(long totalWorldTime) 
 	{
 		timeCreated = totalWorldTime;
-	}
-	public void postInit(short combustion, short humidity, long timeCreated, long worldTime)
-	{
-		this.humidityLevel = humidity;
-	    this.combustionDuration = combustion;
-	    this.torchAge = worldTime - timeCreated;
+		combustionDuration = MAX_TORCH_FLAME_DURATION;
 	}
 	
 	@Override
@@ -68,6 +63,28 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
     	return (humidityLevel > HUMIDITY_THRESHOLD);
     }
     
+    /** This update is for the moment only being done just before the entity is destroyed.
+     *  @param worldTime current total time in the world. 
+     *  @see {@link #saveDataToPacket()}
+     */ 
+    protected void updateTorchAge(long worldTime)
+    {
+    	torchAge = worldTime - timeCreated;
+    }
+    
+    /** Saves all important information to a custom NBT packet. <br>
+     *  Used to pass internal data to external sources.
+     *  @return NBT packet containing all up-to-date torch data. 
+     */
+    public NBTTagCompound saveDataToPacket()
+    {
+    	updateTorchAge(getWorld().getTotalWorldTime());
+    	NBTTagCompound dataPacket = getTileData();
+
+    	this.writeToNBT(dataPacket);
+        return dataPacket;
+    }
+    
 	@Override
     public void writeToNBT(NBTTagCompound par1)
     {
@@ -88,6 +105,9 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
         
         /** DEBUG LOG - Tracking issue #3 */
         if (this instanceof TileEntityTorchLit)
-        	FierySouls.logger.info("Reading from NBT for TileEntityTorchLit, combustion: " + this.combustionDuration);
+        {
+        	String position = " (x: " + pos.getX() + ", y: " + pos.getY() + ", z: " + pos.getZ() + ")";
+        	FierySouls.logger.info("Reading from NBT for TileEntityTorchLit, combustion: " + this.combustionDuration + position);
+        }
     }
 }
