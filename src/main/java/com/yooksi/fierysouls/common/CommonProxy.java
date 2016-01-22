@@ -26,20 +26,20 @@ public class CommonProxy
 			// If we don't do this they will be registered under names different then those defined by our mod and listed in json files.
 			// As a result your resources will not be loaded into the game.
 			
-			if (resource.isInstanceBlock())
+			if (resource.isResourceBlock())
 			{
-				net.minecraft.block.Block resourceBlock = resource.getBlockInstance(); 
+				net.minecraft.block.Block resourceBlock = resource.getBlock(); 
 				String blockName = resourceBlock.getUnlocalizedName().replaceFirst("tile.", "");
 				
 				if (resource.itemBlockClass != null)
 					GameRegistry.registerBlock(resourceBlock, resource.itemBlockClass, blockName);
 				
-				else GameRegistry.registerBlock(resource.getBlockInstance(), blockName);
+				else GameRegistry.registerBlock(resource.getBlock(), blockName);
 				objectsRegistered += 1;
 			}
-			else if (resource.isInstanceItem())
+			else if (resource.isResourceItem())
 			{
-				GameRegistry.registerItem(resource.getItemInstance(), resource.getItemInstance().getUnlocalizedName().replaceFirst("item.", ""));
+				GameRegistry.registerItem(resource.getItem(), resource.getItem().getUnlocalizedName().replaceFirst("item.", ""));
 				objectsRegistered += 1;
 			}
 			else FierySouls.logger.info("Warrning: Couldn't find our resource or we're trying to register an object of unknown type."); 

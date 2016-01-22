@@ -51,14 +51,14 @@ public enum ResourceLibrary
 	private ResourceLibrary(Object resourceInstance, String resourceName, Class tileEntity, Class itemBlockClass)
 	{	
 		this(resourceInstance, resourceName, tileEntity, itemBlockClass, new java.util.ArrayList());
-		getBlockInstance().setUnlocalizedName(resourceName).setCreativeTab(FierySouls.tabTorches);
+		getBlock().setUnlocalizedName(resourceName).setCreativeTab(FierySouls.tabTorches);
 	}
 	/** This constructor is used by resources that initialize ITEMS. 
 	 */
 	private ResourceLibrary(Object resourceInstance, String resourceName)
 	{
 		this(resourceInstance, resourceName, null, null, new java.util.ArrayList());
-		getItemInstance().setUnlocalizedName(resourceName).setCreativeTab(FierySouls.tabTorches);
+		getItem().setUnlocalizedName(resourceName).setCreativeTab(FierySouls.tabTorches);
 	}
 	
 	// I've tried adding this to the constructor but the problem is that the recipe library uses resource library references
@@ -69,25 +69,25 @@ public enum ResourceLibrary
 	}
 	
 	/** Find out if this object is a block */
-	public boolean isInstanceBlock()
+	public boolean isResourceBlock()
 	{
 		return this.instance instanceof Block;
 	}
 	/** Find out if this object is an item */
-	public boolean isInstanceItem()
+	public boolean isResourceItem()
 	{
 		return this.instance instanceof Item;
 	}
 	
-    public final Block getBlockInstance()
+    public final Block getBlock()
     {	
-    	return (isInstanceBlock()) ? (Block)instance : Block.getBlockFromItem((Item)instance); 
+    	return (isResourceBlock()) ? (Block)instance : Block.getBlockFromItem((Item)instance); 
     }
-    public Item getItemInstance()
+    public Item getItem()
     {
     	// In some cases we might want to call this function to get an item instance of a block.
     	// For example this would be needed when adding recipes.
     	
-    	return (isInstanceItem()) ? (Item)instance : Item.getItemFromBlock((Block)instance);
+    	return (isResourceItem()) ? (Item)instance : Item.getItemFromBlock((Block)instance);
     }
 }

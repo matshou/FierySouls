@@ -1,3 +1,14 @@
+Version 1.2.1
+
+- Renamed "getItemInstance" method to "getItem" in 'ResourceLibrary'.
+- Renamed "getBlockInstance" method to "getBlock" in 'ResourceLibrary'.
+
+- Renamed "isInstanceItem" method to "isResourceItem" in 'ResourceLibrary'.
+- Renamed "isInstanceBlock" method to "isResourceBlock" in 'ResourceLibrary'.
+
+Note:
+This will improve ascription accuracy and readability of these methods.
+
 Version 1.2.0
 
 - Added a custom class for both torch blocks and torch items.

@@ -25,16 +25,16 @@ public class ClientProxy extends CommonProxy
 			// If we don't do this Forge will search their textures under names different then those defined by our mod and listed in json files.
 			// As a result your resource textures will not be loaded into the game.
 			
-			if (resource.isInstanceBlock())
+			if (resource.isResourceBlock())
 			{
-				ModelResourceLocation location = new ModelResourceLocation(FierySouls.MODID + ":" + (resource.getBlockInstance()).getUnlocalizedName().replaceFirst("tile.", ""), "inventory");
-				renderItem.getItemModelMesher().register(net.minecraft.item.Item.getItemFromBlock(resource.getBlockInstance()), 0, location);
+				ModelResourceLocation location = new ModelResourceLocation(FierySouls.MODID + ":" + (resource.getBlock()).getUnlocalizedName().replaceFirst("tile.", ""), "inventory");
+				renderItem.getItemModelMesher().register(net.minecraft.item.Item.getItemFromBlock(resource.getBlock()), 0, location);
 				objectsRegistered += 1;
 			}
-			else if (resource.isInstanceItem())
+			else if (resource.isResourceItem())
 			{
-				ModelResourceLocation location = new ModelResourceLocation(FierySouls.MODID + ":" + (resource.getItemInstance()).getUnlocalizedName().replaceFirst("item.", ""), "inventory");
-				renderItem.getItemModelMesher().register(resource.getItemInstance(), 0, location);
+				ModelResourceLocation location = new ModelResourceLocation(FierySouls.MODID + ":" + (resource.getItem()).getUnlocalizedName().replaceFirst("item.", ""), "inventory");
+				renderItem.getItemModelMesher().register(resource.getItem(), 0, location);
 				objectsRegistered += 1;
 			}
 			else FierySouls.logger.info("Warrning: Couldn't find our resource or we're trying to register an object of unknown type."); 

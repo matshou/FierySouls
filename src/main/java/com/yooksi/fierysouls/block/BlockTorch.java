@@ -73,7 +73,7 @@ public class BlockTorch extends net.minecraft.block.BlockTorch implements net.mi
                 // When the torch is dropped as an item it should be extinguished.
                 // Create a custom NBT for the stack here before we create the new entity item.
    
-                stack.setItem(ResourceLibrary.TORCH_UNLIT.getItemInstance());             
+                stack.setItem(ResourceLibrary.TORCH_UNLIT.getItem());             
                 ItemTorch.createCustomItemNBTFromExisting(stack, tagCompound);
                 
                 EntityItem entityitem = new EntityItemTorch(worldIn, posX, posY, posZ, stack);

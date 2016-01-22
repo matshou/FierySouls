@@ -61,16 +61,16 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch
 	        
 	        return true;
 	    }
-	    else if (equippedItem.getItem() == ResourceLibrary.TORCH_UNLIT.getItemInstance())
+	    else if (equippedItem.getItem() == ResourceLibrary.TORCH_UNLIT.getItem())
 	    {
 	    	// Remove the old (unlit) and place a new (lit) torch in our hands.
 	    	// If we tried to light a torch stack; decrement the stack and move it to a new inventory slot
 	        
 	    	int torchStackSize = equippedItem.stackSize;
-	    	playerIn.setCurrentItemOrArmor(0, new ItemStack(ResourceLibrary.TORCH_LIT.getItemInstance(), 1));
+	    	playerIn.setCurrentItemOrArmor(0, new ItemStack(ResourceLibrary.TORCH_LIT.getItem(), 1));
 	    	
 	    	if (torchStackSize > 1)
-	    		playerIn.inventory.addItemStackToInventory(new ItemStack(ResourceLibrary.TORCH_UNLIT.getItemInstance(), torchStackSize - 1));  
+	    		playerIn.inventory.addItemStackToInventory(new ItemStack(ResourceLibrary.TORCH_UNLIT.getItem(), torchStackSize - 1));  
 	    
 	    	return true;      // Let the calling function know that this block was successfully used,
 	     	                  // and there is no need to spawn the activation item as a block. 
@@ -94,9 +94,9 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch
 		// account facing sides, otherwise the torch will detach from the wall and turn into an item.
 		
 		if (facing != EnumFacing.UP && facing != EnumFacing.DOWN) 
-			return world.setBlockState(pos, ResourceLibrary.TORCH_UNLIT.getBlockInstance().getBlockState().getBaseState().withProperty(BlockTorch.FACING, facing)); 
+			return world.setBlockState(pos, ResourceLibrary.TORCH_UNLIT.getBlock().getBlockState().getBaseState().withProperty(BlockTorch.FACING, facing)); 
 	
-		else return world.setBlockState(pos, ResourceLibrary.TORCH_UNLIT.getBlockInstance().getDefaultState());
+		else return world.setBlockState(pos, ResourceLibrary.TORCH_UNLIT.getBlock().getDefaultState());
 	}
 
 	@Override

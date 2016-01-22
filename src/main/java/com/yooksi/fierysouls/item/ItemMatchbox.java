@@ -30,7 +30,7 @@ public class ItemMatchbox extends Item
 		stack.damageItem(1, playerIn);
 		
 		// If used on torch, light it on fire
-		if (worldIn.getBlockState(pos).getBlock() == ResourceLibrary.TORCH_UNLIT.getBlockInstance())
+		if (worldIn.getBlockState(pos).getBlock() == ResourceLibrary.TORCH_UNLIT.getBlock())
 		{
 			TileEntity entityTorch = worldIn.getTileEntity(pos);
     		if (entityTorch != null && entityTorch instanceof TileEntityTorchUnlit)
