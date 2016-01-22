@@ -1,8 +1,10 @@
 package com.yooksi.fierysouls.item;
 
+import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.entity.player.EntityPlayer;
@@ -70,20 +72,21 @@ public class ItemTorch extends ItemBlock
 	}
 	/**
 	 * Write NBT data to designated packet and return the updated data.<p>
-	 * <i>If no packet is designated (passed as an argument) or item has no NBT, we will not update.</i>
+	 * <i>Note that if the packet passed does not exists a new one will be created.</i>
 	 * 
-	 * @param stack ItemStack to be save data for
-	 * @param packet NBTTagCompound to save data to
+	 * @param stack ItemStack to be save data for <i>(cannot be null)</i>
+	 * @param packet NBTTagCompound to save data to <i>(can be null)</i>
 	 * @return The new and updated NBT tag compound
 	 */
 	private static NBTTagCompound saveStackDataToPacket(ItemStack stack, NBTTagCompound packet)
 	{
-		if (packet == null || !stack.hasTagCompound())
-			return packet;
-			
+		if (packet == null)
+			packet = new NBTTagCompound();    // If no packet was selected create a new one
+		
 		NBTTagCompound itemStackData = stack.getTagCompound();
 		packet.setShort("humidityLevel", itemStackData.getShort("humidityLevel"));
 		packet.setShort("combustionDuration", itemStackData.getShort("combustionDuration")); 
+		
 		return packet;
 	}
 	
@@ -120,6 +123,16 @@ public class ItemTorch extends ItemBlock
     	return wasBlockPlaced;
     }
 
+    @Override
+    public void onUpdate(ItemStack stack, World worldIn, Entity entityIn, int itemSlot, boolean isSelected)
+    {
+    	// TODO: When an item is added to the inventory from the creativeTab it ends up
+    	//       without a proper custom NBT, so we do it here. Find a better way of handling this...
+    	
+    	if (!worldIn.isRemote && !stack.hasTagCompound())
+    		createCustomItemNBT(stack);
+    }
+    
 	/**
      * This used to be 'display damage' but its really just 'aux' data in the ItemStack. <br>
      * If we return anything other then 0 for this item the texture will not be rendered properly.<p>

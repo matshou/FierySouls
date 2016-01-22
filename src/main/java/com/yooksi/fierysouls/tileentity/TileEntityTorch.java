@@ -14,7 +14,7 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
 	private short humidityLevel = 0;
 	
 	protected byte updateTickCount = 0;
-	protected long torchAge = 0;
+	protected long torchAge = 0;            // Currently unused
 	protected long timeCreated;
 	
 	public TileEntityTorch() { this(0); };
@@ -58,12 +58,13 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
     }
     
     /** This update is for the moment only being done just before the entity is destroyed.
-     *  @param worldTime current total time in the world. 
+     *  @param worldTime current <b>total</b> time in the world. 
      *  @see {@link #saveDataToPacket()}
      */ 
     protected void updateTorchAge(long worldTime)
     {
-    	torchAge = worldTime - timeCreated;
+    	if (worldTime > 0 && timeCreated > worldTime)   // Make sure age value doesn't get corrupt
+    		torchAge = worldTime - timeCreated;
     }
     
     /** Saves all important information to a custom NBT packet. <br>
@@ -73,7 +74,7 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
     public NBTTagCompound saveDataToPacket()
     {
     	updateTorchAge(getWorld().getTotalWorldTime());
-    	NBTTagCompound dataPacket = getTileData();
+    	NBTTagCompound dataPacket = new NBTTagCompound();
 
     	this.writeToNBT(dataPacket);
         return dataPacket;
@@ -85,7 +86,7 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
 		super.writeToNBT(par1);
 		par1.setLong("torchAge", torchAge);
 		par1.setLong("timeCreated", timeCreated);
-	    par1.setShort("humidityLevel", getHumidityLevel());
+	    par1.setShort("humidityLevel", humidityLevel);
 	    par1.setShort("combustionDuration", combustionDuration);
     }
     @Override

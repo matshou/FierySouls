@@ -160,14 +160,16 @@ public class EntityItemTorch extends EntityItem
      */
 	private void readDataFromStack()
 	{
-		humidity = getEntityItem().getTagCompound().getShort("humidityLevel");
+		if (getEntityItem().hasTagCompound())
+			humidity = getEntityItem().getTagCompound().getShort("humidityLevel");
 	}
 	/**
 	 *  Save local variable values to item stack NBT.
 	 */
 	private void saveDataToStack()
 	{
-		getEntityItem().getTagCompound().setShort("humidityLevel", humidity);
+		if (getEntityItem().hasTagCompound())
+		    getEntityItem().getTagCompound().setShort("humidityLevel", humidity);
 	}
     
 	@Override

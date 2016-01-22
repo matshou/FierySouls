@@ -1,3 +1,9 @@
+Version 1.2.3
+
+- Fixed a bug that was caused by the last version update. 
+  The bug would disable torch tile entities from updating properly and corrupt the current world instance.
+- Did some minor security improvements.
+
 Version 1.2.2
 
 - Create a new class for publicly shared defines.
