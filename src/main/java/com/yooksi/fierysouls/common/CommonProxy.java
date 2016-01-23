@@ -1,5 +1,10 @@
 package com.yooksi.fierysouls.common;
 
+import com.yooksi.fierysouls.entity.item.EntityItemTorch;
+
+import net.minecraft.entity.EntityList;
+import net.minecraft.entity.item.EntityItem;
+
 import net.minecraft.item.Item;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -31,8 +36,8 @@ public class CommonProxy
 				net.minecraft.block.Block resourceBlock = resource.getBlock(); 
 				String blockName = resourceBlock.getUnlocalizedName().replaceFirst("tile.", "");
 				
-				if (resource.itemBlockClass != null)
-					GameRegistry.registerBlock(resourceBlock, resource.itemBlockClass, blockName);
+				if (resource.getItemBlockClass() != null)
+					GameRegistry.registerBlock(resourceBlock, resource.getItemBlockClass(), blockName);
 				
 				else GameRegistry.registerBlock(resource.getBlock(), blockName);
 				objectsRegistered += 1;
@@ -100,21 +105,54 @@ public class CommonProxy
 	
 	public void init(FMLInitializationEvent event) 
 	{
-		int tileEntitiesRegistered = 0;
+		int tileEntitiesRegistered = 0; 
+		int entityItemsRegistered = 0;
+		
 		for (ResourceLibrary resource : ResourceLibrary.values())
 		{
 			// In order to register them we need to pass the entity class as an argument.
 			// This info should be stored in the resource library. If nothing is found, don't registered.
 			
-			if (resource.tileEntityClass != null)
+			if (resource.getTileEntityClass() != null)
 			{
-				GameRegistry.registerTileEntity(resource.tileEntityClass, resource.name);
+				GameRegistry.registerTileEntity(resource.getTileEntityClass(), resource.name);
 			    tileEntitiesRegistered += 1;
 			}
+			
+			if (registerCustomEntityItem(resource.getEntityItemClass(), resource.name))
+				entityItemsRegistered += 1;
 		}
-		FierySouls.logger.info("Finished registering TileEntities, " + tileEntitiesRegistered + " entities was registered.");	
+		
+		FierySouls.logger.info("Finished registering TileEntities, " + tileEntitiesRegistered + " entities registered.");	
+		FierySouls.logger.info("Finished registering custom EntityItems, " + entityItemsRegistered + " entities registered.");
+		
 		this.registerResourceRenderers();
 	}	
+	
+	/**
+	 * The normal way of registering custom entity items would be by calling <i><b>EntityRegistry.registerModEntity</i></b>,
+	 * however the reason we're avoiding that is because when entities are registered with that method they seem to need
+	 * custom renderer definition and registration.<p> 
+	 * 
+	 * <i>Use this method <b>ONLY</b> for items that do not use custom textures.</i>
+	 * 
+	 * @param entityClass Class belonging to the custom EntityItem we want to register 
+	 * @param name Custom name to be used for this entity (don't worry about uniqueness)
+	 * @return True if the registration process was successful
+	 */
+	private static boolean registerCustomEntityItem(Class<? extends EntityItem> entityClass, String name)
+	{
+		String customName = String.format("%s.entityitem.%s", FierySouls.NAME, name);
+		
+		if (entityClass != null && !EntityList.classToStringMapping.containsKey(customName))
+        {
+			EntityList.classToStringMapping.put(entityClass, customName);
+			EntityList.stringToClassMapping.put(customName, entityClass);
+			
+			return true;
+        }
+		else return false;
+	}
 	
 	// This function is overriden on the client proxy side
 	protected void registerResourceRenderers() {}

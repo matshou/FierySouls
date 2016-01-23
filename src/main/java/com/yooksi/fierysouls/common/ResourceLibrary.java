@@ -1,9 +1,12 @@
 package com.yooksi.fierysouls.common;
 
+import com.yooksi.fierysouls.entity.item.EntityItemTorch;
+import com.yooksi.fierysouls.tileentity.*;
 import com.yooksi.fierysouls.block.*;
 import com.yooksi.fierysouls.item.*;
-import com.yooksi.fierysouls.tileentity.*;
 
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -19,13 +22,15 @@ import net.minecraft.item.Item;
  */
 public enum ResourceLibrary
 {
-	TORCH_LIT(new BlockTorchLit(), "torch_lit", TileEntityTorchLit.class, ItemTorch.class),
-	TORCH_UNLIT(new BlockTorchUnlit(), "torch_unlit", TileEntityTorchUnlit.class, ItemTorch.class),
-	GLOWSTONE_CRYSTAL(new ItemGlowstoneCrystal(), "glowstone_crystal"),
-	MATCHBOX(new ItemMatchbox(), "matchbox");
+	TORCH_LIT(new BlockTorchLit(), "torch_lit", TileEntityTorchLit.class, ItemTorch.class, EntityItemTorch.class),
+	TORCH_UNLIT(new BlockTorchUnlit(), "torch_unlit", TileEntityTorchUnlit.class, ItemTorch.class, EntityItemTorch.class),
+	GLOWSTONE_CRYSTAL(new ItemGlowstoneCrystal(), "glowstone_crystal", null),
+	MATCHBOX(new ItemMatchbox(), "matchbox", null);
 	
-	public final Class tileEntityClass;
-	public final Class itemBlockClass;
+	private final Class tileEntityClass;
+	private final Class entityItemClass;
+	private final Class itemBlockClass;
+	
 	private final Object instance;
 	public final String name;
 	
@@ -38,26 +43,28 @@ public enum ResourceLibrary
 	 *  @param entityClass The class of a TileEntity of this resource. Used to register said TileEntity with Forge.
 	 *  @param itemBlockClass The item type to register with it, used by blocks that have custom item classes.
 	 */
-	private ResourceLibrary(Object resource, String resourceName, Class tileEntity, Class itemBlock, java.util.List recipes)
+	private ResourceLibrary(Object resource, String resourceName, Class<? extends TileEntity>tileEntity, Class<? extends ItemBlock>itemBlock, Class<? extends EntityItem>entityItem, java.util.List recipes)
 	{
 		tileEntityClass = tileEntity;
+		entityItemClass = entityItem;
 		itemBlockClass = itemBlock;
+		
 		recipeList = recipes;
 		instance = resource;
 		name = resourceName;		
 	}
 	/** This constructor is used by resources that initialize BLOCKS. 
 	 */
-	private ResourceLibrary(Object resourceInstance, String resourceName, Class tileEntity, Class itemBlockClass)
+	private ResourceLibrary(Object resourceInstance, String resourceName, Class tileEntity, Class itemBlockClass, Class entityItem)
 	{	
-		this(resourceInstance, resourceName, tileEntity, itemBlockClass, new java.util.ArrayList());
+		this(resourceInstance, resourceName, tileEntity, itemBlockClass, entityItem, new java.util.ArrayList());
 		getBlock().setUnlocalizedName(resourceName).setCreativeTab(FierySouls.tabTorches);
 	}
 	/** This constructor is used by resources that initialize ITEMS. 
 	 */
-	private ResourceLibrary(Object resourceInstance, String resourceName)
+	private ResourceLibrary(Object resourceInstance, String resourceName, Class entityItem)
 	{
-		this(resourceInstance, resourceName, null, null, new java.util.ArrayList());
+		this(resourceInstance, resourceName, null, null, entityItem, new java.util.ArrayList());
 		getItem().setUnlocalizedName(resourceName).setCreativeTab(FierySouls.tabTorches);
 	}
 	
@@ -66,6 +73,31 @@ public enum ResourceLibrary
 	public final void addRecipeToLibrary(RecipeLibrary recipeToAdd)
 	{
 		this.recipeList.add(recipeToAdd);
+	}
+	
+	/** 
+	 * This will return the TileEntity class associated with this resource.
+	 * @return <i>if return value is null, this resource does not spawn a TileEntity
+	 */
+	public Class getTileEntityClass()
+	{
+		return tileEntityClass;
+	}
+	/** 
+	 * This will return the ItemBlock class associated with this resource.
+	 * @return <i>if return value is null, this resource does not drop an ItemBlock type item
+	 */
+	public Class getItemBlockClass()
+	{
+		return itemBlockClass;
+	}
+	/** 
+	 * This will return the EntityItem class associated with this resource.
+	 * @return <i>if return value is null, this resource does not have a custom EntityItem class
+	 */
+	public Class getEntityItemClass()
+	{
+		return entityItemClass;
 	}
 	
 	/** Find out if this object is a block */

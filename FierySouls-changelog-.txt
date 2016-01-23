@@ -1,3 +1,9 @@
+Version 1.2.4
+
+- Resolved an issue that prevented torch entity items from loading into the world.
+- Wrote a custom EntityItem registration method to handle these things in the future.
+- Made some minor modifications in ResourceLibrary and CommonProxy classes.
+
 Version 1.2.3
 
 - Fixed a bug that was caused by the last version update. 

@@ -15,6 +15,9 @@ public class EntityItemTorch extends EntityItem
 	private byte updateTickCount = 0;
 	private short humidity;
 	
+	// This constructor is used when registering this custom entity with Forge
+	public EntityItemTorch(World worldIn) { super(worldIn); };
+	
 	public EntityItemTorch(World worldIn, double x, double y, double z, ItemStack stack) 
 	{
 		super(worldIn, x, y, z, stack);
