@@ -7,24 +7,21 @@ import com.yooksi.fierysouls.block.BlockTorchUnlit;
 
 import net.minecraft.network.Packet;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.server.MinecraftServer;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 
 import net.minecraft.world.World;
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-
 public class TileEntityTorchLit extends TileEntityTorch
 {
 	private static final double DIMINISH_LIGHT_PER_INTERVAL = 0.025;   // Amount of light to diminish each update interval.
 	private static final short DIMINISH_LIGHT_TIME_MARK = 1600;        // Diminishing light after remaining combustion equals this number.
     
-	private boolean extinguishTorchOnServer = false;   // Used by client to extinguish torch on server.
 	public boolean torchFireHazardUpdate = true;       
-	private boolean updatingLightData= false;          // Used by server to notify client to start updating light value.
+	private boolean updatingLightData= false;      // Used by server to notify client to start updating light value.
 	private double torchLightLevel = 0;
 	
 	public TileEntityTorchLit() {}	
@@ -47,7 +44,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 				tryCatchFireOnNeighbour();
 			
 			if (updateCombustionDuration(SharedDefines.MAIN_UPDATE_INTERVAL * -1) <= 0)
-				extinguishTorch(true);
+				extinguishTorch();
 			
 			// Since we're not updating this data here handle light updates on client, we're done here.
 			else if (getCombustionDuration() <= DIMINISH_LIGHT_TIME_MARK && !updatingLightData)
@@ -59,56 +56,32 @@ public class TileEntityTorchLit extends TileEntityTorch
 		    if (getWorld().getWorldInfo().isRaining() && getWorld().canBlockSeeSky(pos))
 		    {
 			    if (updateHumidityLevel(SharedDefines.MAIN_UPDATE_INTERVAL) >= SharedDefines.HUMIDITY_THRESHOLD)		   
-			    	extinguishTorch(true);
+			    	extinguishTorch();
 		    }
 		}
 		else if (updatingLightData == true)
 			updateLightLevel(DIMINISH_LIGHT_PER_INTERVAL);
 	}
 	
-	/** Replace this torch with an unlit one and activate the smoldering effect.
+	/** Replace this torch with an unlit one and activate the smoldering effect. <br>
 	 *  This method acts like a proxy for a clone method in BlockTorchLit, always call this one first!
-	 *  The way we handle the client and server side here is interesting, take a look at the code. 
-	 *  
-	 *  @param waitForClient Should we wait for the client to call this method first? Quite useful to enable
-	 *                       client side smoke particle spawning. If true do a SERVER - client - SERVER connection.
 	 */
-	public void extinguishTorch(final boolean waitForClient)
+	public void extinguishTorch()
 	{
-		// In case we want the smoldering effect we need to activate it on the client first.
-		// If the server handles blockstates first, it will remove tile entity and sync clients.
-		// This means that we will not have the chance to spawn smoke particles.
-		
-		if (!getWorld().isRemote && waitForClient)
-		{
-			this.extinguishTorchOnServer = true; 
-			this.markForUpdate(); return;
-		}
-		
-	    // This is the part where the blockstate gets updated and client entities are handled.
-	    // When we extinguish the torch the new tile entity should be initialized and we can pass our data to it.
-	  
-	    if (BlockTorchLit.extinguishTorch(getWorld(), pos))
+	    if (!getWorld().isRemote && BlockTorchLit.extinguishTorch(getWorld(), pos))
 	    {
-	    	TileEntityTorchUnlit torchUnlit = (TileEntityTorchUnlit)getWorld().getTileEntity(pos);
-		    	
-		    // Notify tile entity that it should start spawning smoke particles only on client side.
-		    // After that extinguish the torch server-side. This will finalize current tile entity destruction 
-		    // and update the new tile entity with needed info.
-		    	
-		    if (!getWorld().isRemote)		    
-                torchUnlit.readFromNBT(saveDataToPacket());
-		    
-		    else if (waitForClient)
-		    {
-		    	MinecraftServer server = net.minecraft.server.MinecraftServer.getServer();
-		    	TileEntityTorchLit torchLit = (TileEntityTorchLit)server.getEntityWorld().getTileEntity(pos);  
-		            
-		    	torchLit.extinguishTorch(false);
-		        torchUnlit.setTorchSmoldering(true);
+	    	TileEntity torchEntity = getWorld().getTileEntity(pos);
+	    	if (torchEntity != null && torchEntity instanceof TileEntityTorchUnlit)
+	    	{
+	    		TileEntityTorchUnlit torchUnlit = (TileEntityTorchUnlit)torchEntity;
+	    	    torchUnlit.readFromNBT(saveDataToPacket());
+	    		
+	    	    // Set the torch 'smoldering' on server side, nothing will be seen but the client
+	    	    // will want to update and the sides will sync, pulling the data from server.
+	    	    
+	    	    torchUnlit.setTorchSmoldering(true, getWorld().getTotalWorldTime());
 		    }
-		    else torchUnlit.setTorchSmoldering(true);
-	    }      
+	    }
 	}  
 	
 	/** Check to see if we should force the block above us to catch on fire.
@@ -179,43 +152,29 @@ public class TileEntityTorchLit extends TileEntityTorch
 	
 	// ====================================== NETWORK UTILITIES ==============================================
 	
-	/** These functions are used to update, write and read packets sent from SERVER to CLIENT. */ 
-	// This will make the server call 'getDescriptionPacket' for a full data sync
-	//@SideOnly(Side.SERVER)
-	private void markForUpdate()
-	{
-		getWorld().markBlockForUpdate(pos);
-		this.markDirty();
-	}
+	/** 
+	 * Gathers data into a packet that is to be sent to the client. Called on server only.<br>
+	 * Place custom packet data you want to send to client here.
+	 */
 	@Override
-	// Gathers data into a packet that is to be sent to the client. Called on server only.
 	public Packet getDescriptionPacket() 
 	{
 		NBTTagCompound nbtTag = new NBTTagCompound();
 		this.writeToNBT(nbtTag);
 		
-		// These variables are used to notify the client that it should do something on it's side. 
-		// They are also exclusive to TileEntityTorchLit, that's why they are here and not in writeToNBT.
-		
-		nbtTag.setBoolean("extinguishTorchOnServer", extinguishTorchOnServer);
 		nbtTag.setBoolean("startUpdatingLight", updatingLightData);
 		
 		return new S35PacketUpdateTileEntity(this.pos, 1, nbtTag);
 	}
-	// Extracts data from a packet that was sent from the server. Called on client only.
-	// Minecraft automatically sends a 'description packet' for the tile entity when it is first 
-	// loaded on the client, and you can force it to resend one afterwards
+
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void onDataPacket(net.minecraft.network.NetworkManager net, S35PacketUpdateTileEntity packet) 
 	{
-		this.readFromNBT(packet.getNbtCompound());
-
-		if (packet.getNbtCompound().getBoolean("extinguishTorchOnServer"))	
-			extinguishTorch(true);
+		super.onDataPacket(net, packet);
 
 		// Recalculate light data and send it to world once each time the world loads.
-		else if (updatingLightData == false && (updatingLightData = packet.getNbtCompound().getBoolean("startUpdatingLight")))
-			this.recalculateLightLevel();
+		if (updatingLightData == false && (updatingLightData = packet.getNbtCompound().getBoolean("startUpdatingLight")))
+			recalculateLightLevel();
 	}
 }

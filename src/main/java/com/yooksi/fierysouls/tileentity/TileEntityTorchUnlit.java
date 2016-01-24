@@ -4,10 +4,13 @@ import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.block.BlockTorchUnlit;
 
+import net.minecraft.network.Packet;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
+
+import net.minecraft.tileentity.TileEntity;
 
 public class TileEntityTorchUnlit extends TileEntityTorch
 { 
@@ -38,8 +41,8 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 			if (getWorld().isRaining() && !isHighHumidity() && getWorld().canBlockSeeSky(pos))
 				updateHumidityLevel(SharedDefines.MAIN_UPDATE_INTERVAL);
 		}
-		else if (didSmolderingExpire())	
-			setTorchSmoldering(false);
+		else if (isTorchSmoldering() && didSmolderingExpire())				
+			setTorchSmoldering(false, getWorld().getWorldTime());
 	}
 	
 	/** Set the torch on fire by updating 'blockstate' at world coordinates. This method serves 
@@ -63,11 +66,15 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 	{
 		return (timeTorchStartedSmoldering != 0);
 	}
-	/** Activate or deactivate smoke particles spawning above the torch.
-     * When torch smoldering has been activated, the particles will be created in it's block class.
+	/** Activate or deactivate smoke particles spawning above the torch. <br>
+     *  When torch smoldering has been activated, the particles will be created in it's block class.
+     *  
+     *  @param smolderingState True to activate, false to deactivate smoldering effect
+     *  @param totalWorldTime Total time in this world, passed as an argument for security reasons
+     *  
+     *  @see {@link BlockTorchUnlit#randomDisplayTick}
      */
-	@SideOnly(Side.CLIENT)
-	public void setTorchSmoldering(boolean smolderingState)
+	public void setTorchSmoldering(boolean smolderingState, long totalWorldTime)
 	{
 		if (smolderingState == true)
 		{
@@ -75,7 +82,7 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 			java.util.Random rand = new java.util.Random();
 			
 			torchSmolderingDuration = rand.nextInt(SMOLDERING_RANDOM) + 50;
-			timeTorchStartedSmoldering = getWorld().getTotalWorldTime(); 
+			timeTorchStartedSmoldering = totalWorldTime; 
 		}
 		else timeTorchStartedSmoldering =  0;
 	}
@@ -84,4 +91,29 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 	{
 		return (getWorld().getTotalWorldTime() - timeTorchStartedSmoldering > torchSmolderingDuration);
 	}
+	
+	/** 
+	 * Gathers data into a packet that is to be sent to the client. Called on server only.<br>
+	 * Place custom packet data you want to send to client here.
+	 */
+	@Override
+	public Packet getDescriptionPacket() 
+	{
+		NBTTagCompound nbtTag = new NBTTagCompound();
+		this.writeToNBT(nbtTag);
+		
+		nbtTag.setInteger("torchSmolderingDuration", torchSmolderingDuration);
+		nbtTag.setLong("timeTorchStartedSmoldering", timeTorchStartedSmoldering);
+		
+		return new S35PacketUpdateTileEntity(this.pos, 1, nbtTag);
+	}
+	
+	@Override
+    public void readFromNBT(NBTTagCompound par1)
+    {
+		super.readFromNBT(par1);
+		
+		torchSmolderingDuration = par1.getInteger("torchSmolderingDuration");
+		timeTorchStartedSmoldering = par1.getLong("timeTorchStartedSmoldering");
+    }
 }

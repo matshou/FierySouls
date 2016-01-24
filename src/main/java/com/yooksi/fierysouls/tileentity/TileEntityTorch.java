@@ -4,9 +4,13 @@ import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.block.BlockTorchLit;
 import com.yooksi.fierysouls.common.FierySouls;
 
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.server.gui.IUpdatePlayerListBox;
+
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 
 public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
 {
@@ -54,7 +58,7 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
 	/** Check if this torch has been exposed to rain for a long period of time. */
     protected boolean isHighHumidity()
     {
-    	return (humidityLevel > SharedDefines.HUMIDITY_THRESHOLD);
+    	return (humidityLevel >= SharedDefines.HUMIDITY_THRESHOLD);
     }
     
     /** This update is for the moment only being done just before the entity is destroyed.
@@ -66,6 +70,8 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
     	if (worldTime > 0 && timeCreated > worldTime)   // Make sure age value doesn't get corrupt
     		torchAge = worldTime - timeCreated;
     }
+    
+    // ====================================== NETWORK UTILITIES ==============================================
     
     /** Saves all important information to a custom NBT packet. <br>
      *  Used to pass internal data to external sources.
@@ -79,6 +85,31 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
     	this.writeToNBT(dataPacket);
         return dataPacket;
     }
+    
+	/**
+	 *  This will make the server call <b><i>'getDescriptionPacket'</b></i> for a full data sync, <br>
+	 *  the client will receive the packet in the method <b><i>'onDataPacket'</b></i>.
+	 *  
+	 *  @see #onDataPacket
+	 */
+	protected void markForUpdate()
+	{
+		getWorld().markBlockForUpdate(pos);
+		this.markDirty();
+	}
+	
+	/** 
+	 * Extracts data from a packet that was sent from the server. Called on client only. <br>
+	 * Minecraft automatically sends a 'description packet' for the tile entity when it is first 
+	 * loaded on the client,<br> and you can force it to resend one afterwards	
+	 * 	
+	 */
+	@Override
+	@SideOnly(Side.CLIENT)
+	public void onDataPacket(net.minecraft.network.NetworkManager net, S35PacketUpdateTileEntity packet) 
+	{
+		this.readFromNBT(packet.getNbtCompound());
+	}
     
 	@Override
     public void writeToNBT(NBTTagCompound par1)
@@ -97,12 +128,5 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
 	    timeCreated = par1.getLong("timeCreated");
         humidityLevel = par1.getShort("humidityLevel");
         combustionDuration = par1.getShort("combustionDuration");
-        
-        /** DEBUG LOG - Tracking issue #3 */
-        if (this instanceof TileEntityTorchLit)
-        {
-        	String position = " (x: " + pos.getX() + ", y: " + pos.getY() + ", z: " + pos.getZ() + ")";
-        	FierySouls.logger.info("Reading from NBT for TileEntityTorchLit, combustion: " + this.combustionDuration + position);
-        }
     }
 }

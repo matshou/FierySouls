@@ -1,3 +1,19 @@
+Version 1.2.6
+
+- Created a copy of torch tile entity network utilities and placed it in the parent class.
+- Improved the safety of some methods in 'TileEntityTorchUnlit'.
+- Restructured a lot of code in 'TileEntityTorchLit'.
+
+- The way torch tile entities communicate and inherit data when being extinguished has changed a lot,
+  read the notes below for more information.
+
+Notes:
+The system we used before was to wait for the lit torch entity's client side to change blockstate and spawn smoke particles.
+Then we called server from client side and extinguished the torch on it's side. The obvious problem here is that it only works
+if there in only one client in the game. When you have more clients in this situation, the first one to call the server and destroy
+the master instance is the only one who knows what happened as the rest don't get the chance to find out. Now we use NBT to sync
+client and server when communicating between unlit tile entity instances.
+
 Version 1.2.5
 
 - Created two new helper methods in ResourceLibrary.
