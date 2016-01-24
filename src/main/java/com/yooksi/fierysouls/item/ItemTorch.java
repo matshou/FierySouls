@@ -2,6 +2,7 @@ package com.yooksi.fierysouls.item;
 
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.SharedDefines;
+import com.yooksi.fierysouls.common.ResourceLibrary;
 import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 
 import net.minecraft.entity.Entity;
@@ -123,14 +124,80 @@ public class ItemTorch extends ItemBlock
     	return wasBlockPlaced;
     }
 
+    /**
+     * Called each tick as long the item is on a player inventory. Uses by maps to check if is on a player hand and
+     * update it's contents.
+     */
     @Override
     public void onUpdate(ItemStack stack, World worldIn, Entity entityIn, int itemSlot, boolean isSelected)
     {
-    	// TODO: When an item is added to the inventory from the creativeTab it ends up
-    	//       without a proper custom NBT, so we do it here. Find a better way of handling this...
+    	if (!worldIn.isRemote && stack != null)
+    	{
+    		// TODO: When an item is added to the inventory from the creativeTab it ends up
+        	// without a proper custom NBT, so we do it here. Find a better way of handling this...
+        	
+    		if (!stack.hasTagCompound())
+    			createCustomItemNBT(stack);
+    		
+    		// Currently we're only updating humidity and not combustion,
+    		// so there is no need to go further if humidity is at maximum value.
+    		
+    		if (getItemHumidity(stack) >= SharedDefines.HUMIDITY_THRESHOLD)
+    			return;
+    		
+    		// Check 'isInWater' first to optimize the code a bit, boolean checks are the fastest. 
+    		// The second check is a lengthy one and should not return true if the first one returns false.
+    				
+    		if (entityIn.isInWater() && entityIn.isInsideOfMaterial(net.minecraft.block.material.Material.water))
+    		{
+    			if (ResourceLibrary.isItemLitTorch(stack.getItem()))
+    				extinguishItemTorch(stack, true);
+    				
+    			else setItemHumidity(stack, SharedDefines.HUMIDITY_THRESHOLD); 
+    		}
+    	}
+    }
+    
+    /**
+     * Get humidity value for this item from NBT storage.<p>
+     * <i><b>Warning:</b> This method does not make safe checks on the validity of item NBT.</i>
+     * @param stack ItemStack to get the information from
+     * @return Returns the humidity value from item NBT
+     */
+    private static short getItemHumidity(ItemStack stack)
+    {
+    	return stack.getTagCompound().getShort("humidityLevel");
+    }
+    
+    /**
+     * Called when the torch is submerged under water or is exposed to rain for too long. <p>
+     * <i>Unlike the <b>TileEntityTorch</b> version, this method will not order smoke particle spawning.</i>
+     * 
+     * @param stack Torch ItemStack to extinguish
+     * @param extinguishByWater If true; update the humidity value as well
+     */
+    public static void extinguishItemTorch(ItemStack stack, boolean extinguishByWater)
+    {
+    	if (ResourceLibrary.isItemLitTorch(stack.getItem()))
+    		stack.setItem(ResourceLibrary.TORCH_UNLIT.getItem());
     	
-    	if (!worldIn.isRemote && !stack.hasTagCompound())
-    		createCustomItemNBT(stack);
+    	if (extinguishByWater == true)
+    		setItemHumidity(stack, SharedDefines.HUMIDITY_THRESHOLD);
+    }
+     
+    /**
+     * Set the humidity level of an ItemStack to a new value. <p>
+     * <i>This method is responsible for checking for null values, no need to worry.</i>
+     * 
+     * @param stack ItemStack that data we wish to update
+     * @param value New value to update humidity to
+     */
+    public static void setItemHumidity(ItemStack stack, short value)
+    {
+    	if (stack != null && stack.hasTagCompound())
+    		stack.getTagCompound().setShort("humidityLevel", value);
+    }
+    
     }
     
 	/**

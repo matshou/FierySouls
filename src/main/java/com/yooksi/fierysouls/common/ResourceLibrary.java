@@ -111,6 +111,26 @@ public enum ResourceLibrary
 		return this.instance instanceof Item;
 	}
 	
+	/**
+	 * Helper method to make this check look cleaner.
+	 * @param item Item to check for being a lit torch.
+	 * @return True if item is a <b><i>lit</i></b> torch of type Item or block that can be an item.
+	 */
+	public static boolean isItemLitTorch(Item item)
+	{
+		return item == ResourceLibrary.TORCH_LIT.getItem();
+	}
+	
+	/**
+	 * Helper method to make this check look cleaner.
+	 * @param item Item to check for being an unlit torch.
+	 * @return True if item is an <b><i>unlit</i></b> torch of type Item or block that can be an item.
+	 */
+	public static boolean isItemUnlitTorch(Item item)
+	{
+		return item == ResourceLibrary.TORCH_LIT.getItem();
+	}
+	
     public final Block getBlock()
     {	
     	return (isResourceBlock()) ? (Block)instance : Block.getBlockFromItem((Item)instance); 

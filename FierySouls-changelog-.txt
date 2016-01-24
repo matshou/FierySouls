@@ -1,3 +1,9 @@
+Version 1.2.5
+
+- Created two new helper methods in ResourceLibrary.
+- When torch items are dropped in water they now become completely wet.
+- When the player submerges himself in water all torches in his inventory will become wet and extinguished.
+
 Version 1.2.4
 
 - Resolved an issue that prevented torch entity items from loading into the world.

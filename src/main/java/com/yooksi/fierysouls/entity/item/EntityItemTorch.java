@@ -3,6 +3,7 @@ package com.yooksi.fierysouls.entity.item;
 import com.yooksi.fierysouls.item.ItemTorch;
 import com.yooksi.fierysouls.common.Utilities;
 import com.yooksi.fierysouls.common.SharedDefines;
+import com.yooksi.fierysouls.common.ResourceLibrary;
 
 import net.minecraft.world.World;
 import net.minecraft.item.ItemStack;
@@ -37,23 +38,47 @@ public class EntityItemTorch extends EntityItem
     	super.onCollideWithPlayer(entityIn);
     }
 
+	/**
+     * Called to update the entity's position/logic.
+     */
 	@Override
 	public void onUpdate()
 	{
 		super.onUpdate();
-		if (worldObj.isRemote)
-			return;
 
 		// TODO: Humidity should speed up item decay (decrease it's lifespan).
 		
 		// Update only at set intervals to reduce performance hits.   
 		// When it's raining and the torch is directly exposed to rain it will start collecting humidity.
 		
-		if (updateTickCount++ < SharedDefines.MAIN_UPDATE_INTERVAL)    
+		if (worldObj.isRemote || updateTickCount++ < SharedDefines.MAIN_UPDATE_INTERVAL)    
 			return; else updateTickCount = 0;
 		
-		if (worldObj.isRaining() && !isHighHumidity() && worldObj.canBlockSeeSky(getPosition()))
-			humidity += SharedDefines.MAIN_UPDATE_INTERVAL;
+		// Currently we're only updating humidity and not combustion,
+		// so there is no need to go further if humidity is at maximum value.
+		
+		if (humidity >= SharedDefines.HUMIDITY_THRESHOLD)
+			return;
+		
+		// Check if the entity is in water first because rain doesn't matter
+		// if we're submerged in a pool of water anyways.
+			
+		if (isInWater() /**&& isInsideOfMaterial(Material.water)*/)
+		{
+			ItemTorch.extinguishItemTorch(getEntityItem(), true);
+			readDataFromStack();
+		}
+		else if (worldObj.isRaining() && worldObj.canBlockSeeSky(getPosition()))
+		{
+			if (updateHumidity() >= SharedDefines.HUMIDITY_THRESHOLD)
+			{
+				if (ResourceLibrary.isItemLitTorch(getEntityItem().getItem()))
+				{
+					ItemTorch.extinguishItemTorch(getEntityItem(), false);
+					readDataFromStack();
+				}
+			}
+		}
 	}
 	
 	/**
@@ -149,14 +174,14 @@ public class EntityItemTorch extends EntityItem
     	
     	return new int[]{iHumidity, iDuration};
     }
-	
+
 	/** 
-	 * Check if this torch item has been exposed to rain for a long period of time. 
+	 * Update torch entity item humidity level with a standard 'update interval' value.
 	 */
-    private boolean isHighHumidity()
-    {
-    	return (humidity > SharedDefines.HUMIDITY_THRESHOLD);
-    }
+	private short updateHumidity()
+	{
+		return humidity += SharedDefines.MAIN_UPDATE_INTERVAL;
+	}
 	
     /** 
      *  Update local variables with values read from item stack NBT.

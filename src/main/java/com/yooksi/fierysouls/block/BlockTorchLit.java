@@ -3,7 +3,6 @@ package com.yooksi.fierysouls.block;
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.ResourceLibrary;
 import com.yooksi.fierysouls.entity.item.EntityItemTorch;
-import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 import com.yooksi.fierysouls.tileentity.TileEntityTorchLit;
 
 import net.minecraft.block.Block;
@@ -57,7 +56,7 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch
 	    {
 	    	TileEntity torchEntity = worldIn.getTileEntity(pos);
 	        if (torchEntity != null && torchEntity instanceof TileEntityTorchLit)
-	        	((TileEntityTorchLit)worldIn.getTileEntity(pos)).extinguishTorch(false);
+	        	((TileEntityTorchLit)worldIn.getTileEntity(pos)).extinguishTorch();
 	        
 	        return true;
 	    }
