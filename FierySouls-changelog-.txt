@@ -1,6 +1,18 @@
+Version 1.2.7
+
+- Torches now have a 50-50% chance (as opposed to being 100% so far) of being extinguished 
+  when knocked from blocks due to their destruction. Thinking of making this value a variable...
+
+- Torch items (item stacks) are now updated on set intervals.
+- Prevented the Item "bobbing" animation from occurring when updating metadata or NBT values.
+
+Notes:
+Discovering how to prevent the animation was a long process and quite a frustrating one, until I read this post:
+http://www.minecraftforge.net/forum/index.php/topic,30937.0.html
+
 Version 1.2.6
 
-- Created a copy of torch tile entity network utilities and placed it in the parent class.
+- Changed the way network torch tile entity network utilities function and interact.
 - Improved the safety of some methods in 'TileEntityTorchUnlit'.
 - Restructured a lot of code in 'TileEntityTorchLit'.
 

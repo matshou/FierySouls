@@ -70,11 +70,13 @@ public class BlockTorch extends net.minecraft.block.BlockTorch implements net.mi
                 double posY = (double)pos.getY() + ((double)(worldIn.rand.nextFloat() * 0.5F) + 0.25D); 
                 double posZ = (double)pos.getZ() + ((double)(worldIn.rand.nextFloat() * 0.5F) + 0.25D);
                 
-                // When the torch is dropped as an item it should be extinguished.
+                // When the torch is dropped as an item in this way it has a 50-50% chance of being extinguished.
                 // Create a custom NBT for the stack here before we create the new entity item.
    
-                stack.setItem(ResourceLibrary.TORCH_UNLIT.getItem());             
-                ItemTorch.createCustomItemNBTFromExisting(stack, tagCompound);
+                if (new java.util.Random().nextInt(2) < 1)
+                	stack.setItem(ResourceLibrary.TORCH_UNLIT.getItem());             
+                
+                ItemTorch.createCustomItemNBTFromExisting(stack, tagCompound, worldIn.getTotalWorldTime());
                 
                 EntityItem entityitem = new EntityItemTorch(worldIn, posX, posY, posZ, stack);
                 entityitem.setDefaultPickupDelay(); worldIn.spawnEntityInWorld(entityitem);

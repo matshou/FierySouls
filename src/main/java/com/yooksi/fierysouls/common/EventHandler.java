@@ -25,7 +25,7 @@ public class EventHandler
 		if (droppedStack.stackSize > 0 && Block.getBlockFromItem(droppedStack.getItem()) instanceof BlockTorch)
 		{
 			if (!droppedStack.hasTagCompound())
-				com.yooksi.fierysouls.item.ItemTorch.createCustomItemNBT(droppedStack);
+				com.yooksi.fierysouls.item.ItemTorch.createCustomItemNBT(droppedStack, event.entity.worldObj.getTotalWorldTime());
 			
 			// We're going to create a custom EntityItem and do all the work needed here.
 			// The entity will then spawn in the world as being tossed in front of the player.

@@ -29,7 +29,7 @@ public class ItemTorch extends ItemBlock
 	 * @param stack Item stack to update
 	 * @param newTagCompound NBT Tag Compound to extract data from
 	 */
-	public static void updateCustomItemNBTFromExisting(ItemStack stack, NBTTagCompound newTagCompound)
+	private static void updateCustomItemNBTFromExisting(ItemStack stack, NBTTagCompound newTagCompound)
 	{
 		if (newTagCompound != null && stack.hasTagCompound())
 		{
@@ -45,11 +45,12 @@ public class ItemTorch extends ItemBlock
 	 * 
 	 * @param stack ItemStack to create a new NBT for
 	 */
-	public static void createCustomItemNBT(ItemStack stack)
+	public static void createCustomItemNBT(ItemStack stack, long worldTime)
 	{
 		NBTTagCompound tagCompound = new NBTTagCompound();
 		
 		tagCompound.setShort("humidityLevel", (short)0);
+		tagCompound.setLong("lastUpdateTime", worldTime);
 		tagCompound.setShort("combustionDuration", SharedDefines.MAX_TORCH_FLAME_DURATION);
 		
 		stack.setTagCompound(tagCompound);
@@ -63,11 +64,11 @@ public class ItemTorch extends ItemBlock
 	 * @param stack ItemStack to create a new NBT for
 	 * @param tagCompound Existing NBT tag compound to extract data from
 	 */
-	public static void createCustomItemNBTFromExisting(ItemStack stack, NBTTagCompound tagCompound)
+	public static void createCustomItemNBTFromExisting(ItemStack stack, NBTTagCompound tagCompound, long worldTime)
 	{
 		if (tagCompound != null)
 		{
-			stack.setTagCompound(new NBTTagCompound());
+			createCustomItemNBT(stack, worldTime);
 			updateCustomItemNBTFromExisting(stack, tagCompound);
 		}
 	}
@@ -125,6 +126,27 @@ public class ItemTorch extends ItemBlock
     }
 
     /**
+     * Determine if the player switching between these two item stacks
+     * 
+     * @param oldStack The old stack that was equipped
+     * @param newStack The new stack
+     * @param slotChanged Has the current equipped slot changed?
+     * @return True to play the item change animation
+     */
+    @Override
+    public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged)
+    {
+    	// This is the ideal solution to prevent the first person item "bobbing" animation
+    	// that happens when you update item metadata or NBT fields.
+    	
+    	if (!slotChanged && oldStack.getItem() == newStack.getItem())
+    		return false;
+    	
+    	return super.shouldCauseReequipAnimation(oldStack, newStack, slotChanged);
+    
+    }
+    
+    /**
      * Called each tick as long the item is on a player inventory. Uses by maps to check if is on a player hand and
      * update it's contents.
      */
@@ -136,8 +158,13 @@ public class ItemTorch extends ItemBlock
     		// TODO: When an item is added to the inventory from the creativeTab it ends up
         	// without a proper custom NBT, so we do it here. Find a better way of handling this...
         	
+    		long totalWorldTime = worldIn.getTotalWorldTime();
+    		
     		if (!stack.hasTagCompound())
-    			createCustomItemNBT(stack);
+    			createCustomItemNBT(stack, totalWorldTime);
+    		
+    		else if (!shouldUpdateItem(stack, totalWorldTime))
+    			return;
     		
     		// Currently we're only updating humidity and not combustion,
     		// so there is no need to go further if humidity is at maximum value.
@@ -159,14 +186,50 @@ public class ItemTorch extends ItemBlock
     }
     
     /**
+    
+    /**
+     * Check to see if we should perform a full item update.<br>
+     *
+     * @throws java.lang.NullPointerException
+     * @param stack ItemStack we're checking this for
+     * @param worldTime Total time elapsed from the creation of the world 
+     * @return True if enough world time has elapsed
+     */
+    private static boolean shouldUpdateItem(ItemStack stack, long worldTime)
+    {
+    	long lastUpdateTime = stack.getTagCompound().getLong("lastUpdateTime");
+    	
+    	if (lastUpdateTime > 0 && worldTime - lastUpdateTime >= SharedDefines.MAIN_UPDATE_INTERVAL)
+    	{
+    		stack.getTagCompound().setLong("lastUpdateTime", worldTime);
+    		return true;
+    	}
+    	else return false;
+    }
+    
+    /**
      * Get humidity value for this item from NBT storage.<p>
      * <i><b>Warning:</b> This method does not make safe checks on the validity of item NBT.</i>
+     * 
+     * @throws java.lang.NullPointerException
      * @param stack ItemStack to get the information from
      * @return Returns the humidity value from item NBT
      */
     private static short getItemHumidity(ItemStack stack)
     {
     	return stack.getTagCompound().getShort("humidityLevel");
+    }
+    /**
+     * Get combustion duration value for this item from NBT storage.<p>
+     * <i><b>Warning:</b> This method does not make safe checks on the validity of item NBT.</i>
+     * 
+     * @throws java.lang.NullPointerException
+     * @param stack ItemStack to get the information from
+     * @return Returns the combustion duration value from item NBT
+     */
+    private static short getItemCombustionDuration(ItemStack stack)
+    {
+    	return stack.getTagCompound().getShort("combustionDuration");
     }
     
     /**
@@ -178,7 +241,7 @@ public class ItemTorch extends ItemBlock
      */
     public static void extinguishItemTorch(ItemStack stack, boolean extinguishByWater)
     {
-    	if (ResourceLibrary.isItemLitTorch(stack.getItem()))
+    	if (stack != null && ResourceLibrary.isItemLitTorch(stack.getItem()))
     		stack.setItem(ResourceLibrary.TORCH_UNLIT.getItem());
     	
     	if (extinguishByWater == true)
