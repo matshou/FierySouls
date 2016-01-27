@@ -4,8 +4,10 @@ import com.yooksi.fierysouls.item.ItemTorch;
 import com.yooksi.fierysouls.common.Utilities;
 import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.common.ResourceLibrary;
+import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 
 import net.minecraft.world.World;
+import net.minecraft.util.BlockPos;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.MathHelper;
 import net.minecraft.nbt.NBTTagCompound;
@@ -22,6 +24,7 @@ public class EntityItemTorch extends EntityItem
 	public EntityItemTorch(World worldIn, double x, double y, double z, ItemStack stack) 
 	{
 		super(worldIn, x, y, z, stack);
+		this.setDefaultPickupDelay();		
 		this.readDataFromStack();          // Initialize localized custom data
 	}
 	
@@ -82,7 +85,7 @@ public class EntityItemTorch extends EntityItem
 	}
 	
 	/**
-	 * Create new EntityItemTorch from the passed stack being tossed <i>(dropped or drag-n-dropped)</i> in the world <br>
+	 * Create a new EntityItemTorch from a stack being tossed <i>(dropped or drag-n-dropped)</i> in the world <br>
 	 * and prepare it for being added in the world as a tossed item by initialize motion data and pickup delay. <p>
 	 * 
 	 * <i>The code is a slightly modified copy from <b>EntityPlayer.dropItem</b>.</i>
@@ -97,7 +100,7 @@ public class EntityItemTorch extends EntityItem
 	public static EntityItemTorch createTossedEntityItem(ItemStack stack, net.minecraft.entity.player.EntityPlayer player)
 	{
 		double d0 = player.posY - 0.30000001192092896D + (double)player.getEyeHeight();
-        EntityItem entityTorch = new EntityItemTorch(player.worldObj, player.posX, d0, player.posZ, stack);
+        EntityItemTorch entityTorch = new EntityItemTorch(player.worldObj, player.posX, d0, player.posZ, stack);
         entityTorch.setPickupDelay(40);
         
         java.util.Random rand = new java.util.Random();
@@ -113,7 +116,28 @@ public class EntityItemTorch extends EntityItem
         entityTorch.motionY += (double)((rand.nextFloat() - rand.nextFloat()) * 0.1F);
         entityTorch.motionZ += Math.sin((double)f1) * (double)f;
         
-        return (EntityItemTorch)entityTorch;
+        return entityTorch;
+	}
+	
+	/**
+	 * Create a new EntityItemTorch from a stack being dropped as an item from a block.<br>
+	 * This method will be called as a chained override for Block.dropBlockAsItem by ItemTorch and BlockTorch.
+	 * 
+	 * @param worldIn Instance of the world where we want to create the entity
+	 * @param pos Position where we want to spawn the entity
+	 * @param stack ItemStack to create the entity from
+	 * @param nbt Torch data to imprint the entity with <i>(comes from TileEntityTorch)</i>
+	 * 
+	 * @return An instance of the newly created entity
+	 */
+	public static EntityItemTorch createDroppedEntityItem(World worldIn, BlockPos pos, ItemStack stack, NBTTagCompound nbt)
+	{
+		 double posX = (double)pos.getX() + ((double)(worldIn.rand.nextFloat() * 0.5F) + 0.25D); 
+         double posY = (double)pos.getY() + ((double)(worldIn.rand.nextFloat() * 0.5F) + 0.25D); 
+         double posZ = (double)pos.getZ() + ((double)(worldIn.rand.nextFloat() * 0.5F) + 0.25D);             
+         
+         ItemTorch.createCustomItemNBTFromExisting(stack, nbt, worldIn.getTotalWorldTime());
+         return new EntityItemTorch(worldIn, posX, posY, posZ, stack);
 	}
 	
     /**

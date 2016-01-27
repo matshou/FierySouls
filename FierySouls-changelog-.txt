@@ -1,3 +1,7 @@
+Version 1.2.8
+
+- Torches now drop custom EntityItem when harvested in survival mode.
+
 Version 1.2.7
 
 - Torches now have a 50-50% chance (as opposed to being 100% so far) of being extinguished 

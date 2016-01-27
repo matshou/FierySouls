@@ -6,8 +6,10 @@ import com.yooksi.fierysouls.tileentity.TileEntityTorchLit;
 import com.yooksi.fierysouls.entity.item.EntityItemTorch;
 import com.yooksi.fierysouls.item.ItemTorch;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
+
 import net.minecraft.util.BlockPos;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -18,6 +20,46 @@ import net.minecraft.world.World;
 
 public class BlockTorch extends net.minecraft.block.BlockTorch implements net.minecraft.block.ITileEntityProvider
 {
+	/**
+	 * Drop the block as item when harvested by player. <br>
+	 * Called when the player destroys the block by left-clicking it in survival mode. <p>
+	 * 
+	 * <i>Note: This method is not triggered in creative mode.</i>
+	 * 
+	 * @param worldIn The world instance where the player is harvesting the block
+	 * @param player EntityPlayer harvesting the block
+	 * @param pos Position of the block that's being harvested
+	 * @param state Current state of the block
+	 * @param te TileEntity that belongs to this block
+	 */
+	@Override
+	public void harvestBlock(World worldIn, EntityPlayer player, BlockPos pos, IBlockState state, TileEntity te)
+    {
+		if (!worldIn.isRemote && te != null && te instanceof TileEntityTorch)
+		{
+			player.triggerAchievement(net.minecraft.stats.StatList.mineBlockStatArray[getIdFromBlock(this)]);
+		    player.addExhaustion(0.025F);
+
+		    TileEntityTorch torchEntity = (TileEntityTorch)te;
+		      
+		    int fortune = net.minecraft.enchantment.EnchantmentHelper.getFortuneModifier(player);
+		    java.util.List<ItemStack> items = getDrops(worldIn, pos, state, fortune);
+	         
+		    // Normally the super method would now call Block.dropBlockAsItem,
+		    // however it does not pass the TileEntity reference to it and we need that here,
+		    // so we're just going to invoke a part of #dropBlockAsItemWithChance to go around that.
+		     
+	        for (ItemStack item : items)
+	        {
+	        	if (Block.getBlockFromItem(item.getItem()) == this)
+	        		spawnAsTorchEntity(worldIn, pos, item, torchEntity.saveDataToPacket());
+	                	
+	        	else super.spawnAsEntity(worldIn, pos, item);   // Spawn other items the default way
+	        }
+		}
+		else super.harvestBlock(worldIn, player, pos, state, te);
+    }
+	
 	/**
      * Spawns this Block's drops into the World as EntityItems.
      * The only thing we changed while overriding this method is that {@link Block#spawnAsEntity} 
@@ -32,6 +74,9 @@ public class BlockTorch extends net.minecraft.block.BlockTorch implements net.mi
 		// Since the whole reason we're overriding this method is so we can inject
 		// our own ItemEntity into the world, if we can't find the right tile entity we can't get the
 		// tile entity data and there really is no need for any custom injection here.
+		
+		// NOTE: Do not call this method when harvesting the block, at this stage the TileEntity
+		//       has already been removed from world and only exists as a passed reference. Call #harvestBlock method instead.
 		
 		net.minecraft.tileentity.TileEntity tileEntity = worldIn.getTileEntity(pos);
         if (tileEntity != null && tileEntity instanceof TileEntityTorch)
@@ -65,21 +110,15 @@ public class BlockTorch extends net.minecraft.block.BlockTorch implements net.mi
 		if (worldIn.getGameRules().getGameRuleBooleanValue("doTileDrops")) 
 		{
 			if (!captureDrops.get())
-            {
-                double posX = (double)pos.getX() + ((double)(worldIn.rand.nextFloat() * 0.5F) + 0.25D); 
-                double posY = (double)pos.getY() + ((double)(worldIn.rand.nextFloat() * 0.5F) + 0.25D); 
-                double posZ = (double)pos.getZ() + ((double)(worldIn.rand.nextFloat() * 0.5F) + 0.25D);
-                
-                // When the torch is dropped as an item in this way it has a 50-50% chance of being extinguished.
-                // Create a custom NBT for the stack here before we create the new entity item.
-   
-                if (new java.util.Random().nextInt(2) < 1)
+            { 
+                // When the torch is dropped as an item in this way 
+				// it has a 50-50% chance of being extinguished
+				
+				if (worldIn.rand.nextInt(2) < 1)
                 	stack.setItem(ResourceLibrary.TORCH_UNLIT.getItem());             
-                
-                ItemTorch.createCustomItemNBTFromExisting(stack, tagCompound, worldIn.getTotalWorldTime());
-                
-                EntityItem entityitem = new EntityItemTorch(worldIn, posX, posY, posZ, stack);
-                entityitem.setDefaultPickupDelay(); worldIn.spawnEntityInWorld(entityitem);
+                    
+                EntityItem entityitem = EntityItemTorch.createDroppedEntityItem(worldIn, pos, stack, tagCompound);
+                worldIn.spawnEntityInWorld(entityitem);
             }
 			else capturedDrops.get().add(stack);
 		}
