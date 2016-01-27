@@ -71,6 +71,10 @@ public class EntityItemTorch extends EntityItem
 			ItemTorch.extinguishItemTorch(getEntityItem(), true);
 			readDataFromStack();
 		}
+		else if (ItemTorch.updateItemCombustion(getEntityItem(), SharedDefines.MAIN_UPDATE_INTERVAL * -1) < 1) 
+		{
+			ItemTorch.extinguishItemTorch(getEntityItem(), false);
+		}
 		else if (worldObj.isRaining() && worldObj.canBlockSeeSky(getPosition()))
 		{
 			if (updateHumidity() >= SharedDefines.HUMIDITY_THRESHOLD)

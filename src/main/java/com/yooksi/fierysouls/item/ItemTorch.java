@@ -20,7 +20,7 @@ public class ItemTorch extends ItemBlock
 	public ItemTorch(net.minecraft.block.Block block) 
 	{
 		super(block);
-		this.setMaxDamage(-1);   // Disable damage for this item.
+		this.setMaxDamage(-1);   // Disable vanilla damage and use "torchItemDamage" NBT value instead.
 	}
 	
 	/** Use an existing NBTTC to update item stack NBT by extracting data directly from it. <p>
@@ -35,7 +35,15 @@ public class ItemTorch extends ItemBlock
 		{
 			NBTTagCompound itemTagCompound = stack.getTagCompound();
 			itemTagCompound.setShort("humidityLevel", newTagCompound.getShort("humidityLevel"));
-			itemTagCompound.setShort("combustionDuration", newTagCompound.getShort("combustionDuration"));
+			
+			// 'torchItemDamage' is a helper variable that we use so that we don't have to recalculate
+			// how much material has the torch combusted so far on every GUI render update.
+			
+			short combustion = newTagCompound.getShort("combustionDuration");
+			short itemDamage = (short) (SharedDefines.MAX_TORCH_FLAME_DURATION - combustion);
+			
+			itemTagCompound.setShort("combustionDuration", combustion);
+			itemTagCompound.setShort("torchItemDamage", itemDamage);
 		}
 	}
 	
@@ -47,10 +55,13 @@ public class ItemTorch extends ItemBlock
 	 */
 	public static void createCustomItemNBT(ItemStack stack, long worldTime)
 	{
+		final short sNull = (short) 0;
 		NBTTagCompound tagCompound = new NBTTagCompound();
 		
-		tagCompound.setShort("humidityLevel", (short)0);
+		tagCompound.setShort("humidityLevel", sNull);
 		tagCompound.setLong("lastUpdateTime", worldTime);
+		
+		tagCompound.setShort("torchItemDamage", sNull);
 		tagCompound.setShort("combustionDuration", SharedDefines.MAX_TORCH_FLAME_DURATION);
 		
 		stack.setTagCompound(tagCompound);
@@ -66,7 +77,7 @@ public class ItemTorch extends ItemBlock
 	 */
 	public static void createCustomItemNBTFromExisting(ItemStack stack, NBTTagCompound tagCompound, long worldTime)
 	{
-		if (tagCompound != null)
+		if (tagCompound != null && stack != null)
 		{
 			createCustomItemNBT(stack, worldTime);
 			updateCustomItemNBTFromExisting(stack, tagCompound);
@@ -143,7 +154,6 @@ public class ItemTorch extends ItemBlock
     		return false;
     	
     	return super.shouldCauseReequipAnimation(oldStack, newStack, slotChanged);
-    
     }
     
     /**
@@ -172,6 +182,15 @@ public class ItemTorch extends ItemBlock
     		if (getItemHumidity(stack) >= SharedDefines.HUMIDITY_THRESHOLD)
     			return;
     		
+    		if (ResourceLibrary.isItemLitTorch(stack.getItem()))
+    		{
+    			// When lit torches are not placed in the hotbar, but in storage slots
+    			// they should be extinguished - adds realism.
+    			
+    			if (itemSlot > 8 || updateItemCombustion(stack, SharedDefines.MAIN_UPDATE_INTERVAL * -1) < 1)
+    				extinguishItemTorch(stack, false);
+    		}
+    		
     		// Check 'isInWater' first to optimize the code a bit, boolean checks are the fastest. 
     		// The second check is a lengthy one and should not return true if the first one returns false.
     				
@@ -182,10 +201,42 @@ public class ItemTorch extends ItemBlock
     				
     			else setItemHumidity(stack, SharedDefines.HUMIDITY_THRESHOLD); 
     		}
+    		else if (entityIn.isInLava() && itemSlot < 9)  // Light torches in hotbar on fire when player is in lava
+    		{
+    			if (ResourceLibrary.isItemUnlitTorch(stack.getItem()))
+    				stack.setItem(ResourceLibrary.TORCH_LIT.getItem());
+    		}
     	}
     }
     
     /**
+     * Determines if the durability bar should be rendered for this item. <br>
+     * Dependent on torch combustion duration value.
+     *
+     * @param stack The current Item Stack
+     * @return True if it should render the 'durability' bar.
+     */
+    public boolean showDurabilityBar(ItemStack stack)
+    {
+    	return this.getTorchItemDamage(stack) > 0;
+    }
+    	
+    /**
+     * Queries the percentage of the 'Durability' bar that should be drawn. <p>
+     * 
+     * <i>The percentage is dependent on combustion rather then ItemStack.itemDamage.<br>
+     * The reason we don't use itemDamage is because we want to replace the torch when it burns out,<br>
+     * and if we use itemDamage the item will get destroyed before we get the chance to replace the torch.</i>
+     *
+     * @see {@link #showDurabilityBar(ItemStack)}
+     * @param stack The current ItemStack
+     * @return 0 for 100% 1.0 for 0%
+     */
+    @Override
+    public double getDurabilityForDisplay(ItemStack stack)
+    {
+    	return (double)this.getTorchItemDamage(stack) / (double)SharedDefines.MAX_TORCH_FLAME_DURATION;
+    }
     
     /**
      * Check to see if we should perform a full item update.<br>
@@ -220,16 +271,29 @@ public class ItemTorch extends ItemBlock
     	return stack.getTagCompound().getShort("humidityLevel");
     }
     /**
-     * Get combustion duration value for this item from NBT storage.<p>
+     * Get combustion duration value for this item from NBT storage.
      * <i><b>Warning:</b> This method does not make safe checks on the validity of item NBT.</i>
      * 
      * @throws java.lang.NullPointerException
      * @param stack ItemStack to get the information from
-     * @return Returns the combustion duration value from item NBT
+     * @return Returns combustion duration value from item NBT or -1 if no stack or compound found
      */
     private static short getItemCombustionDuration(ItemStack stack)
     {
     	return stack.getTagCompound().getShort("combustionDuration");
+    }
+    
+    /**
+     * How much material has this torch expended (with combustion) so far?
+     * 
+     * @see {@link #getDurabilityForDisplay(ItemStack)}
+     * @param stack ItemStack to get the information from
+     * @return Amount of material combusted from stack NBT
+     */
+    private static short getTorchItemDamage(ItemStack stack)
+    {
+    	return (stack != null && stack.hasTagCompound()) ?
+    			stack.getTagCompound().getShort("torchItemDamage") : -1;
     }
     
     /**
@@ -261,6 +325,30 @@ public class ItemTorch extends ItemBlock
     		stack.getTagCompound().setShort("humidityLevel", value);
     }
     
+    /**
+     * Update the time the item torch is allowed to burn.
+     * 
+     * @param stack ItemStack to update the time for
+     * @param value Value to decrease the time for (expected to be a negative value)
+     * @return The updated value or -1 if stack of NBT were not found
+     */
+    public static short updateItemCombustion(ItemStack stack, int value)
+    {
+    	if (stack != null && stack.hasTagCompound())
+    	{	
+    		short combustion = stack.getTagCompound().getShort("combustionDuration");
+    		combustion += ((combustion + value > 0) ? value : combustion * -1);   // Keep the value unsigned; 
+    		
+    		stack.getTagCompound().setShort("combustionDuration", combustion);
+    		
+    		// Updating this under the assumption that the argument is a negative value
+    		
+    		short itemDamage = (short) (stack.getTagCompound().getShort("torchItemDamage") + (value * -1));
+    		stack.getTagCompound().setShort("torchItemDamage", itemDamage);
+    	    
+    		return combustion;
+    	}
+    	else return -1;
     }
     
 	/**

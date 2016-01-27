@@ -128,7 +128,7 @@ public enum ResourceLibrary
 	 */
 	public static boolean isItemUnlitTorch(Item item)
 	{
-		return item == ResourceLibrary.TORCH_LIT.getItem();
+		return item == ResourceLibrary.TORCH_UNLIT.getItem();
 	}
 	
     public final Block getBlock()
