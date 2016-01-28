@@ -13,7 +13,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.entity.item.EntityItem;
 
-public class EntityItemTorch extends EntityItem
+public final class EntityItemTorch extends EntityItem
 {
 	private byte updateTickCount = 0;
 	private short humidity;

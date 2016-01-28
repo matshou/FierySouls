@@ -32,7 +32,8 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
 	// This updates every tileEntity tick on both client and server side
 	public void update() {};
 	
-	/** Update the time duration of torch coal combustion with a new value.
+	/** 
+	 *  Update the time duration of torch coal combustion with a new value.
 	 *  @param value to increment the duration with (accepts negatives). 
 	 */
 	protected short updateCombustionDuration(final int value)
@@ -44,7 +45,8 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
 		return combustionDuration;
 	}
 	
-	/** Update torch humidity level with a new value.
+	/** 
+	 *  Update torch humidity level with a new value.
 	 *  @param value to increment the humidity level with (accepts negatives).
 	 */
 	protected short updateHumidityLevel(short value)
@@ -61,7 +63,9 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
     	return (humidityLevel >= SharedDefines.HUMIDITY_THRESHOLD);
     }
     
-    /** This update is for the moment only being done just before the entity is destroyed.
+    /** 
+     *  This update is for the moment only being done just before the entity is destroyed.
+     *  
      *  @param worldTime current <b>total</b> time in the world. 
      *  @see {@link #saveDataToPacket()}
      */ 
@@ -73,7 +77,8 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
     
     // ====================================== NETWORK UTILITIES ==============================================
     
-    /** Saves all important information to a custom NBT packet. <br>
+    /** 
+     *  Saves all important information to a custom NBT packet. <br>
      *  Used to pass internal data to external sources.
      *  @return NBT packet containing all up-to-date torch data. 
      */
@@ -102,7 +107,6 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
 	 * Extracts data from a packet that was sent from the server. Called on client only. <br>
 	 * Minecraft automatically sends a 'description packet' for the tile entity when it is first 
 	 * loaded on the client,<br> and you can force it to resend one afterwards	
-	 * 	
 	 */
 	@Override
 	@SideOnly(Side.CLIENT)

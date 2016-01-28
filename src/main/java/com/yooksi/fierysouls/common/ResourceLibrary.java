@@ -1,6 +1,7 @@
 package com.yooksi.fierysouls.common;
 
 import com.yooksi.fierysouls.entity.item.EntityItemTorch;
+import com.yooksi.fierysouls.client.ClientProxy;
 import com.yooksi.fierysouls.tileentity.*;
 import com.yooksi.fierysouls.block.*;
 import com.yooksi.fierysouls.item.*;
@@ -12,13 +13,20 @@ import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 
 /** 
- * List of all resources (items, blocks and entities) contained in this distribution. 
- * To create a new resource just create a new enumerator here and initialize the resource inside it.
- * Be sure to invoke the right constructor depending on the resource type (block or item).
- * Your resource instance will be registered with Forge in "CommonProxy" and it's renderers in "ClientProxy".
- * If you want to register tile entities just include the class or enter null if none exists.
+ * List of all resources (items, blocks and entities) contained in this distribution. <p>
  * 
- * Optionally if you want to add a recipe for your item visit the "RecipeLibrary".
+ * To create a new resource just create a new enumerator here and initialize the resource inside it. <br>
+ * Be sure to invoke the right constructor depending on the resource type. Your resource instance will be <br>
+ * registered with Forge in {@link CommonProxy} and it's renderers in {@link ClientProxy}. <p>
+ *
+ * <i><b>Optional</b> elements to register with this resource:</i>
+ * <ul>
+ * <li>TileEntities</li>
+ * <li>ItemBlocks</li>
+ * <li>EntityItems</li>
+ * <li>Recipes</li></ul>
+ * 
+ * @see RecipeLibrary
  */
 public enum ResourceLibrary
 {
@@ -53,14 +61,16 @@ public enum ResourceLibrary
 		instance = resource;
 		name = resourceName;		
 	}
-	/** This constructor is used by resources that initialize BLOCKS. 
+	/** 
+	 * This constructor is used by resources that initialize BLOCKS. 
 	 */
 	private ResourceLibrary(Object resourceInstance, String resourceName, Class tileEntity, Class itemBlockClass, Class entityItem)
 	{	
 		this(resourceInstance, resourceName, tileEntity, itemBlockClass, entityItem, new java.util.ArrayList());
 		getBlock().setUnlocalizedName(resourceName).setCreativeTab(FierySouls.tabTorches);
 	}
-	/** This constructor is used by resources that initialize ITEMS. 
+	/** 
+	 * This constructor is used by resources that initialize ITEMS. 
 	 */
 	private ResourceLibrary(Object resourceInstance, String resourceName, Class entityItem)
 	{
@@ -68,9 +78,16 @@ public enum ResourceLibrary
 		getItem().setUnlocalizedName(resourceName).setCreativeTab(FierySouls.tabTorches);
 	}
 	
-	// I've tried adding this to the constructor but the problem is that the recipe library uses resource library references
-	// before we're properly initialized it. Have to call it from there after we initialize first.
-	public final void addRecipeToLibrary(RecipeLibrary recipeToAdd)
+	/**
+	 *  Should only be called by the RecipeLibrary. <p>
+	 *  
+	 *  <i>I've tried adding this to the constructor but the problem is that the recipe library <br>
+	 *  uses resource library references before we're properly initialized it. <br>
+	 *  Have to call it from there after we initialize first. </i>
+	 *  
+	 * @param recipeToAdd
+	 */
+	public void addRecipeToLibrary(RecipeLibrary recipeToAdd)
 	{
 		this.recipeList.add(recipeToAdd);
 	}
@@ -135,6 +152,7 @@ public enum ResourceLibrary
     {	
     	return (isResourceBlock()) ? (Block)instance : Block.getBlockFromItem((Item)instance); 
     }
+    
     public Item getItem()
     {
     	// In some cases we might want to call this function to get an item instance of a block.

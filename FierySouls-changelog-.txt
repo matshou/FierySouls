@@ -1,3 +1,8 @@
+Version 1.2.10
+
+- Made comments look more pretty and give more accurate information.
+- Reorganized methods in ItemTorch class.
+
 Version 1.2.9
 
 - Fixed a typo affecting unlit torches in ResourceLibrary.

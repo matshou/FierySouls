@@ -22,87 +22,7 @@ public class ItemTorch extends ItemBlock
 		super(block);
 		this.setMaxDamage(-1);   // Disable vanilla damage and use "torchItemDamage" NBT value instead.
 	}
-	
-	/** Use an existing NBTTC to update item stack NBT by extracting data directly from it. <p>
-	 * <i><b>Note</b> that this does not create but just update an already existing NBT Tag Compound.</i>
-	 *  
-	 * @param stack Item stack to update
-	 * @param newTagCompound NBT Tag Compound to extract data from
-	 */
-	private static void updateCustomItemNBTFromExisting(ItemStack stack, NBTTagCompound newTagCompound)
-	{
-		if (newTagCompound != null && stack.hasTagCompound())
-		{
-			NBTTagCompound itemTagCompound = stack.getTagCompound();
-			itemTagCompound.setShort("humidityLevel", newTagCompound.getShort("humidityLevel"));
-			
-			// 'torchItemDamage' is a helper variable that we use so that we don't have to recalculate
-			// how much material has the torch combusted so far on every GUI render update.
-			
-			short combustion = newTagCompound.getShort("combustionDuration");
-			short itemDamage = (short) (SharedDefines.MAX_TORCH_FLAME_DURATION - combustion);
-			
-			itemTagCompound.setShort("combustionDuration", combustion);
-			itemTagCompound.setShort("torchItemDamage", itemDamage);
-		}
-	}
-	
-	/**
-	 * Create a custom item NBT tag compound for a specific item stack. <br>
-	 * <i>This makes the item stack carry the same information as <b>TileEntityTorch</b> and <b>EntityItemTorch</b>.
-	 * 
-	 * @param stack ItemStack to create a new NBT for
-	 */
-	public static void createCustomItemNBT(ItemStack stack, long worldTime)
-	{
-		final short sNull = (short) 0;
-		NBTTagCompound tagCompound = new NBTTagCompound();
 		
-		tagCompound.setShort("humidityLevel", sNull);
-		tagCompound.setLong("lastUpdateTime", worldTime);
-		
-		tagCompound.setShort("torchItemDamage", sNull);
-		tagCompound.setShort("combustionDuration", SharedDefines.MAX_TORCH_FLAME_DURATION);
-		
-		stack.setTagCompound(tagCompound);
-	}
-	
-	/** 
-	 * Create a custom item NBT tag compound for a specific item stack <b><i>from an existing tag compound</b></i>.<p>
-	 * <i>This is an attempt at micro-optimizing because we could just pass the existing NBT to item <br> 
-	 * without creating a new one, however this might save some memory as it will not carry useless data.</i>
-	 *  
-	 * @param stack ItemStack to create a new NBT for
-	 * @param tagCompound Existing NBT tag compound to extract data from
-	 */
-	public static void createCustomItemNBTFromExisting(ItemStack stack, NBTTagCompound tagCompound, long worldTime)
-	{
-		if (tagCompound != null && stack != null)
-		{
-			createCustomItemNBT(stack, worldTime);
-			updateCustomItemNBTFromExisting(stack, tagCompound);
-		}
-	}
-	/**
-	 * Write NBT data to designated packet and return the updated data.<p>
-	 * <i>Note that if the packet passed does not exists a new one will be created.</i>
-	 * 
-	 * @param stack ItemStack to be save data for <i>(cannot be null)</i>
-	 * @param packet NBTTagCompound to save data to <i>(can be null)</i>
-	 * @return The new and updated NBT tag compound
-	 */
-	private static NBTTagCompound saveStackDataToPacket(ItemStack stack, NBTTagCompound packet)
-	{
-		if (packet == null)
-			packet = new NBTTagCompound();    // If no packet was selected create a new one
-		
-		NBTTagCompound itemStackData = stack.getTagCompound();
-		packet.setShort("humidityLevel", itemStackData.getShort("humidityLevel"));
-		packet.setShort("combustionDuration", itemStackData.getShort("combustionDuration")); 
-		
-		return packet;
-	}
-	
 	/**
      * Called when a Block is right-clicked with this Item. <p>
      * 
@@ -135,9 +55,29 @@ public class ItemTorch extends ItemBlock
     	}
     	return wasBlockPlaced;
     }
+    
+    /**
+	 * Write NBT data to designated packet and return the updated data.<p>
+	 * <i>Note that if the packet passed does not exists a new one will be created.</i>
+	 * 
+	 * @param stack ItemStack to be save data for <i>(cannot be null)</i>
+	 * @param packet NBTTagCompound to save data to <i>(can be null)</i>
+	 * @return The new and updated NBT tag compound
+	 */
+	private static NBTTagCompound saveStackDataToPacket(ItemStack stack, NBTTagCompound packet)
+	{
+		if (packet == null)
+			packet = new NBTTagCompound();    // If no packet was selected create a new one
+		
+		NBTTagCompound itemStackData = stack.getTagCompound();
+		packet.setShort("humidityLevel", itemStackData.getShort("humidityLevel"));
+		packet.setShort("combustionDuration", itemStackData.getShort("combustionDuration")); 
+		
+		return packet;
+	}
 
     /**
-     * Determine if the player switching between these two item stacks
+     * Determines if the player is switching between two item stacks.<br>
      * 
      * @param oldStack The old stack that was equipped
      * @param newStack The new stack
@@ -157,8 +97,27 @@ public class ItemTorch extends ItemBlock
     }
     
     /**
-     * Called each tick as long the item is on a player inventory. Uses by maps to check if is on a player hand and
-     * update it's contents.
+     * Check to see if we should perform a full item update.<br>
+     * Written specifically to be at the disposal of {@link #onUpdate}.
+     *
+     * @param stack ItemStack we would like to update <b>(unchecked)</b>
+     * @param worldTime Total time elapsed from the creation of the world 
+     * @return True if enough world time has elapsed
+     */
+    private static boolean shouldUpdateItem(ItemStack stack, long worldTime)
+    {
+    	long lastUpdateTime = stack.getTagCompound().getLong("lastUpdateTime");	
+    	if (lastUpdateTime > 0 && worldTime - lastUpdateTime >= SharedDefines.MAIN_UPDATE_INTERVAL)
+    	{
+    		stack.getTagCompound().setLong("lastUpdateTime", worldTime);
+    		return true;
+    	}
+    	else return false;
+    }   
+    
+    /**
+     * Called each tick as long the item is on a player inventory.<br> 
+     * Uses by maps to check if is on a player hand and update it's contents.
      */
     @Override
     public void onUpdate(ItemStack stack, World worldIn, Entity entityIn, int itemSlot, boolean isSelected)
@@ -214,7 +173,7 @@ public class ItemTorch extends ItemBlock
      * Dependent on torch combustion duration value.
      *
      * @param stack The current Item Stack
-     * @return True if it should render the 'durability' bar.
+     * @return True if it should render the 'durability' bar
      */
     public boolean showDurabilityBar(ItemStack stack)
     {
@@ -239,31 +198,10 @@ public class ItemTorch extends ItemBlock
     }
     
     /**
-     * Check to see if we should perform a full item update.<br>
-     *
-     * @throws java.lang.NullPointerException
-     * @param stack ItemStack we're checking this for
-     * @param worldTime Total time elapsed from the creation of the world 
-     * @return True if enough world time has elapsed
-     */
-    private static boolean shouldUpdateItem(ItemStack stack, long worldTime)
-    {
-    	long lastUpdateTime = stack.getTagCompound().getLong("lastUpdateTime");
-    	
-    	if (lastUpdateTime > 0 && worldTime - lastUpdateTime >= SharedDefines.MAIN_UPDATE_INTERVAL)
-    	{
-    		stack.getTagCompound().setLong("lastUpdateTime", worldTime);
-    		return true;
-    	}
-    	else return false;
-    }
-    
-    /**
      * Get humidity value for this item from NBT storage.<p>
-     * <i><b>Warning:</b> This method does not make safe checks on the validity of item NBT.</i>
      * 
-     * @throws java.lang.NullPointerException
-     * @param stack ItemStack to get the information from
+     * @throws java.lang.NullPointerException if item tag compound is not found
+     * @param stack ItemStack to get the information from <b>(unchecked)</b>
      * @return Returns the humidity value from item NBT
      */
     private static short getItemHumidity(ItemStack stack)
@@ -272,11 +210,10 @@ public class ItemTorch extends ItemBlock
     }
     /**
      * Get combustion duration value for this item from NBT storage.
-     * <i><b>Warning:</b> This method does not make safe checks on the validity of item NBT.</i>
      * 
-     * @throws java.lang.NullPointerException
-     * @param stack ItemStack to get the information from
-     * @return Returns combustion duration value from item NBT or -1 if no stack or compound found
+     * @throws java.lang.NullPointerException if item tag compound is not found
+     * @param stack ItemStack to get the information from <b>(unchecked)</b>
+     * @return Returns combustion duration value from item NBT
      */
     private static short getItemCombustionDuration(ItemStack stack)
     {
@@ -284,11 +221,12 @@ public class ItemTorch extends ItemBlock
     }
     
     /**
-     * How much material has this torch expended (with combustion) so far?
+     * How much material has this torch expended with combustion so far?
      * 
-     * @see {@link #getDurabilityForDisplay(ItemStack)}
+     * @see {@link #getDurabilityForDisplay}
      * @param stack ItemStack to get the information from
-     * @return Amount of material combusted from stack NBT
+     * @return Amount of material combusted from stack NBT, <br> 
+     *         -1 if item stack or NBT are <i>null</i>
      */
     private static short getTorchItemDamage(ItemStack stack)
     {
@@ -314,7 +252,6 @@ public class ItemTorch extends ItemBlock
      
     /**
      * Set the humidity level of an ItemStack to a new value. <p>
-     * <i>This method is responsible for checking for null values, no need to worry.</i>
      * 
      * @param stack ItemStack that data we wish to update
      * @param value New value to update humidity to
@@ -350,6 +287,74 @@ public class ItemTorch extends ItemBlock
     	}
     	else return -1;
     }
+    
+    /** 
+	 * Use an existing NBT tag compound to update item stack NBT by extracting data directly from it. <p>
+	 * <i><b>Note</b> that this does not create but just update an already existing NBT Tag Compound.</i>
+	 *  
+	 * @param stack Item stack to update
+	 * @param newTagCompound NBT Tag Compound to extract data from
+	 */
+	private static void updateCustomItemNBTFromExisting(ItemStack stack, NBTTagCompound newTagCompound)
+	{
+		if (newTagCompound != null && stack.hasTagCompound())
+		{
+			NBTTagCompound itemTagCompound = stack.getTagCompound();
+			itemTagCompound.setShort("humidityLevel", newTagCompound.getShort("humidityLevel"));
+			
+			// 'torchItemDamage' is a helper variable that we use so that we don't have to recalculate
+			// how much material has the torch combusted so far on every GUI render update.
+			
+			short combustion = newTagCompound.getShort("combustionDuration");
+			short itemDamage = (short) (SharedDefines.MAX_TORCH_FLAME_DURATION - combustion);
+			
+			itemTagCompound.setShort("combustionDuration", combustion);
+			itemTagCompound.setShort("torchItemDamage", itemDamage);
+		}
+	}
+	
+	/** 
+	 * Create a custom item NBT tag compound for a specific item stack <b><i>from an existing tag compound</b></i>.<p>
+	 * 
+	 * <i>This is an attempt at micro-optimizing because we could just pass the existing NBT to item <br> 
+	 * without creating a new one, however this might save some memory as it will not carry useless data.</i>
+	 *  
+	 * @param stack ItemStack to create a new NBT for
+	 * @param tagCompound Existing NBT tag compound to extract data from
+	 * @param worldTime Current <b>total</b> time in the world
+	 */
+	public static void createCustomItemNBTFromExisting(ItemStack stack, NBTTagCompound tagCompound, long worldTime)
+	{
+		if (tagCompound != null && stack != null)
+		{
+			createCustomItemNBT(stack, worldTime);
+			updateCustomItemNBTFromExisting(stack, tagCompound);
+		}
+	}
+	
+	/**
+	 * Create a custom item NBT tag compound for a specific item stack. <br>
+	 * All the values will be initialized to default standards.<p>
+	 * 
+	 * <i>Use #createCustomItemNBTFromExisting if you already have NBT data for this item to inherit.</i>
+	 *
+	 * @see {@link #createCustomItemNBTFromExisting}
+	 * @param worldTime Current <b>total</b> time in the world
+	 * @param stack ItemStack to create a new NBT for <b>(unchecked)</b>
+	 */
+	public static void createCustomItemNBT(ItemStack stack, long worldTime)
+	{	
+		final short sNull = (short) 0;
+		NBTTagCompound tagCompound = new NBTTagCompound();
+		
+		tagCompound.setShort("humidityLevel", sNull);
+		tagCompound.setLong("lastUpdateTime", worldTime);
+		
+		tagCompound.setShort("torchItemDamage", sNull);
+		tagCompound.setShort("combustionDuration", SharedDefines.MAX_TORCH_FLAME_DURATION);
+		
+		stack.setTagCompound(tagCompound);
+	}
     
 	/**
      * This used to be 'display damage' but its really just 'aux' data in the ItemStack. <br>

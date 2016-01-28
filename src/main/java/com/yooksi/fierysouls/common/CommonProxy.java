@@ -19,7 +19,10 @@ public class CommonProxy
 		handleRecipes(); 
 	}
 	
-	/** Register all items and blocks from the resource library with Forge */
+	/** 
+	 *  Register all items and blocks from the resource library with Forge. <br>
+	 *  This is called when the mod is passing the pre-initialization phase.
+	 */
 	private static void registerResources() 
 	{
 		FierySouls.logger.info("Preparing to register item and block instances...");
@@ -54,7 +57,10 @@ public class CommonProxy
 		FierySouls.logger.info("Finished registering object instances. " + report);
 	}
 	
-	/** Register new custom recipes and remove vanilla ones */
+	/** 
+	 *  Register new custom recipes and remove vanilla ones. <br>
+	 *  This is called when the mod is passing the pre-initialization phase.
+	 */
 	private void handleRecipes() 
     {	
 		// Remove vanilla recipes here
@@ -79,9 +85,14 @@ public class CommonProxy
 			}
 		}
     }
-	/** Removes vanilla recipes from CraftingManager recipe list.
+	/** 
+	 *  Removes vanilla recipes from the CraftingManager recipe list.
+	 *  
 	 *  @param toRemove Item corresponding to the output of the recipe we want to remove.
 	 *  @return Number of recipes we removed from the recipe list.
+	 *  
+	 *  @throws java.lang.NullPointerException <br>
+	 *          if either the crafting manager or the recipe list are not found.
 	 */ 
 	private static int removeRecipe(Item toRemove)
 	{

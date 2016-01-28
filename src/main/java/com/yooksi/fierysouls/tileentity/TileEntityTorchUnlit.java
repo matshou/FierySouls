@@ -12,7 +12,7 @@ import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 
 import net.minecraft.tileentity.TileEntity;
 
-public class TileEntityTorchUnlit extends TileEntityTorch
+public final class TileEntityTorchUnlit extends TileEntityTorch
 { 
 	private static final float RAIN_STR_THRESHOLD = 0.85F;   // How strong must the rain be falling to extinguish the torch?
 	private static final byte SMOLDERING_RANDOM = 125;      // Random factor in determining how long is the torch going to smolder.
@@ -45,9 +45,12 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 			setTorchSmoldering(false, getWorld().getWorldTime());
 	}
 	
-	/** Set the torch on fire by updating 'blockstate' at world coordinates. This method serves 
-	 *  as a proxy for the duplicate method in BlockTorchUnlit, checking humidity and combustion duration 
-	 *  as well as handling data inheritance. Always call this function first!
+	/** 
+	 *  Set the torch on fire by updating 'blockstate' at world coordinates. <p>
+	 *  
+	 *  <i>This method serves  as a proxy for the duplicate method in BlockTorchUnlit, <br>
+	 *  checking humidity and combustion duration as well as handling data inheritance. <p>
+	 *  <b>Always call this method first!</b></i>
 	 */
     public void lightTorch()
     {
@@ -61,16 +64,13 @@ public class TileEntityTorchUnlit extends TileEntityTorch
     		}
     	}
     }
-	// Tells us if our torch is emitting smoke particles due to recently being extinguished
-    public final boolean isTorchSmoldering()
-	{
-		return (timeTorchStartedSmoldering != 0);
-	}
-	/** Activate or deactivate smoke particles spawning above the torch. <br>
+    
+	/** 
+	 *  Activate or deactivate smoke particles spawning above the torch. <br>
      *  When torch smoldering has been activated, the particles will be created in it's block class.
      *  
      *  @param smolderingState True to activate, false to deactivate smoldering effect
-     *  @param totalWorldTime Total time in this world, passed as an argument for security reasons
+     *  @param totalWorldTime Total time in this world, passed instead of World for security reasons
      *  
      *  @see {@link BlockTorchUnlit#randomDisplayTick}
      */
@@ -86,15 +86,27 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 		}
 		else timeTorchStartedSmoldering =  0;
 	}
+	
 	@SideOnly(Side.CLIENT)
 	private final boolean didSmolderingExpire()
 	{
-		return (getWorld().getTotalWorldTime() - timeTorchStartedSmoldering > torchSmolderingDuration);
+		return (getWorld().getWorldTime() - timeTorchStartedSmoldering > torchSmolderingDuration);
 	}
 	
 	/** 
-	 * Gathers data into a packet that is to be sent to the client. Called on server only.<br>
-	 * Place custom packet data you want to send to client here.
+	 * Tells us if our torch is emitting smoke particles after recently being extinguished.
+	 */
+	@SideOnly(Side.CLIENT)
+    public boolean isTorchSmoldering()
+	{
+		return (timeTorchStartedSmoldering != 0);
+	}
+	
+	/** 
+	 * Gathers data into a packet that is to be sent to the client. <br>
+	 * Place custom packet data you want to send to client here. <p>
+	 * 
+	 * <i>Called on server only.</i>
 	 */
 	@Override
 	public Packet getDescriptionPacket() 

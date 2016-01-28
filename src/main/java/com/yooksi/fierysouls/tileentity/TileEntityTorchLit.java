@@ -15,7 +15,7 @@ import net.minecraft.world.World;
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 
-public class TileEntityTorchLit extends TileEntityTorch
+public final class TileEntityTorchLit extends TileEntityTorch
 {
 	private static final double DIMINISH_LIGHT_PER_INTERVAL = 0.025;   // Amount of light to diminish each update interval.
 	private static final short DIMINISH_LIGHT_TIME_MARK = 1600;        // Diminishing light after remaining combustion equals this number.
@@ -32,7 +32,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 	}
 	
 	@Override
-	public final void update()
+	public void update()
 	{
 		// Update only at set intervals to reduce performance hits.
 		if (updateTickCount++ < SharedDefines.MAIN_UPDATE_INTERVAL)
@@ -63,7 +63,8 @@ public class TileEntityTorchLit extends TileEntityTorch
 			updateLightLevel(DIMINISH_LIGHT_PER_INTERVAL);
 	}
 	
-	/** Replace this torch with an unlit one and activate the smoldering effect. <br>
+	/** 
+	 *  Replace this torch with an unlit one and activate the smoldering effect. <br>
 	 *  This method acts like a proxy for a clone method in BlockTorchLit, always call this one first!
 	 */
 	public void extinguishTorch()
@@ -79,13 +80,13 @@ public class TileEntityTorchLit extends TileEntityTorch
 	    	    // Set the torch 'smoldering' on server side, nothing will be seen but the client
 	    	    // will want to update and the sides will sync, pulling the data from server.
 	    	    
-	    	    torchUnlit.setTorchSmoldering(true, getWorld().getTotalWorldTime());
+	    	    torchUnlit.setTorchSmoldering(true, getWorld().getWorldTime());
 		    }
 	    }
 	}  
 	
-	/** Check to see if we should force the block above us to catch on fire.
-	 *  If we roll positive the torch will assume the function of a fire block with limited spreading movement.
+	/** 
+	 *  Check to see if we should force the block above us to catch on fire.
 	 */
 	private boolean tryCatchFireOnNeighbour()
 	{
@@ -112,18 +113,23 @@ public class TileEntityTorchLit extends TileEntityTorch
 		else return false;
 	}	
 	
-	/** Decrease the level of light the torch emits in it's environment 
-	 *  @param value this will be subtracted from the light level value. 
-	 *  The more iterations of subtracting this value from the total light level it takes to fully round the number
-	 *  the more it will take before the world get's notified that we changed the light value. Choose your base carefully.
-	 * */
+	/** 
+	 *  Decrease the level of light the torch emits in it's environment. <p>
+	 *  
+	 *  <i><b>Note:</b> The more iterations of subtracting this value from the total light level <br>
+	 *  it takes to fully round the number the more it will take before the world get's <br> notified
+	 *  that we changed the light value. Choose your base carefully.</i>
+	 *  
+	 *  @param value The value to be subtracted from the light level value. 
+	 */
 	@SideOnly(Side.CLIENT)
-	protected void updateLightLevel(double value)
+	private void updateLightLevel(double value)
 	{
 		// Update data after truncating to 3 decimals and then check if the value is a round number.
 		// To increase performance send render updates in world only if data is already rounded before casting int. 
 
 		torchLightLevel = Math.round((torchLightLevel - value) * 1000.0) / 1000.0;	
+		
 		if (torchLightLevel == Math.ceil(torchLightLevel))
 			worldObj.checkLight(this.pos);
 	}
@@ -133,8 +139,9 @@ public class TileEntityTorchLit extends TileEntityTorch
 		return (int)Math.floor(torchLightLevel);
 	}
 	
-	/** Initialize light level data on client and start regularly updating it.
-	 *  The initialization will only happen if light data needs to be updated.
+	/** 
+	 *  Initialize light level data on client and start regularly updating it. <br>
+	 *  The initialization will only happen if light data needs to be updated. <br>
 	 *  Also request from world to update light renderer with new data.
 	 */ 
 	@SideOnly(Side.CLIENT)

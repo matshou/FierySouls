@@ -3,8 +3,9 @@ package com.yooksi.fierysouls.common;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 
-/** This is where we store all our custom item recipes 
- *  Recipe library is initialized and used in "CommonProxy" to register new recipes with Forge
+/** 
+ *  This is where we store all our custom item recipes. <br>
+ *  Recipe library is initialized and used in {@link CommonProxy} to register recipes with Forge.
  */
 public enum RecipeLibrary
 {
@@ -17,7 +18,8 @@ public enum RecipeLibrary
 	private final Object[] chart;         // Recipe pattern that will be used to register the recipe
 	private final boolean isShapeless;
 	
-	/** This constructor will be called when any Enum constants are first called or referenced in code.	 
+	/** 
+	 * This constructor will be called when any Enum constants are first called or referenced in code.	 
 	 * 
 	 * @param recipeProduct The item that's crafted when using this recipe.
 	 * @param recipeChart The recipe pattern is used as a crafting parameter for shaped recipes. 
