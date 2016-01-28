@@ -1,3 +1,8 @@
+Version 1.2.11
+
+- When used as weapons to attack; torches will now deal fire damage on impact,
+  they also have a small chance of setting the target entities on fire.
+
 Version 1.2.10
 
 - Made comments look more pretty and give more accurate information.

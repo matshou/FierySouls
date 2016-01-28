@@ -55,4 +55,18 @@ public final class Utilities
 	  {
 	      return (array == null || array.length == 0);
 	  }
+	  
+	  /**
+	   * Emulate a random roll of a dice, and check if the roll beats the challenge.
+	   * 
+	   * @param challenge Value to roll against
+	   * @param sides Number of dice sides <i>(if 0, roll will be 0)</i>
+	   * @param rand Instance of java Random
+	   * @return True if the natural roll was successful against the challenge
+	   */
+	  public static boolean rollDiceAgainst(int challenge, int sides, java.util.Random rand)
+	  {
+		  final int naturalRoll = (sides > 0) ? rand.nextInt(sides) + 1 : 0;
+		  return (naturalRoll > 0 && naturalRoll <= challenge);
+	  }
 }

@@ -1,5 +1,6 @@
 package com.yooksi.fierysouls.item;
 
+import com.yooksi.fierysouls.common.Utilities;
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.common.ResourceLibrary;
@@ -8,6 +9,7 @@ import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 
 import net.minecraft.world.World;
@@ -17,12 +19,58 @@ import net.minecraft.nbt.NBTTagCompound;
 
 public class ItemTorch extends ItemBlock
 {
+	/** 
+	 * Damage this item will inflict in combat. <br>
+	 * This is what's written in <b>Pathfinder</b> about torches and combat: <p> 
+	 * 
+	 * <i>"If a torch is used in combat, treat it as a one-handed improvised weapon that deals <br>
+	 * bludgeoning damage equal to that of a gauntlet of its size, plus 1 point of fire damage."</i>
+	 */
+	private static final float TORCH_FIRE_DAMAGE = 1.0F;
+	
+	/** 
+	 *  Base chance value that is further modified and used as a value to roll against, <br>
+	 *  to determine if the entity attacked should be set on fire.
+	 */
+	private static final int CHANCE_TO_SET_TARGET_ON_FIRE = 10;
+	
 	public ItemTorch(net.minecraft.block.Block block) 
 	{
 		super(block);
 		this.setMaxDamage(-1);   // Disable vanilla damage and use "torchItemDamage" NBT value instead.
 	}
+	
+	 /**
+     * "Current implementations of this method in child classes do not use the entry argument <br> 
+     * beside ev. They just raise the damage on the stack." <p>
+     * 
+     * <i>Called when one entity attacks another with this item equipped.<br>
+     * Deal fire damage to target and possibly set entity on fire.</i>
+     *  
+     * @param target The Entity being hit
+     * @param attacker the attacking entity
+     */
+	@Override
+	public boolean hitEntity(ItemStack stack, EntityLivingBase target, EntityLivingBase attacker)
+    {
+		// TODO: Fire damage and chance of setting target on fire should
+		//       both be modified by entities 'fireResistance' value.
 		
+		target.attackEntityFrom(net.minecraft.util.DamageSource.onFire, TORCH_FIRE_DAMAGE);
+		
+		// The armor of the targets decreases the chance of setting on fire,
+		// count the combined value, not the type of armor.
+		
+		int armorValue = target.getTotalArmorValue();
+		final int chanceToSetOnFire = CHANCE_TO_SET_TARGET_ON_FIRE - armorValue;
+		
+		boolean setOnFire = Utilities.rollDiceAgainst(chanceToSetOnFire, 100, new java.util.Random());
+		
+		if (!target.isImmuneToFire() && setOnFire)
+			target.setFire(2);                              // Deal 1pt of DOT to target
+			
+		return super.hitEntity(stack, target, attacker);
+    }
 	/**
      * Called when a Block is right-clicked with this Item. <p>
      * 
