@@ -1,15 +1,7 @@
 # Forge Documents #
 ###################
 
-.gradle
-.settings
-bin
-build
-eclipse
 gradle
-run
-.classpath
-.project
 build.gradle
 CREDITS-fml.txt
 forge-1.8-11.14.4.1563-changelog.txt
@@ -30,8 +22,8 @@ bin
 *.launch
 .settings
 .metadata
-.classpath
-.project
+#.classpath
+#.project
 
 # idea
 out
