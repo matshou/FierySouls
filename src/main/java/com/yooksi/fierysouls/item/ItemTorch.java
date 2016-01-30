@@ -38,7 +38,10 @@ public class ItemTorch extends ItemBlock
 	{
 		super(block);
 		this.setMaxDamage(-1);   // Disable vanilla damage and use "torchItemDamage" NBT value instead.
-	}
+
+		if (block.equals(ResourceLibrary.TORCH_LIT.getBlock()))
+			this.setMaxStackSize(1);
+	}	
 	
 	 /**
      * "Current implementations of this method in child classes do not use the entry argument <br> 
@@ -53,24 +56,28 @@ public class ItemTorch extends ItemBlock
 	@Override
 	public boolean hitEntity(ItemStack stack, EntityLivingBase target, EntityLivingBase attacker)
     {
-		// TODO: Fire damage and chance of setting target on fire should
-		//       both be modified by entities 'fireResistance' value.
+		if (stack != null && ResourceLibrary.isItemLitTorch(stack.getItem()))
+		{
+			// TODO: Fire damage and chance of setting target on fire should
+		    //       both be modified by entities 'fireResistance' value.
 		
-		target.attackEntityFrom(net.minecraft.util.DamageSource.onFire, TORCH_FIRE_DAMAGE);
+		    target.attackEntityFrom(net.minecraft.util.DamageSource.onFire, TORCH_FIRE_DAMAGE);
 		
-		// The armor of the targets decreases the chance of setting on fire,
-		// count the combined value, not the type of armor.
+		    // The armor of the targets decreases the chance of setting on fire,
+		    // count the combined value, not the type of armor.
 		
-		int armorValue = target.getTotalArmorValue();
-		final int chanceToSetOnFire = CHANCE_TO_SET_TARGET_ON_FIRE - armorValue;
+		    int armorValue = target.getTotalArmorValue();
+		    final int chanceToSetOnFire = CHANCE_TO_SET_TARGET_ON_FIRE - armorValue;
 		
-		boolean setOnFire = Utilities.rollDiceAgainst(chanceToSetOnFire, 100, new java.util.Random());
+		    boolean setOnFire = Utilities.rollDiceAgainst(chanceToSetOnFire, 100, new java.util.Random());
 		
-		if (!target.isImmuneToFire() && setOnFire)
-			target.setFire(2);                              // Deal 1pt of DOT to target
-			
+		    if (!target.isImmuneToFire() && setOnFire)
+			    target.setFire(2);                              // Deal 1pt of DOT to target	
+		}
+		
 		return super.hitEntity(stack, target, attacker);
     }
+    
 	/**
      * Called when a Block is right-clicked with this Item. <p>
      * 
@@ -196,6 +203,9 @@ public class ItemTorch extends ItemBlock
     			
     			if (itemSlot > 8 || updateItemCombustion(stack, SharedDefines.MAIN_UPDATE_INTERVAL * -1) < 1)
     				extinguishItemTorch(stack, false);
+    			
+    			else if (updateItemHumidity(stack, SharedDefines.MAIN_UPDATE_INTERVAL) >= SharedDefines.HUMIDITY_THRESHOLD)
+    					extinguishItemTorch(stack, false);
     		}
     		
     		// Check 'isInWater' first to optimize the code a bit, boolean checks are the fastest. 
@@ -297,6 +307,22 @@ public class ItemTorch extends ItemBlock
     	if (extinguishByWater == true)
     		setItemHumidity(stack, SharedDefines.HUMIDITY_THRESHOLD);
     }
+    
+    /**
+     *  Set this item torch on fire. <br>
+     *  <i>Nothing will happen if the item is too wet or has already burned out.</i>
+     *  
+     * @param stack ItemStack instance of our torch to set on fire
+     */
+    public static void lightItemTorch(ItemStack stack)
+    {
+    	boolean result = stack != null && stack.hasTagCompound();
+    	if (result && getItemHumidity(stack) < SharedDefines.HUMIDITY_THRESHOLD)
+    	{
+    		if (getItemCombustionDuration(stack) > 0)
+    			stack.setItem(ResourceLibrary.TORCH_LIT.getItem());
+    	}
+    }
      
     /**
      * Set the humidity level of an ItemStack to a new value. <p>
@@ -332,6 +358,27 @@ public class ItemTorch extends ItemBlock
     		stack.getTagCompound().setShort("torchItemDamage", itemDamage);
     	    
     		return combustion;
+    	}
+    	else return -1;
+    }
+    
+    /**
+     *  Update the humidity of this item by updating a custom NBT field. 
+     *  
+     * @param stack ItemStack to update humidity for
+     * @param value Value to increment the humidity for
+     * @return The updated value or -1 if stack or NBT were not found
+     */
+    public static short updateItemHumidity(ItemStack stack, int value)
+    {
+    	if (stack != null && stack.hasTagCompound())
+    	{
+    		short humidity = getItemHumidity(stack);
+    		humidity += ((humidity + value < SharedDefines.HUMIDITY_THRESHOLD) ? 
+    				value : SharedDefines.HUMIDITY_THRESHOLD - humidity);
+    	
+    		stack.getTagCompound().setShort("humidityLevel", humidity);
+    		return humidity;
     	}
     	else return -1;
     }

@@ -1,5 +1,6 @@
 package com.yooksi.fierysouls.block;
 
+import com.yooksi.fierysouls.item.ItemTorch;
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.ResourceLibrary;
 import com.yooksi.fierysouls.entity.item.EntityItemTorch;
@@ -60,17 +61,19 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch
 	        
 	        return true;
 	    }
-	    else if (equippedItem.getItem() == ResourceLibrary.TORCH_UNLIT.getItem())
+	    else if (ResourceLibrary.isItemUnlitTorch(equippedItem.getItem()))
 	    {
-	    	// Remove the old (unlit) and place a new (lit) torch in our hands.
-	    	// If we tried to light a torch stack; decrement the stack and move it to a new inventory slot
-	        
-	    	int torchStackSize = equippedItem.stackSize;
-	    	playerIn.setCurrentItemOrArmor(0, new ItemStack(ResourceLibrary.TORCH_LIT.getItem(), 1));
+	    	// If the equipped stack has more then one item, keep one item, light it on fire
+	    	// and move the rest of the stack in a different inventory slot (auto-assigned)
 	    	
-	    	if (torchStackSize > 1)
-	    		playerIn.inventory.addItemStackToInventory(new ItemStack(ResourceLibrary.TORCH_UNLIT.getItem(), torchStackSize - 1));  
-	    
+	    	if (equippedItem.stackSize > 1)
+	    	{
+	    		playerIn.inventory.addItemStackToInventory(new ItemStack(ResourceLibrary.TORCH_UNLIT.getItem(), equippedItem.stackSize - 1));  
+	    		equippedItem.stackSize = 1;
+	    	}
+	    	
+	    	ItemTorch.lightItemTorch(equippedItem);
+	    	
 	    	return true;      // Let the calling function know that this block was successfully used,
 	     	                  // and there is no need to spawn the activation item as a block. 
 	    }
