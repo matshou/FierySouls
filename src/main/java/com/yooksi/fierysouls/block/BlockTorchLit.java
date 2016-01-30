@@ -114,10 +114,7 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch
 	
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta)
-	{
-		/** DEBUG LOG - Tracking issue #3 */
-		FierySouls.logger.info("Created new TileEntityTorchLit tile entity.");
-		
+	{		
 		return new TileEntityTorchLit(worldIn.getTotalWorldTime());
 	}
 }

@@ -163,12 +163,12 @@ public final class EntityItemTorch extends EntityItem
     	int lengthDiff;
     	
     	String a = Utilities.convertToZeroDigits(SharedDefines.HUMIDITY_THRESHOLD);
-        lengthDiff = a.length() - Utilities.getSizeOfInteger(humidityData);
+        lengthDiff = a.length() - Utilities.getNumberOfDigits(humidityData);
         
     	firstSegment = (lengthDiff > 0) ? a.substring(0, lengthDiff) + humidityData : Integer.toString(humidityData);
 
     	String b = Utilities.convertToZeroDigits(SharedDefines.MAX_TORCH_FLAME_DURATION);
-    	lengthDiff = b.length() - Utilities.getSizeOfInteger(durationData);
+    	lengthDiff = b.length() - Utilities.getNumberOfDigits(durationData);
     	
     	secondSegment = (lengthDiff > 0) ? b.substring(0, lengthDiff) + durationData : Integer.toString(durationData);
     	
@@ -188,8 +188,8 @@ public final class EntityItemTorch extends EntityItem
     public static int[] disassembleMetadata(int metadata) 
     {
     	final String sMetadata = Integer.toString(metadata);
-    	int maxHumiditySize = Utilities.getSizeOfInteger(SharedDefines.HUMIDITY_THRESHOLD);
-    	int maxDurationSize = Utilities.getSizeOfInteger(SharedDefines.MAX_TORCH_FLAME_DURATION);
+    	int maxHumiditySize = Utilities.getNumberOfDigits(SharedDefines.HUMIDITY_THRESHOLD);
+    	int maxDurationSize = Utilities.getNumberOfDigits(SharedDefines.MAX_TORCH_FLAME_DURATION);
 
     	if (sMetadata.length() != 1 + maxHumiditySize + maxDurationSize)
     		return null;

@@ -182,7 +182,7 @@ public class ItemTorch extends ItemBlock
     		// TODO: When an item is added to the inventory from the creativeTab it ends up
         	// without a proper custom NBT, so we do it here. Find a better way of handling this...
         	
-    		long totalWorldTime = worldIn.getTotalWorldTime();
+    		long totalWorldTime = worldIn.getWorldTime();
     		
     		if (!stack.hasTagCompound())
     			createCustomItemNBT(stack, totalWorldTime);
@@ -337,11 +337,11 @@ public class ItemTorch extends ItemBlock
     }
     
     /**
-     * Update the time the item torch is allowed to burn.
+     * Update the remaining time the item torch is allowed to burn.
      * 
      * @param stack ItemStack to update the time for
      * @param value Value to decrease the time for (expected to be a negative value)
-     * @return The updated value or -1 if stack of NBT were not found
+     * @return The updated value or -1 if stack or NBT were not found
      */
     public static short updateItemCombustion(ItemStack stack, int value)
     {
@@ -416,7 +416,7 @@ public class ItemTorch extends ItemBlock
 	 *  
 	 * @param stack ItemStack to create a new NBT for
 	 * @param tagCompound Existing NBT tag compound to extract data from
-	 * @param worldTime Current <b>total</b> time in the world
+	 * @param worldTime Current time in the world
 	 */
 	public static void createCustomItemNBTFromExisting(ItemStack stack, NBTTagCompound tagCompound, long worldTime)
 	{
@@ -434,7 +434,7 @@ public class ItemTorch extends ItemBlock
 	 * <i>Use #createCustomItemNBTFromExisting if you already have NBT data for this item to inherit.</i>
 	 *
 	 * @see {@link #createCustomItemNBTFromExisting}
-	 * @param worldTime Current <b>total</b> time in the world
+	 * @param worldTime Current time in the world
 	 * @param stack ItemStack to create a new NBT for <b>(unchecked)</b>
 	 */
 	public static void createCustomItemNBT(ItemStack stack, long worldTime)

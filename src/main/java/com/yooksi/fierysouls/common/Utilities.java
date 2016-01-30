@@ -3,12 +3,14 @@ package com.yooksi.fierysouls.common;
 public final class Utilities 
 {
 	/**
-	 *  Returns the length of an integer by first converting it to a string <br>
-	 *  and then returning the number of "Unicode code units" in the string.
+	 *  Returns the number of digits found in the argument by first converting it to a string <br>
+	 *  and then returning the number of "Unicode code units" in the string. <p>
+	 *  
+	 *  <i>Note that the decimal mark will be converted to a string as well, account for that.</i> 
 	 */
-	public static int getSizeOfInteger(int integer)
+	public static int getNumberOfDigits(double number)
 	{
-		return (int)String.valueOf(integer).length();
+		return (int)String.valueOf(number).length() - 1;
 	}
 
     /**  
@@ -19,7 +21,7 @@ public final class Utilities
      */
 	public static String convertToZeroDigits(int integer)
 	{
-		return Integer.toString((int)Math.pow(10, getSizeOfInteger(integer))).substring(1);
+		return Integer.toString((int)Math.pow(10, getNumberOfDigits(integer))).substring(1);
 	}
 	
 	  /**
