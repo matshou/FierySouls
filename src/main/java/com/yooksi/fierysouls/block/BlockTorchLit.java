@@ -24,12 +24,12 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch 
 {
 	// TODO: Move this value to a configuration file.
-	public static final byte MAXIMUM_TORCH_LIGHT_LEVEL = 14;
+	public static final byte MAXIMUM_TORCH_LIGHT_LEVEL = 13;
 	
 	public BlockTorchLit() 
 	{	
 		this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.tabDecorations);
-		this.setLightLevel((float)(MAXIMUM_TORCH_LIGHT_LEVEL / 0.93F));
+		this.setLightLevel((float)(MAXIMUM_TORCH_LIGHT_LEVEL / 15.0F));
 	}
 
 	@Override
@@ -39,6 +39,14 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch
 		return false;
     }
 	
+	/**
+     * Get a light value for the block at the specified coordinates, normal ranges are between 0 and 15. <br>
+     * <i>Return a custom light value from torch tile entity.</i>
+     *
+     * @param world The current world
+     * @param pos Block position in world
+     * @return Custom light value
+     */
 	@Override
 	public int getLightValue(IBlockAccess world, BlockPos pos)
     {

@@ -13,6 +13,19 @@ public final class Utilities
 		return (int)String.valueOf(number).length() - 1;
 	}
 
+	/**
+	 *  Truncate a certain number of decimals from an argument.
+	 *  
+	 *  @param number Decimal number to truncate
+	 *  @param decimals Number of decimals to truncate from <i>number</i>
+	 *  @return Truncated decimal number
+	 */
+	public static double truncateDecimals(double number, int decimals)
+	{
+		double factor = Math.pow(10, decimals);
+		return Math.round((number) * factor) / factor;
+	}
+	
     /**  
      *  Converts an integer to a series of zeros in a string. <br>
      *  The number of zero digits directly reflects the length of that integer. <p>

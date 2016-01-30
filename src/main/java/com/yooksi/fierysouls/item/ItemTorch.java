@@ -159,12 +159,12 @@ public class ItemTorch extends ItemBlock
      * @param worldTime Total time elapsed from the creation of the world 
      * @return True if enough world time has elapsed
      */
-    private static boolean shouldUpdateItem(ItemStack stack, long worldTime)
+    private static boolean shouldUpdateItem(ItemStack stack, long totalWorldTime)
     {
-    	long lastUpdateTime = stack.getTagCompound().getLong("lastUpdateTime");	
-    	if (lastUpdateTime > 0 && worldTime - lastUpdateTime >= SharedDefines.MAIN_UPDATE_INTERVAL)
+    	long lastUpdateTime = stack.getTagCompound().getLong("lastUpdateTime");
+    	if (lastUpdateTime > 0 && totalWorldTime - lastUpdateTime >= SharedDefines.MAIN_UPDATE_INTERVAL)
     	{
-    		stack.getTagCompound().setLong("lastUpdateTime", worldTime);
+    		stack.getTagCompound().setLong("lastUpdateTime", totalWorldTime);
     		return true;
     	}
     	else return false;
@@ -182,7 +182,7 @@ public class ItemTorch extends ItemBlock
     		// TODO: When an item is added to the inventory from the creativeTab it ends up
         	// without a proper custom NBT, so we do it here. Find a better way of handling this...
         	
-    		long totalWorldTime = worldIn.getWorldTime();
+    		long totalWorldTime = worldIn.getTotalWorldTime();
     		
     		if (!stack.hasTagCompound())
     			createCustomItemNBT(stack, totalWorldTime);
@@ -196,6 +196,9 @@ public class ItemTorch extends ItemBlock
     		if (getItemHumidity(stack) >= SharedDefines.HUMIDITY_THRESHOLD)
     			return;
     		
+    		final short itemHumidity = (worldIn.isRaining() && worldIn.canBlockSeeSky(entityIn.getPosition()))
+    				? updateItemHumidity(stack, SharedDefines.MAIN_UPDATE_INTERVAL) : 0;
+    				
     		if (ResourceLibrary.isItemLitTorch(stack.getItem()))
     		{
     			// When lit torches are not placed in the hotbar, but in storage slots
@@ -203,11 +206,11 @@ public class ItemTorch extends ItemBlock
     			
     			if (itemSlot > 8 || updateItemCombustion(stack, SharedDefines.MAIN_UPDATE_INTERVAL * -1) < 1)
     				extinguishItemTorch(stack, false);
-    			
-    			else if (updateItemHumidity(stack, SharedDefines.MAIN_UPDATE_INTERVAL) >= SharedDefines.HUMIDITY_THRESHOLD)
-    					extinguishItemTorch(stack, false);
-    		}
     		
+    			else if (itemHumidity >= SharedDefines.HUMIDITY_THRESHOLD)
+    				extinguishItemTorch(stack, false);
+    		}
+ 
     		// Check 'isInWater' first to optimize the code a bit, boolean checks are the fastest. 
     		// The second check is a lengthy one and should not return true if the first one returns false.
     				
@@ -416,13 +419,13 @@ public class ItemTorch extends ItemBlock
 	 *  
 	 * @param stack ItemStack to create a new NBT for
 	 * @param tagCompound Existing NBT tag compound to extract data from
-	 * @param worldTime Current time in the world
+	 * @param totalWorldTime Total world time since the world was created
 	 */
-	public static void createCustomItemNBTFromExisting(ItemStack stack, NBTTagCompound tagCompound, long worldTime)
+	public static void createCustomItemNBTFromExisting(ItemStack stack, NBTTagCompound tagCompound, long totalWorldTime)
 	{
 		if (tagCompound != null && stack != null)
 		{
-			createCustomItemNBT(stack, worldTime);
+			createCustomItemNBT(stack, totalWorldTime);
 			updateCustomItemNBTFromExisting(stack, tagCompound);
 		}
 	}
@@ -434,16 +437,16 @@ public class ItemTorch extends ItemBlock
 	 * <i>Use #createCustomItemNBTFromExisting if you already have NBT data for this item to inherit.</i>
 	 *
 	 * @see {@link #createCustomItemNBTFromExisting}
-	 * @param worldTime Current time in the world
+	 * @param totalWorldTime Total world time since the world was created
 	 * @param stack ItemStack to create a new NBT for <b>(unchecked)</b>
 	 */
-	public static void createCustomItemNBT(ItemStack stack, long worldTime)
+	public static void createCustomItemNBT(ItemStack stack, long totalWorldTime)
 	{	
 		final short sNull = (short) 0;
 		NBTTagCompound tagCompound = new NBTTagCompound();
 		
 		tagCompound.setShort("humidityLevel", sNull);
-		tagCompound.setLong("lastUpdateTime", worldTime);
+		tagCompound.setLong("lastUpdateTime", totalWorldTime);
 		
 		tagCompound.setShort("torchItemDamage", sNull);
 		tagCompound.setShort("combustionDuration", SharedDefines.MAX_TORCH_FLAME_DURATION);

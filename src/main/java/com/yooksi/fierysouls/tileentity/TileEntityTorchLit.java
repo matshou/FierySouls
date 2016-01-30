@@ -1,7 +1,9 @@
 package com.yooksi.fierysouls.tileentity;
 
+import com.yooksi.fierysouls.common.Utilities;
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.SharedDefines;
+
 import com.yooksi.fierysouls.block.BlockTorchLit;
 import com.yooksi.fierysouls.block.BlockTorchUnlit;
 
@@ -17,12 +19,40 @@ import net.minecraft.tileentity.TileEntity;
 
 public final class TileEntityTorchLit extends TileEntityTorch
 {
-	private static final double DIMINISH_LIGHT_PER_INTERVAL = 0.025;   // Amount of light to diminish each update interval.
-	private static final short DIMINISH_LIGHT_TIME_MARK = 1600;        // Diminishing light after remaining combustion equals this number.
+	/**
+	 *  Start diminishing torch light after the remaining combustion 
+	 *  time duration goes below this mark. <br> If this define is not set,
+	 *  light will start diminishing as soon as the torch has been set on fire. <p>
+	 *  
+	 *  <i><b>Note:</b>  this is an optional feature, set to -1 to disable.</i>
+	 */
+	private static final short DIMINISH_LIGHT_TIME_MARK = 2000;
+	
+	/**
+	 *  This is the minimum light level this torch can have before extinguishing. <br>
+	 *  The illumination of this light level should be as dark possible while still looking natural.
+	 */
+	private static final double MINIMUM_TORCH_LIGHT_LEVEL = 5;
+
+	/**
+	 *  Amount of light to diminish each update interval. 
+	 *  This value has to always return a round value (or close to one) after being multiplied
+	 *  to the point of incrementing the base (first digit past the decimal mark). <p>
+	 *  
+	 *  Here are some examples of accepted values: <br>
+	 *  <code> 1, 0.2, 0.005, 0.5, 0.020, 2.2, 5.025 </code>
+	 * */
+	@SuppressWarnings("unused")
+	private static final double DIMINISH_LIGHT_PER_INTERVAL =
+		(BlockTorchLit.MAXIMUM_TORCH_LIGHT_LEVEL - MINIMUM_TORCH_LIGHT_LEVEL) / ( ((DIMINISH_LIGHT_TIME_MARK > 0) ?
+					DIMINISH_LIGHT_TIME_MARK : SharedDefines.MAX_TORCH_FLAME_DURATION) / SharedDefines.MAIN_UPDATE_INTERVAL);
     
+	
+	/* Used by server to notify client to start updating light value. */
+	private boolean updatingLight = false;
+	
 	public boolean torchFireHazardUpdate = true;       
-	private boolean updatingLightData= false;      // Used by server to notify client to start updating light value.
-	private double torchLightLevel = 0;
+	public double torchLightLevel = 0;
 	
 	public TileEntityTorchLit() {}	
 	public TileEntityTorchLit(final long totalWorldTime) 
@@ -30,10 +60,10 @@ public final class TileEntityTorchLit extends TileEntityTorch
 		super(totalWorldTime);
 		torchLightLevel = BlockTorchLit.MAXIMUM_TORCH_LIGHT_LEVEL;
 	}
-	
+
 	@Override
 	public void update()
-	{
+	{	
 		// Update only at set intervals to reduce performance hits.
 		if (updateTickCount++ < SharedDefines.MAIN_UPDATE_INTERVAL)
 			return; else updateTickCount = 0;
@@ -47,11 +77,12 @@ public final class TileEntityTorchLit extends TileEntityTorch
 				extinguishTorch();
 			
 			// Since we're not updating this data here handle light updates on client, we're done here.
-			else if (getCombustionDuration() <= DIMINISH_LIGHT_TIME_MARK && !updatingLightData)
+			else if (DIMINISH_LIGHT_TIME_MARK > 0 && getCombustionDuration() <= DIMINISH_LIGHT_TIME_MARK && !updatingLight)
 			{
-				updatingLightData = true;
+				updatingLight = true;
 				markForUpdate();
 			}
+			
 		    // When it's raining and the torch is directly exposed to rain it will start collecting humidity.
 		    if (getWorld().getWorldInfo().isRaining() && getWorld().canBlockSeeSky(pos))
 		    {
@@ -59,7 +90,7 @@ public final class TileEntityTorchLit extends TileEntityTorch
 			    	extinguishTorch();
 		    }
 		}
-		else if (updatingLightData == true)
+		else if (updatingLight == true)
 			updateLightLevel(DIMINISH_LIGHT_PER_INTERVAL);
 	}
 	
@@ -80,7 +111,7 @@ public final class TileEntityTorchLit extends TileEntityTorch
 	    	    // Set the torch 'smoldering' on server side, nothing will be seen but the client
 	    	    // will want to update and the sides will sync, pulling the data from server.
 	    	    
-	    	    torchUnlit.setTorchSmoldering(true, getWorld().getWorldTime());
+	    	    torchUnlit.setTorchSmoldering(true, getWorld().getTotalWorldTime());
 		    }
 	    }
 	}  
@@ -104,12 +135,10 @@ public final class TileEntityTorchLit extends TileEntityTorch
 			
 		final int chancesToCatchFire = neighbourBlock.getFlammability(getWorld(), neighbourPos, face);
 	
-		java.util.Random rand = new java.util.Random();
-		int natural_roll = rand.nextInt(100) + 1;            // 0% - 100% (1 - 100 roll)
-
-		if (chancesToCatchFire >= natural_roll)
+		if (Utilities.rollDiceAgainst(chancesToCatchFire, 100, getWorld().rand))
+		{
 			return getWorld().setBlockState(neighbourPos, net.minecraft.init.Blocks.fire.getDefaultState());
-		
+		}
 		else return false;
 	}	
 	
@@ -118,70 +147,81 @@ public final class TileEntityTorchLit extends TileEntityTorch
 	 *  
 	 *  <i><b>Note:</b> The more iterations of subtracting this value from the total light level <br>
 	 *  it takes to fully round the number the more it will take before the world get's <br> notified
-	 *  that we changed the light value. Choose your base carefully.</i>
+	 *  that we changed the light value.</i>
 	 *  
-	 *  @param value The value to be subtracted from the light level value. 
+	 *  @param value The value to be <b>subtracted</b> from the light level value. 
 	 */
 	@SideOnly(Side.CLIENT)
 	private void updateLightLevel(double value)
 	{
-		// Update data after truncating to 3 decimals and then check if the value is a round number.
+		// Update data after truncating decimals and checking if the value is a round number.
 		// To increase performance send render updates in world only if data is already rounded before casting int. 
 
-		torchLightLevel = Math.round((torchLightLevel - value) * 1000.0) / 1000.0;	
+		int digits = Utilities.getNumberOfDigits(DIMINISH_LIGHT_PER_INTERVAL) - 1;
+		torchLightLevel = Utilities.truncateDecimals(torchLightLevel - value, ((digits < 5) ? digits : 5));
+        
+		// Allow a small deviation to increase the range of values accepted.
+		// Reset the light level to always get the same expected deviation.
 		
-		if (torchLightLevel == Math.ceil(torchLightLevel))
-			worldObj.checkLight(this.pos);
+		final double fTorchLightLevel = Math.floor(torchLightLevel);
+		if (torchLightLevel - fTorchLightLevel < 0.02D)
+		{
+			torchLightLevel = fTorchLightLevel;
+			getWorld().checkLightFor(net.minecraft.world.EnumSkyBlock.BLOCK, pos);
+		}
 	}
 	public int getLightLevel()
 	{
-		// NOTE: Always round this value up not down to prevent unexpected updates until we're ready to send. 
-		return (int)Math.floor(torchLightLevel);
+		return (int)Math.round(torchLightLevel);
 	}
 	
 	/** 
-	 *  Initialize light level data on client and start regularly updating it. <br>
-	 *  The initialization will only happen if light data needs to be updated. <br>
-	 *  Also request from world to update light renderer with new data.
+	 *  Initialize light level data on client and start regularly updating it.
+	 *  The initialization will only happen if <br> light data needs to be updated.
+	 *  Also request from world to update light renderer with new data. <p>
+	 *  
+	 *  <i><b>Note:</b> when the world is entered and this entity is loaded from the NBT,
+	 *  there will be a small delay before we can recalculate light data and update the world.
+	 *  In the duration of this delay the light will be set to maximum default.</i> 
 	 */ 
 	@SideOnly(Side.CLIENT)
-	protected void recalculateLightLevel()
+	private void recalculateLightLevel()
 	{
-		if (getCombustionDuration() < DIMINISH_LIGHT_TIME_MARK)
+		if (DIMINISH_LIGHT_TIME_MARK < 0 || getCombustionDuration() < DIMINISH_LIGHT_TIME_MARK)
 		{
-			int ticksElapsed = DIMINISH_LIGHT_TIME_MARK - getCombustionDuration();
+		    @SuppressWarnings("unused")
+			short timeMark = (DIMINISH_LIGHT_TIME_MARK < 0) ? SharedDefines.MAX_TORCH_FLAME_DURATION : DIMINISH_LIGHT_TIME_MARK;
+			
+		    int ticksElapsed =  timeMark - getCombustionDuration();
 			updateLightLevel(ticksElapsed / SharedDefines.MAIN_UPDATE_INTERVAL * DIMINISH_LIGHT_PER_INTERVAL);
 			
-			worldObj.checkLight(this.pos);
-			updatingLightData = true;
+			getWorld().checkLightFor(net.minecraft.world.EnumSkyBlock.BLOCK, pos);
 		}
 	}
 	
-	// ====================================== NETWORK UTILITIES ==============================================
-	
 	/** 
-	 * Gathers data into a packet that is to be sent to the client. Called on server only.<br>
-	 * Place custom packet data you want to send to client here.
+	 * Gathers data into a packet that is to be sent to the client. <br>
+	 * Place custom packet data you want to send to client here. <p>
 	 */
 	@Override
 	public Packet getDescriptionPacket() 
 	{
 		NBTTagCompound nbtTag = new NBTTagCompound();
 		this.writeToNBT(nbtTag);
-		
-		nbtTag.setBoolean("startUpdatingLight", updatingLightData);
-		
+			
+		nbtTag.setBoolean("updateLight", updatingLight);
+			
 		return new S35PacketUpdateTileEntity(this.pos, 1, nbtTag);
 	}
-
+		
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void onDataPacket(net.minecraft.network.NetworkManager net, S35PacketUpdateTileEntity packet) 
 	{
 		super.onDataPacket(net, packet);
-
+		
 		// Recalculate light data and send it to world once each time the world loads.
-		if (updatingLightData == false && (updatingLightData = packet.getNbtCompound().getBoolean("startUpdatingLight")))
+		if (updatingLight == false && (updatingLight = packet.getNbtCompound().getBoolean("updateLight")))
 			recalculateLightLevel();
 	}
 }

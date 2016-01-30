@@ -1,3 +1,12 @@
+Version 1.3.0
+
+- Reconfigured and changed the way the torch light system works, it's more modular now.
+- The last update did not implement humidity updates properly for torch items, hopefully this should be fixed now.
+- Corrected an error which caused torch items to stop updating. This was introduced with the last commit where 
+  we stopped using 'total' world time in ItemTorch.
+ 
+Note: Started working more seriously on the torch light system.
+ 
 Version 1.2.12
 
 - Fixes an NBT inheritance problem between lit torch blocks and unlit torch items.

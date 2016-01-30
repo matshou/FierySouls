@@ -42,7 +42,7 @@ public final class TileEntityTorchUnlit extends TileEntityTorch
 				updateHumidityLevel(SharedDefines.MAIN_UPDATE_INTERVAL);
 		}
 		else if (isTorchSmoldering() && didSmolderingExpire())				
-			setTorchSmoldering(false, getWorld().getWorldTime());
+			setTorchSmoldering(false, getWorld().getTotalWorldTime());
 	}
 	
 	/** 
@@ -90,7 +90,7 @@ public final class TileEntityTorchUnlit extends TileEntityTorch
 	@SideOnly(Side.CLIENT)
 	private final boolean didSmolderingExpire()
 	{
-		return (getWorld().getWorldTime() - timeTorchStartedSmoldering > torchSmolderingDuration);
+		return (getWorld().getTotalWorldTime() - timeTorchStartedSmoldering > torchSmolderingDuration);
 	}
 	
 	/** 
@@ -102,12 +102,6 @@ public final class TileEntityTorchUnlit extends TileEntityTorch
 		return (timeTorchStartedSmoldering != 0);
 	}
 	
-	/** 
-	 * Gathers data into a packet that is to be sent to the client. <br>
-	 * Place custom packet data you want to send to client here. <p>
-	 * 
-	 * <i>Called on server only.</i>
-	 */
 	@Override
 	public Packet getDescriptionPacket() 
 	{

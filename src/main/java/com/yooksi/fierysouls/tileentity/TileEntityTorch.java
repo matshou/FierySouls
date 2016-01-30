@@ -10,6 +10,7 @@ import net.minecraft.server.gui.IUpdatePlayerListBox;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 
 public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
@@ -104,9 +105,24 @@ public class TileEntityTorch extends TileEntity implements IUpdatePlayerListBox
 	}
 	
 	/** 
-	 * Extracts data from a packet that was sent from the server. Called on client only. <br>
+	 * Gathers data into a packet that is to be sent to the client. <br>
+	 * Place custom packet data you want to send to client here. <p>
+	 * 
+	 * <i>Called on server only.</i>
+	 */
+	@Override
+	public Packet getDescriptionPacket() 
+	{
+		NBTTagCompound nbtTag = new NBTTagCompound();
+		this.writeToNBT(nbtTag);
+
+		return new S35PacketUpdateTileEntity(this.pos, 1, nbtTag);
+	}
+	
+	/** 
+	 * Extracts data from a packet that was sent from the server.
 	 * Minecraft automatically sends a 'description packet' for the tile entity when it is first 
-	 * loaded on the client,<br> and you can force it to resend one afterwards	
+	 * loaded on the client, and you can force it to resend one afterwards. <p>
 	 */
 	@Override
 	@SideOnly(Side.CLIENT)
