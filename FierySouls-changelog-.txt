@@ -1,3 +1,9 @@
+Version 1.3.2
+
+- Unlit torch items can now be set on fire by using them on lava or fire blocks.
+- Trying to break blocks with a lit torch as a tool will now extinguish it after a few update intervals.
+- Implemented a range restriction for placing torch blocks, should do this for all items with time.
+
 Version 1.3.1
 
 - Fixed a bug that caused unlit entity torch items to update combustion.

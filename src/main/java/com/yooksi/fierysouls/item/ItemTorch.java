@@ -6,16 +6,19 @@ import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.common.ResourceLibrary;
 import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 
+import net.minecraft.world.World;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.client.Minecraft;
+
+import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 
-import net.minecraft.world.World;
+import net.minecraft.util.Vec3;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 
 public class ItemTorch extends ItemBlock
@@ -28,6 +31,12 @@ public class ItemTorch extends ItemBlock
 	 * bludgeoning damage equal to that of a gauntlet of its size, plus 1 point of fire damage."</i>
 	 */
 	private static final float TORCH_FIRE_DAMAGE = 1.0F;
+	
+	/**
+	 *  Maximum item reach radius when both attacking and using in the world. <br>
+	 *  The radius value is expressed in the number of blocks the item can reach in one direction. 
+	 */
+	public static final double TORCH_ITEM_REACH_RADIUS = 2.0D;
 	
 	/** 
 	 *  Base chance value that is further modified and used as a value to roll against, <br>
@@ -80,6 +89,59 @@ public class ItemTorch extends ItemBlock
     }
     
 	/**
+	 *  This method is intended to be called right after an item was right-clicked, and no <i>'blockHit'</i> was found. <br>
+	 *  It will search for the first occurrence of a block made of specific materials in the direction where the player <br>
+	 *  is looking, limiting the search with the specified range of item's reach.
+	 *  
+	 *  @param player EntityPlayer using the item <b>(unchecked)</b>
+	 *  @param world Instance of the world the player and his item are in <b>(unchecked)</b>
+	 *  @param materials The material types to check if item is used on 
+	 *  @param itemReach User defined reach of the item being used <i>(should be > 1)</i>
+	 *  @return True if the block made from designated material has been found 
+	 *  
+	 *  @see EntityPlayer#rayTrace(double, float)
+	 *  @throws java.lang.NullPointerException if EntityPlayer or World instances are <code>null</code>
+	 */
+	public static boolean willItemTouchMaterialsOnUse(final EntityPlayer player, final World world, Material[] materials, double itemReach)
+	{
+		final Vec3 vec3 = player.getPositionEyes(1.0F);
+		final Vec3 vec31 = player.getLook(1.0F); 
+		     
+		for (int i = 1; i <= itemReach; i++)  // Manually traverse the vector
+		{
+			Vec3 vec32 = vec3.addVector(vec31.xCoord * i, vec31.yCoord * i, vec31.zCoord * i);
+		    BlockPos blockpos = new BlockPos(vec32.xCoord, vec32.yCoord, vec32.zCoord);
+		    final net.minecraft.block.state.IBlockState iblockstate;
+		    iblockstate = world.getBlockState(blockpos);
+		    
+		    for (int i2 = 0; i2 < materials.length; i2++)  // Return the first occurrence of material
+		    {
+		    	if (iblockstate != null && iblockstate.getBlock().getMaterial() == materials[i2])
+		    		return true;
+		    }
+		}       return false;	
+	}
+	
+	/**
+     *  Called whenever this item is equipped and the right mouse button is pressed, <br>
+     *  if there no collideable blocks returned a mouse-over 'rayTrace', this includes liquids. 
+     */
+	 public ItemStack onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn)
+	 { 	 
+		 boolean isTorchUnlit = ResourceLibrary.isItemUnlitTorch(itemStackIn.getItem());
+		 Material[] materials = new Material[] { Material.lava, Material.fire };
+		 /*
+		  *   If we're trying to use a torch on lava light the torch on fire.
+          */	
+		 if (isTorchUnlit && willItemTouchMaterialsOnUse(playerIn, worldIn, materials, TORCH_ITEM_REACH_RADIUS))
+		 {	
+			 playerIn.swingItem();
+			 lightItemTorch(itemStackIn);
+		 }
+	     return super.onItemRightClick(itemStackIn, worldIn, playerIn);
+	 }
+	
+	/**
      * Called when a Block is right-clicked with this Item. <p>
      * 
      * <i>If all goes well the item will be placed on the position right-clicked by player,<br>
@@ -92,6 +154,32 @@ public class ItemTorch extends ItemBlock
     @Override
 	public boolean onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ)
     {
+    	/*
+    	 *  When placing the torch block it's important that we can actually reach the block we want to place
+    	 *  the torch on, also take into consideration the exact position of the place clicked on.
+    	 *  The item will not be placed if the distance exceeds item reach radius.
+    	 */
+    	
+    	Vec3 playerVec = new Vec3(playerIn.posX, playerIn.posY, playerIn.posZ);
+    	Vec3 hitVec = new Vec3(pos.getX() + hitX, pos.getY() + hitY, pos.getZ() + hitZ);
+    	
+    	if (playerVec.distanceTo(hitVec) > TORCH_ITEM_REACH_RADIUS)
+    		return false;
+    	
+    	/*   
+         *   If we're trying to use a torch on lava light the torch on fire.
+         */
+    	Material[] materials = new Material[] { Material.lava, Material.fire };
+    	if (willItemTouchMaterialsOnUse(playerIn, worldIn, materials, TORCH_ITEM_REACH_RADIUS))
+    	{
+    		playerIn.swingItem();  // Do item swing animation before setting on fire
+    	
+    		if (ResourceLibrary.isItemLitTorch(stack.getItem()))
+    			lightItemTorch(stack);
+    		
+    		return false;
+    	}
+    	
     	final boolean wasBlockPlaced = super.onItemUse(stack, playerIn, worldIn, pos, side, hitX, hitY, hitZ);
     	
     	if (wasBlockPlaced == true && !worldIn.isRemote)
@@ -206,6 +294,7 @@ public class ItemTorch extends ItemBlock
     	
     	else if (worldIn.isRemote == false)
     	{
+    		final boolean isTorchItemLit = ResourceLibrary.isItemLitTorch(stack.getItem());
     		ExtendedProperties extendedProperties = null;
     		
     		/*  Periodic item NBT updates seem to reset the block breaking progress.
@@ -243,8 +332,18 @@ public class ItemTorch extends ItemBlock
     			/*
     			 *  Block breaking by player is currently IN PROGRESS,
     			 *  find belonging extended item properties and reroute data to it. 
+    			 *  If we're breaking a block with a lit torch put the flame out after a few update intervals.
     			 */
-    		    else extendedProperties = ExtendedProperties.findExtendedPropertiesForItem(stack);
+    		    else 
+    		    {
+    		    	extendedProperties = ExtendedProperties.findExtendedPropertiesForItem(stack);
+    		        if (isTorchItemLit == true)
+    		        {
+    		        	long lastUpdate = stack.getTagCompound().getLong("lastUpdateTime");
+    		        	if (lastUpdate > 0 && worldIn.getTotalWorldTime() - lastUpdate > SharedDefines.MAIN_UPDATE_INTERVAL * 3)
+    		        		extinguishItemTorch(stack, false);
+    		        }
+    		    }
     		}   
     		
     		final NBTTagCompound itemTagCompound = (extendedProperties == null) ? 
@@ -262,7 +361,7 @@ public class ItemTorch extends ItemBlock
     		final short itemHumidity = (worldIn.isRaining() && worldIn.canBlockSeeSky(entityIn.getPosition()))
     				? updateItemHumidity(itemTagCompound, SharedDefines.MAIN_UPDATE_INTERVAL) : 0;
     				
-    		if (ResourceLibrary.isItemLitTorch(stack.getItem()))
+    		if (isTorchItemLit == true)
     		{
     			/*  When lit torches are not placed in the hotbar, but in storage slots
     			 *  they should be extinguished - adds realism.
@@ -279,16 +378,16 @@ public class ItemTorch extends ItemBlock
     				
     		if (entityIn.isInWater() && entityIn.isInsideOfMaterial(net.minecraft.block.material.Material.water))
     		{
-    			if (ResourceLibrary.isItemLitTorch(stack.getItem()))
+    			if (isTorchItemLit == true)
     				extinguishItemTorch(stack, true);
     				
     			else setItemHumidity(stack.getTagCompound(), SharedDefines.HUMIDITY_THRESHOLD); 
     		}
-    		else if (entityIn.isInLava() && itemSlot < 9)  // Light torches in hotbar on fire when player is in lava
-    		{
-    			if (ResourceLibrary.isItemUnlitTorch(stack.getItem()))
-    				stack.setItem(ResourceLibrary.TORCH_LIT.getItem());
-    		}
+    		/* 
+    		 *  Light torches in hotbar on fire when player is in lava
+    		 */
+    		else if (!isTorchItemLit && itemSlot < 9 && entityIn.isInLava())
+    			lightItemTorch(stack);
     	}
     }
     
@@ -375,14 +474,12 @@ public class ItemTorch extends ItemBlock
     }
     
     /**
-     *  Set this item torch on fire. <br>
-     *  <i>Nothing will happen if the item is too wet or has already burned out.</i>
-     *  
-     * @param stack ItemStack instance of our torch to set on fire
+     *  Set this item torch on fire. Nothing will happen if the item is too wet or has already burned out.
+     *  @param stack ItemStack instance of our torch to set on fire
      */
     public static void lightItemTorch(ItemStack stack)
     {
-    	final boolean result = stack != null && stack.hasTagCompound();
+    	final boolean result = stack != null && stack.hasTagCompound() && stack.getItem() instanceof ItemTorch;
     	if (result && getItemHumidity(stack.getTagCompound()) < SharedDefines.HUMIDITY_THRESHOLD)
     	{
     		if (getItemCombustionDuration(stack) > 0)
