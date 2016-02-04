@@ -1,3 +1,9 @@
+Version 1.3.1
+
+- Fixed a bug that caused unlit entity torch items to update combustion.
+- Created extended properties for mod items that can be used for anything.
+- Resolved an issue that disrupted block breaking progress when trying to break blocks with a torch.
+
 Version 1.3.0
 
 - Reconfigured and changed the way the torch light system works, it's more modular now.

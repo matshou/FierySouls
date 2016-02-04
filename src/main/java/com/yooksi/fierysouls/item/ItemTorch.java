@@ -9,6 +9,7 @@ import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 
@@ -152,24 +153,44 @@ public class ItemTorch extends ItemBlock
     }
     
     /**
+     *  Checks if the player is in the process of hitting a block. <br>
+     *  <i>If the game is played in multiplayer, this should be validated only on client.</i>
+     *  
+     *  @return True if the player is holding mouse left-click and is mousing over a block.
+     */
+    public static boolean isPlayerBreakingBlock()
+    {
+    	// TODO: Find a better place for this method, it belongs to more of a general purpose category.
+    	
+    	final Minecraft minecraft = Minecraft.getMinecraft();
+    	final net.minecraft.util.MovingObjectPosition mouseOver = minecraft.objectMouseOver;
+    	
+    	boolean isAttackKeyDown = minecraft.gameSettings.keyBindAttack.isKeyDown();
+    	boolean isMouseOverBlock = mouseOver != null && mouseOver.typeOfHit == net.minecraft.util.MovingObjectPosition.MovingObjectType.BLOCK;
+    	
+    	return isAttackKeyDown && isMouseOverBlock;
+    }
+    
+    /**
      * Check to see if we should perform a full item update.<br>
      * Written specifically to be at the disposal of {@link #onUpdate}.
      *
-     * @param stack ItemStack we would like to update <b>(unchecked)</b>
-     * @param worldTime Total time elapsed from the creation of the world 
+     * @throws java.lang.NullPointerException if item tag compound is <code>null</code>
+     * @param itemNBT Map of item's custom data used for updating <b>(unchecked)</b>
+     * @param totalWorldTime Total time elapsed from the creation of the world 
      * @return True if enough world time has elapsed
      */
-    private static boolean shouldUpdateItem(ItemStack stack, long totalWorldTime)
+    private static boolean shouldUpdateItem(NBTTagCompound itemNBT, long totalWorldTime)
     {
-    	long lastUpdateTime = stack.getTagCompound().getLong("lastUpdateTime");
+    	long lastUpdateTime = itemNBT.getLong("lastUpdateTime");
     	if (lastUpdateTime > 0 && totalWorldTime - lastUpdateTime >= SharedDefines.MAIN_UPDATE_INTERVAL)
     	{
-    		stack.getTagCompound().setLong("lastUpdateTime", totalWorldTime);
+    		itemNBT.setLong("lastUpdateTime", totalWorldTime);
     		return true;
     	}
     	else return false;
     }   
-    
+
     /**
      * Called each tick as long the item is on a player inventory.<br> 
      * Uses by maps to check if is on a player hand and update it's contents.
@@ -177,34 +198,76 @@ public class ItemTorch extends ItemBlock
     @Override
     public void onUpdate(ItemStack stack, World worldIn, Entity entityIn, int itemSlot, boolean isSelected)
     {
-    	if (!worldIn.isRemote && stack != null)
+    	// TODO: When an item is added to the inventory from the creativeTab it ends up
+    	// without a proper custom NBT, so we do it here. Find a better way of handling this...
+    	
+    	if (!stack.hasTagCompound())
+    		createCustomItemNBT(stack, worldIn.getTotalWorldTime());
+    	
+    	else if (worldIn.isRemote == false)
     	{
-    		// TODO: When an item is added to the inventory from the creativeTab it ends up
-        	// without a proper custom NBT, so we do it here. Find a better way of handling this...
-        	
-    		long totalWorldTime = worldIn.getTotalWorldTime();
+    		ExtendedProperties extendedProperties = null;
     		
-    		if (!stack.hasTagCompound())
-    			createCustomItemNBT(stack, totalWorldTime);
+    		/*  Periodic item NBT updates seem to reset the block breaking progress.
+    		 *  If for some reason the player decided to dig with a torch he would not be
+    		 *  able to do what without some code magic. We will reroute all NBT updates to
+    		 *  extended item properties and pull the data after the player stops digging.   
+    		 */
+    		if (isSelected == true)  // Do not update this for items that are not currently used by player
+    		{
+    			if (stack.getTagCompound().getBoolean("updateReroute") == false)
+    		    {
+    				/* The player has just STARTED breaking the block,
+    				 * create new extended properties and start 'rerouting' NBT updates to it. 
+    				 */
+    			    if (isPlayerBreakingBlock() == true)
+    			    {
+    			        stack.getTagCompound().setBoolean("updateReroute", true);
+    			        extendedProperties = ExtendedProperties.createExtendedPropertiesForItem(stack);
+    			    }
+    		    }
+    		    else if (isPlayerBreakingBlock() == false)
+    		    {
+    		    	/*  The player has just STOPPPED breaking the block,
+    		    	 *  Pull updates from extended properties to the native stack NBT and disable 'rerouting'.
+    		    	 */
+    			    ExtendedProperties properties = null;
+    			    if ((properties = ExtendedProperties.findExtendedPropertiesForItem(stack)) != null)
+    			    {
+    				    stack.getTagCompound().merge(properties);
+    				    ExtendedProperties.unregisterExtendedPropertyForItem(stack);
+    			    }
+    		    
+    			    stack.getTagCompound().setBoolean("updateReroute", false);
+    		    }
+    			/*
+    			 *  Block breaking by player is currently IN PROGRESS,
+    			 *  find belonging extended item properties and reroute data to it. 
+    			 */
+    		    else extendedProperties = ExtendedProperties.findExtendedPropertiesForItem(stack);
+    		}   
     		
-    		else if (!shouldUpdateItem(stack, totalWorldTime))
+    		final NBTTagCompound itemTagCompound = (extendedProperties == null) ? 
+    				stack.getTagCompound() : extendedProperties;
+    		
+    		if (!shouldUpdateItem(itemTagCompound, worldIn.getTotalWorldTime()))
     			return;
     		
-    		// Currently we're only updating humidity and not combustion,
-    		// so there is no need to go further if humidity is at maximum value.
-    		
-    		if (getItemHumidity(stack) >= SharedDefines.HUMIDITY_THRESHOLD)
+    		/*  Currently we're only updating humidity and not combustion,
+    		 *  so there is no need to go further if humidity is at maximum value.
+    		 */
+    		if (getItemHumidity(itemTagCompound) >= SharedDefines.HUMIDITY_THRESHOLD)
     			return;
-    		
+    	    
     		final short itemHumidity = (worldIn.isRaining() && worldIn.canBlockSeeSky(entityIn.getPosition()))
-    				? updateItemHumidity(stack, SharedDefines.MAIN_UPDATE_INTERVAL) : 0;
+    				? updateItemHumidity(itemTagCompound, SharedDefines.MAIN_UPDATE_INTERVAL) : 0;
     				
     		if (ResourceLibrary.isItemLitTorch(stack.getItem()))
     		{
-    			// When lit torches are not placed in the hotbar, but in storage slots
-    			// they should be extinguished - adds realism.
-    			
-    			if (itemSlot > 8 || updateItemCombustion(stack, SharedDefines.MAIN_UPDATE_INTERVAL * -1) < 1)
+    			/*  When lit torches are not placed in the hotbar, but in storage slots
+    			 *  they should be extinguished - adds realism.
+    			 */
+    			if (itemSlot > 8 || updateItemCombustion(itemTagCompound, SharedDefines.MAIN_UPDATE_INTERVAL * -1) < 1)
     				extinguishItemTorch(stack, false);
     		
     			else if (itemHumidity >= SharedDefines.HUMIDITY_THRESHOLD)
@@ -219,7 +282,7 @@ public class ItemTorch extends ItemBlock
     			if (ResourceLibrary.isItemLitTorch(stack.getItem()))
     				extinguishItemTorch(stack, true);
     				
-    			else setItemHumidity(stack, SharedDefines.HUMIDITY_THRESHOLD); 
+    			else setItemHumidity(stack.getTagCompound(), SharedDefines.HUMIDITY_THRESHOLD); 
     		}
     		else if (entityIn.isInLava() && itemSlot < 9)  // Light torches in hotbar on fire when player is in lava
     		{
@@ -261,18 +324,18 @@ public class ItemTorch extends ItemBlock
     /**
      * Get humidity value for this item from NBT storage.<p>
      * 
-     * @throws java.lang.NullPointerException if item tag compound is not found
-     * @param stack ItemStack to get the information from <b>(unchecked)</b>
+     * @throws java.lang.NullPointerException if item tag compound is <code>null</code>
+     * @param itemNBT Map of item's custom data used for updating <b>(unchecked)</b>
      * @return Returns the humidity value from item NBT
      */
-    private static short getItemHumidity(ItemStack stack)
+    private static short getItemHumidity(NBTTagCompound itemNBT)
     {
-    	return stack.getTagCompound().getShort("humidityLevel");
+    	return itemNBT.getShort("humidityLevel");
     }
     /**
      * Get combustion duration value for this item from NBT storage.
      * 
-     * @throws java.lang.NullPointerException if item tag compound is not found
+     * @throws java.lang.NullPointerException if item tag compound is <code>null</code>
      * @param stack ItemStack to get the information from <b>(unchecked)</b>
      * @return Returns combustion duration value from item NBT
      */
@@ -308,7 +371,7 @@ public class ItemTorch extends ItemBlock
     		stack.setItem(ResourceLibrary.TORCH_UNLIT.getItem());
     	
     	if (extinguishByWater == true)
-    		setItemHumidity(stack, SharedDefines.HUMIDITY_THRESHOLD);
+    		setItemHumidity(stack.getTagCompound(), SharedDefines.HUMIDITY_THRESHOLD);
     }
     
     /**
@@ -319,8 +382,8 @@ public class ItemTorch extends ItemBlock
      */
     public static void lightItemTorch(ItemStack stack)
     {
-    	boolean result = stack != null && stack.hasTagCompound();
-    	if (result && getItemHumidity(stack) < SharedDefines.HUMIDITY_THRESHOLD)
+    	final boolean result = stack != null && stack.hasTagCompound();
+    	if (result && getItemHumidity(stack.getTagCompound()) < SharedDefines.HUMIDITY_THRESHOLD)
     	{
     		if (getItemCombustionDuration(stack) > 0)
     			stack.setItem(ResourceLibrary.TORCH_LIT.getItem());
@@ -328,37 +391,34 @@ public class ItemTorch extends ItemBlock
     }
      
     /**
-     * Set the humidity level of an ItemStack to a new value. <p>
+     * Set the humidity level of an ItemStack to a new value.
      * 
-     * @param stack ItemStack that data we wish to update
-     * @param value New value to update humidity to
+     * @param itemNBT Map of item's custom data used for updating
+     * @param value New value to update humidity to <i>(has to be positive)</i>
      */
-    public static void setItemHumidity(ItemStack stack, short value)
+    public static void setItemHumidity(NBTTagCompound itemNBT, short value)
     {
-    	if (stack != null && stack.hasTagCompound())
-    		stack.getTagCompound().setShort("humidityLevel", value);
+    	if (itemNBT != null && value >= 0)
+    		itemNBT.setShort("humidityLevel", value);
     }
     
     /**
      * Update the remaining time the item torch is allowed to burn.
      * 
-     * @param stack ItemStack to update the time for
-     * @param value Value to decrease the time for (expected to be a negative value)
+     * @param itemNBT Map of item's custom data used for updating
+     * @param value Value to decrease the time for <i>(cannot be 0)</i>
      * @return The updated value or -1 if stack or NBT were not found
      */
-    public static short updateItemCombustion(ItemStack stack, int value)
+    public static short updateItemCombustion(NBTTagCompound itemNBT, int value)
     {
-    	if (stack != null && stack.hasTagCompound())
+    	if (itemNBT != null && value != 0)
     	{	
-    		short combustion = stack.getTagCompound().getShort("combustionDuration");
+    		short combustion = itemNBT.getShort("combustionDuration");
     		combustion += ((combustion + value > 0) ? value : combustion * -1);   // Keep the value unsigned; 
+    		itemNBT.setShort("combustionDuration", combustion);
     		
-    		stack.getTagCompound().setShort("combustionDuration", combustion);
-    		
-    		// Updating this under the assumption that the argument is a negative value
-    		
-    		short itemDamage = (short) (stack.getTagCompound().getShort("torchItemDamage") + (value * -1));
-    		stack.getTagCompound().setShort("torchItemDamage", itemDamage);
+    		short itemDamage = (short) (itemNBT.getShort("torchItemDamage") + (value * -1));
+    		itemNBT.setShort("torchItemDamage", itemDamage);
     	    
     		return combustion;
     	}
@@ -368,19 +428,19 @@ public class ItemTorch extends ItemBlock
     /**
      *  Update the humidity of this item by updating a custom NBT field. 
      *  
-     * @param stack ItemStack to update humidity for
-     * @param value Value to increment the humidity for
+     * @param itemNBT Map of item's custom data used for updating
+     * @param value Value to increment the humidity for <i>(cannot be 0)</i>
      * @return The updated value or -1 if stack or NBT were not found
      */
-    public static short updateItemHumidity(ItemStack stack, int value)
+    public static short updateItemHumidity(NBTTagCompound itemNBT, int value)
     {
-    	if (stack != null && stack.hasTagCompound())
+    	if (itemNBT != null && value != 0)
     	{
-    		short humidity = getItemHumidity(stack);
-    		humidity += ((humidity + value < SharedDefines.HUMIDITY_THRESHOLD) ? 
+    		short humidity = getItemHumidity(itemNBT);
+    		humidity += ((humidity + value < SharedDefines.HUMIDITY_THRESHOLD) ?
     				value : SharedDefines.HUMIDITY_THRESHOLD - humidity);
     	
-    		stack.getTagCompound().setShort("humidityLevel", humidity);
+    		itemNBT.setShort("humidityLevel", humidity);
     		return humidity;
     	}
     	else return -1;
@@ -444,14 +504,13 @@ public class ItemTorch extends ItemBlock
 	{	
 		final short sNull = (short) 0;
 		NBTTagCompound tagCompound = new NBTTagCompound();
+		stack.setTagCompound(tagCompound);
 		
 		tagCompound.setShort("humidityLevel", sNull);
 		tagCompound.setLong("lastUpdateTime", totalWorldTime);
 		
 		tagCompound.setShort("torchItemDamage", sNull);
 		tagCompound.setShort("combustionDuration", SharedDefines.MAX_TORCH_FLAME_DURATION);
-		
-		stack.setTagCompound(tagCompound);
 	}
     
 	/**

@@ -63,15 +63,21 @@ public final class EntityItemTorch extends EntityItem
 		if (humidity >= SharedDefines.HUMIDITY_THRESHOLD)
 			return;
 		
+		final boolean isTorchLit = ResourceLibrary.isItemLitTorch(getEntityItem().getItem());
+		final NBTTagCompound itemTagCompound = getEntityItem().getTagCompound();
+		
 		// Check if the entity is in water first because rain doesn't matter
 		// if we're submerged in a pool of water anyways.
 			
 		if (isInWater() /**&& isInsideOfMaterial(Material.water)*/)
 		{
-			ItemTorch.extinguishItemTorch(getEntityItem(), true);
+			if (isTorchLit == true)
+				getEntityItem().setItem(ResourceLibrary.TORCH_UNLIT.getItem());
+			       
+			ItemTorch.setItemHumidity(itemTagCompound, SharedDefines.HUMIDITY_THRESHOLD);
 			readDataFromStack();
 		}
-		else if (ItemTorch.updateItemCombustion(getEntityItem(), SharedDefines.MAIN_UPDATE_INTERVAL * -1) < 1) 
+		else if (isTorchLit && ItemTorch.updateItemCombustion(itemTagCompound, SharedDefines.MAIN_UPDATE_INTERVAL * -1) < 1)
 		{
 			ItemTorch.extinguishItemTorch(getEntityItem(), false);
 		}
@@ -79,11 +85,11 @@ public final class EntityItemTorch extends EntityItem
 		{
 			if (updateHumidity() >= SharedDefines.HUMIDITY_THRESHOLD)
 			{
-				if (ResourceLibrary.isItemLitTorch(getEntityItem().getItem()))
-				{
-					ItemTorch.extinguishItemTorch(getEntityItem(), false);
-					readDataFromStack();
-				}
+				if (isTorchLit == true)
+					getEntityItem().setItem(ResourceLibrary.TORCH_UNLIT.getItem());
+				       
+				ItemTorch.setItemHumidity(itemTagCompound, SharedDefines.HUMIDITY_THRESHOLD);
+				readDataFromStack();
 			}
 		}
 	}
