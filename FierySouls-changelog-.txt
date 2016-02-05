@@ -1,3 +1,10 @@
+Version 1.3.3
+
+- Torches can no longer replace fire, lava and water blocks by being placed in their position. 
+  This was implemented in the last version but did not work as intended.
+  
+- Torches will now properly be set on fire when activated on fire and lava.
+
 Version 1.3.2
 
 - Unlit torch items can now be set on fire by using them on lava or fire blocks.

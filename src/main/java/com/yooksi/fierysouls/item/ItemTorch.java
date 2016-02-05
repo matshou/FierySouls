@@ -102,24 +102,49 @@ public class ItemTorch extends ItemBlock
 	 *  @see EntityPlayer#rayTrace(double, float)
 	 *  @throws java.lang.NullPointerException if EntityPlayer or World instances are <code>null</code>
 	 */
-	public static boolean willItemTouchMaterialsOnUse(final EntityPlayer player, final World world, Material[] materials, double itemReach)
+	public static boolean willItemTouchMaterialsOnUse(final EntityPlayer player, final World world, Material[] materials, double itemReach, BlockPos pos)
 	{
-		final Vec3 vec3 = player.getPositionEyes(1.0F);
-		final Vec3 vec31 = player.getLook(1.0F); 
-		     
-		for (int i = 1; i <= itemReach; i++)  // Manually traverse the vector
+		final Vec3 vec3 = new Vec3(player.posX, player.posY, player.posZ);
+		final Vec3 vec31 = player.getLook(1.0F);
+        final byte scanSensitivity = 2;
+		
+		/*
+		 *  Due to the way block position works it can be difficult to scan all blocks
+		 *  located in the world from point A to point B so we need to adjust the scan sensitivity
+		 *  to include more iterations then just the range itself.
+		 *  
+		 *  Even with increased scan sensitivity it can still sometimes not be enough.
+		 *  The problem sometimes occurs when the player is trying to use the item on the very edge
+		 *  of some block, the adjacent block in the direction opposite from the hit side will not be scanned.
+		 *  Dramatical increase of scan sensitivity would probably solve this issue, however this would
+		 *  increase performance stress. The simple solution is to directly check for that block.  
+		 */
+		
+		final net.minecraft.block.state.IBlockState state = (pos != null) ? world.getBlockState(pos) : null;
+		for (int i = (state != null) ? 0 : materials.length; i < materials.length; i++)
+	    {
+		   if (state.getBlock().getMaterial() == materials[i])
+			   return true;
+	    }
+		
+		for (int i = 0; i <= itemReach * scanSensitivity; i++)  // Manually traverse the vector
 		{
-			Vec3 vec32 = vec3.addVector(vec31.xCoord * i, vec31.yCoord * i, vec31.zCoord * i);
+			double factor = i / scanSensitivity;
+			
+			Vec3 vec32 = vec3.addVector(vec31.xCoord * factor, vec31.yCoord  * factor, vec31.zCoord * factor);
 		    BlockPos blockpos = new BlockPos(vec32.xCoord, vec32.yCoord, vec32.zCoord);
-		    final net.minecraft.block.state.IBlockState iblockstate;
-		    iblockstate = world.getBlockState(blockpos);
 		    
-		    for (int i2 = 0; i2 < materials.length; i2++)  // Return the first occurrence of material
+		    final net.minecraft.block.state.IBlockState iblockstate = world.getBlockState(blockpos);
+		    Material blockMaterial = (iblockstate != null) ? world.getBlockState(blockpos).getBlock().getMaterial() : null;
+		    
+		    for (int i2 = (blockMaterial != null) ? 0 : materials.length; i2 < materials.length; i2++)
 		    {
-		    	if (iblockstate != null && iblockstate.getBlock().getMaterial() == materials[i2])
-		    		return true;
+		    	if (blockMaterial == materials[i2])
+		    		return true;                      // Return the first occurrence of material
 		    }
-		}       return false;	
+		}
+
+		return false;	
 	}
 	
 	/**
@@ -133,7 +158,7 @@ public class ItemTorch extends ItemBlock
 		 /*
 		  *   If we're trying to use a torch on lava light the torch on fire.
           */	
-		 if (isTorchUnlit && willItemTouchMaterialsOnUse(playerIn, worldIn, materials, TORCH_ITEM_REACH_RADIUS))
+		 if (isTorchUnlit && willItemTouchMaterialsOnUse(playerIn, worldIn, materials, TORCH_ITEM_REACH_RADIUS, null))
 		 {	
 			 playerIn.swingItem();
 			 lightItemTorch(itemStackIn);
@@ -169,15 +194,15 @@ public class ItemTorch extends ItemBlock
     	/*   
          *   If we're trying to use a torch on lava light the torch on fire.
          */
-    	Material[] materials = new Material[] { Material.lava, Material.fire };
-    	if (willItemTouchMaterialsOnUse(playerIn, worldIn, materials, TORCH_ITEM_REACH_RADIUS))
+    	Material[] materials = new Material[] { Material.lava, Material.fire, Material.water };
+    	if (willItemTouchMaterialsOnUse(playerIn, worldIn, materials, TORCH_ITEM_REACH_RADIUS, pos.offset(side)))
     	{
     		playerIn.swingItem();  // Do item swing animation before setting on fire
     	
-    		if (ResourceLibrary.isItemLitTorch(stack.getItem()))
+    		if (ResourceLibrary.isItemUnlitTorch(stack.getItem()))
     			lightItemTorch(stack);
     		
-    		return false;
+    		return true;    // Make it true to prevent calling #onItemRightClick
     	}
     	
     	final boolean wasBlockPlaced = super.onItemUse(stack, playerIn, worldIn, pos, side, hitX, hitY, hitZ);
