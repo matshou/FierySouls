@@ -1,3 +1,9 @@
+Version 1.3.4
+
+- Slightly increased item torch range.
+- Torch items will now be instantly extinguished when used (activated) on water blocks.
+  They will also get instantly extinguished when used as a tool to break a block that is underwater or behind a waterfall. 
+
 Version 1.3.3
 
 - Torches can no longer replace fire, lava and water blocks by being placed in their position. 

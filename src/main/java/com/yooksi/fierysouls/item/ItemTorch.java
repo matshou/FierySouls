@@ -1,6 +1,10 @@
 package com.yooksi.fierysouls.item;
 
 import com.yooksi.fierysouls.common.Utilities;
+
+import java.util.HashSet;
+import java.util.Set;
+
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.common.ResourceLibrary;
@@ -36,7 +40,7 @@ public class ItemTorch extends ItemBlock
 	 *  Maximum item reach radius when both attacking and using in the world. <br>
 	 *  The radius value is expressed in the number of blocks the item can reach in one direction. 
 	 */
-	public static final double TORCH_ITEM_REACH_RADIUS = 2.0D;
+	public static final double TORCH_ITEM_REACH_RADIUS = 2.3D;
 	
 	/** 
 	 *  Base chance value that is further modified and used as a value to roll against, <br>
@@ -90,23 +94,27 @@ public class ItemTorch extends ItemBlock
     
 	/**
 	 *  This method is intended to be called right after an item was right-clicked, and no <i>'blockHit'</i> was found. <br>
-	 *  It will search for the first occurrence of a block made of specific materials in the direction where the player <br>
+	 *  It will search for blocks made of specific materials in the direction where the player <br>
 	 *  is looking, limiting the search with the specified range of item's reach.
 	 *  
 	 *  @param player EntityPlayer using the item <b>(unchecked)</b>
 	 *  @param world Instance of the world the player and his item are in <b>(unchecked)</b>
 	 *  @param materials The material types to check if item is used on 
 	 *  @param itemReach User defined reach of the item being used <i>(should be > 1)</i>
-	 *  @return True if the block made from designated material has been found 
+	 *  @param pos Position of the block the item is being used on <i>(can be null if no block exists)</i>
+	 *  @return List of materials found <b>sorted</b> in the order of discovery
 	 *  
 	 *  @see EntityPlayer#rayTrace(double, float)
 	 *  @throws java.lang.NullPointerException if EntityPlayer or World instances are <code>null</code>
 	 */
-	public static boolean willItemTouchMaterialsOnUse(final EntityPlayer player, final World world, Material[] materials, double itemReach, BlockPos pos)
+	public static Set<Material> getMaterialsItemWillTouchOnUse(EntityPlayer player, World world, Set<Material> materials, double itemReach, BlockPos pos)
 	{
+		// Store all materials found in this array
+		Set<Material> searchResult = new java.util.HashSet();
+		
 		final Vec3 vec3 = new Vec3(player.posX, player.posY, player.posZ);
 		final Vec3 vec31 = player.getLook(1.0F);
-        final byte scanSensitivity = 2;
+		final byte scanSensitivity = 2;
 		
 		/*
 		 *  Due to the way block position works it can be difficult to scan all blocks
@@ -120,13 +128,6 @@ public class ItemTorch extends ItemBlock
 		 *  increase performance stress. The simple solution is to directly check for that block.  
 		 */
 		
-		final net.minecraft.block.state.IBlockState state = (pos != null) ? world.getBlockState(pos) : null;
-		for (int i = (state != null) ? 0 : materials.length; i < materials.length; i++)
-	    {
-		   if (state.getBlock().getMaterial() == materials[i])
-			   return true;
-	    }
-		
 		for (int i = 0; i <= itemReach * scanSensitivity; i++)  // Manually traverse the vector
 		{
 			double factor = i / scanSensitivity;
@@ -135,16 +136,17 @@ public class ItemTorch extends ItemBlock
 		    BlockPos blockpos = new BlockPos(vec32.xCoord, vec32.yCoord, vec32.zCoord);
 		    
 		    final net.minecraft.block.state.IBlockState iblockstate = world.getBlockState(blockpos);
-		    Material blockMaterial = (iblockstate != null) ? world.getBlockState(blockpos).getBlock().getMaterial() : null;
+		    Material blockMaterial = world.getBlockState(blockpos).getBlock().getMaterial();
 		    
-		    for (int i2 = (blockMaterial != null) ? 0 : materials.length; i2 < materials.length; i2++)
-		    {
-		    	if (blockMaterial == materials[i2])
-		    		return true;                      // Return the first occurrence of material
-		    }
+		    if (materials.contains(blockMaterial))
+		    	searchResult.add(blockMaterial);
 		}
 
-		return false;	
+	    Material blockMaterial = (pos != null) ? world.getBlockState(pos).getBlock().getMaterial() : null;
+	    if (blockMaterial != null && materials.contains(blockMaterial))
+	    	searchResult.add(blockMaterial);
+	    
+		return searchResult;
 	}
 	
 	/**
@@ -153,16 +155,26 @@ public class ItemTorch extends ItemBlock
      */
 	 public ItemStack onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn)
 	 { 	 
+		 Set<Material> materials = new HashSet<Material>();
+		 materials.add(Material.lava); materials.add(Material.fire); materials.add(Material.water);
 		 boolean isTorchUnlit = ResourceLibrary.isItemUnlitTorch(itemStackIn.getItem());
-		 Material[] materials = new Material[] { Material.lava, Material.fire };
-		 /*
-		  *   If we're trying to use a torch on lava light the torch on fire.
-          */	
-		 if (isTorchUnlit && willItemTouchMaterialsOnUse(playerIn, worldIn, materials, TORCH_ITEM_REACH_RADIUS, null))
+		 
+		 /*   
+	      *   If we're trying to use a torch on lava or fire light the torch on fire.
+	      *   On the other hand if it's water we're dipping the torch in, extinguish it.
+	      */	
+		 Set foundMaterials = getMaterialsItemWillTouchOnUse(playerIn, worldIn, materials, TORCH_ITEM_REACH_RADIUS, null);
+		 if (isTorchUnlit && foundMaterials.contains(Material.lava) || foundMaterials.contains(Material.fire))
 		 {	
 			 playerIn.swingItem();
 			 lightItemTorch(itemStackIn);
 		 }
+		 else if (foundMaterials.contains(Material.water))
+		 {
+			 playerIn.swingItem();
+	    	 extinguishItemTorch(itemStackIn, true);
+		 }
+		 
 	     return super.onItemRightClick(itemStackIn, worldIn, playerIn);
 	 }
 	
@@ -191,24 +203,37 @@ public class ItemTorch extends ItemBlock
     	if (playerVec.distanceTo(hitVec) > TORCH_ITEM_REACH_RADIUS)
     		return false;
     	
+    	Set<Material> materials = new HashSet<Material>();
+		materials.add(Material.lava); materials.add(Material.fire); materials.add(Material.water);
+		
+		double range = TORCH_ITEM_REACH_RADIUS;
+		Set foundMaterials = getMaterialsItemWillTouchOnUse(playerIn, worldIn, materials, range, pos.offset(side));
+		
     	/*   
-         *   If we're trying to use a torch on lava light the torch on fire.
+         *   If we're trying to use a torch on lava or fire light the torch on fire.
+         *   On the other hand if it's water we're dipping the torch in, extinguish it.
          */
-    	Material[] materials = new Material[] { Material.lava, Material.fire, Material.water };
-    	if (willItemTouchMaterialsOnUse(playerIn, worldIn, materials, TORCH_ITEM_REACH_RADIUS, pos.offset(side)))
-    	{
+    	if (foundMaterials.contains(Material.lava) || foundMaterials.contains(Material.fire))
+    	{		
     		playerIn.swingItem();  // Do item swing animation before setting on fire
     	
     		if (ResourceLibrary.isItemUnlitTorch(stack.getItem()))
     			lightItemTorch(stack);
-    		
-    		return true;    // Make it true to prevent calling #onItemRightClick
+    		                
+    		return true;    //  Return here to prevent the item from being placed like a block in water.
+    		                //  Make it true to prevent calling #onItemRightClick, same for the case below.
+    	}
+    	else if (foundMaterials.contains(Material.water))
+    	{
+    		playerIn.swingItem();
+    		extinguishItemTorch(stack, true);
+    		return true;
     	}
     	
     	final boolean wasBlockPlaced = super.onItemUse(stack, playerIn, worldIn, pos, side, hitX, hitY, hitZ);
     	
     	if (wasBlockPlaced == true && !worldIn.isRemote)
-    	{		
+    	{
     		net.minecraft.tileentity.TileEntity tileEntity = worldIn.getTileEntity(pos.offset(side));
     		if (tileEntity != null && tileEntity instanceof TileEntityTorch)
             {
@@ -338,6 +363,26 @@ public class ItemTorch extends ItemBlock
     			    {
     			        stack.getTagCompound().setBoolean("updateReroute", true);
     			        extendedProperties = ExtendedProperties.createExtendedPropertiesForItem(stack);
+    			        
+    			        /*
+    			         *  If player is trying to break a block located underwater or behind a waterfall,
+    			         *  extinguish the torch if lit and add humidity.
+    			         */
+    			        Set<Material> materials = new HashSet<Material>();
+    					materials.add(Material.water);
+    					
+    					EntityPlayer player = (EntityPlayer)entityIn;
+    					EnumFacing side = Minecraft.getMinecraft().objectMouseOver.sideHit;
+    					BlockPos blockPos = Minecraft.getMinecraft().objectMouseOver.getBlockPos();
+    					Set foundMaterials = getMaterialsItemWillTouchOnUse(player, worldIn, materials, TORCH_ITEM_REACH_RADIUS, blockPos.offset(side));
+    					
+    					if (foundMaterials.contains(Material.water))
+    					{
+    						setItemHumidity(extendedProperties, SharedDefines.HUMIDITY_THRESHOLD);
+    						
+    						if (ResourceLibrary.isItemLitTorch(stack.getItem()))
+    							stack.setItem(ResourceLibrary.TORCH_UNLIT.getItem());
+    					}
     			    }
     		    }
     		    else if (isPlayerBreakingBlock() == false)

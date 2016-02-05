@@ -72,7 +72,7 @@ public class BlockTorchUnlit extends com.yooksi.fierysouls.block.BlockTorch
 		if (equippedItem == null) 
 			return false;
 		
-		if (equippedItem.getItem() ==  ResourceLibrary.TORCH_LIT.getItem())
+		if (ResourceLibrary.isItemLitTorch(equippedItem.getItem()))
 		{
 			TileEntity entityTorch = worldIn.getTileEntity(pos);
     		if (entityTorch != null && entityTorch instanceof TileEntityTorchUnlit)
@@ -95,7 +95,7 @@ public class BlockTorchUnlit extends com.yooksi.fierysouls.block.BlockTorch
 	{
 		// Find out the direction the torch is facing
 		EnumFacing facing = (EnumFacing)world.getBlockState(pos).getValue(BlockTorch.FACING);
-					
+		
 		// If the torch is not facing up but is placed on the side of a block we have to take into
 		// account facing sides, otherwise the torch will detach from the wall and turn into an item.
 		
