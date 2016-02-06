@@ -29,17 +29,16 @@ public final class TileEntityTorchUnlit extends TileEntityTorch
 	@Override
 	public void update()
 	{	
-		// Update only at set intervals to reduce performance hits.
-		if (updateTickCount++ < SharedDefines.MAIN_UPDATE_INTERVAL)
-			return; else updateTickCount = 0;
+		if (!isTorchReadyForUpdate())
+			return;
 		
-		if (!getWorld().isRemote)
+		else if (!getWorld().isRemote)
 		{
 			// When it's raining and the torch is directly exposed to rain it will start collecting humidity.
 			// Update humidity only on SERVER, we don't really need to do this on client.
 			
-			if (getWorld().isRaining() && !isHighHumidity() && getWorld().canBlockSeeSky(pos))
-				updateHumidityLevel(SharedDefines.MAIN_UPDATE_INTERVAL);
+			if (getWorld().isRaining() && !isTorchInHighHumidity() && getWorld().canBlockSeeSky(pos))
+				updateTorchHumidityLevel(SharedDefines.MAIN_UPDATE_INTERVAL);
 		}
 		else if (isTorchSmoldering() && didSmolderingExpire())				
 			setTorchSmoldering(false, getWorld().getTotalWorldTime());
@@ -54,7 +53,8 @@ public final class TileEntityTorchUnlit extends TileEntityTorch
 	 */
     public void lightTorch()
     {
-    	if (!getWorld().isRemote && !isHighHumidity() && getCombustionDuration() > 0 && BlockTorchUnlit.lightTorch(getWorld(), pos))
+    	boolean result = !isTorchInHighHumidity() && getTorchCombustionDuration() > 0;
+    	if (!getWorld().isRemote && result == true && BlockTorchUnlit.lightTorch(getWorld(), pos))
     	{
     		TileEntity entityTorch = getWorld().getTileEntity(pos);
     		if (entityTorch != null && entityTorch instanceof TileEntityTorchLit)

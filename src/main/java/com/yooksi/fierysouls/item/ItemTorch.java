@@ -318,7 +318,7 @@ public class ItemTorch extends ItemBlock
      * @param totalWorldTime Total time elapsed from the creation of the world 
      * @return True if enough world time has elapsed
      */
-    private static boolean shouldUpdateItem(NBTTagCompound itemNBT, long totalWorldTime)
+    public static boolean shouldUpdateItem(NBTTagCompound itemNBT, long totalWorldTime)
     {
     	long lastUpdateTime = itemNBT.getLong("lastUpdateTime");
     	if (lastUpdateTime > 0 && totalWorldTime - lastUpdateTime >= SharedDefines.MAIN_UPDATE_INTERVAL)
@@ -497,7 +497,7 @@ public class ItemTorch extends ItemBlock
      * @param itemNBT Map of item's custom data used for updating <b>(unchecked)</b>
      * @return Returns the humidity value from item NBT
      */
-    private static short getItemHumidity(NBTTagCompound itemNBT)
+    public static short getItemHumidity(NBTTagCompound itemNBT)
     {
     	return itemNBT.getShort("humidityLevel");
     }

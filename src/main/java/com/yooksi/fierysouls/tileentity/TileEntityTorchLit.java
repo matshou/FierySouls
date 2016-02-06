@@ -64,20 +64,19 @@ public final class TileEntityTorchLit extends TileEntityTorch
 	@Override
 	public void update()
 	{	
-		// Update only at set intervals to reduce performance hits.
-		if (updateTickCount++ < SharedDefines.MAIN_UPDATE_INTERVAL)
-			return; else updateTickCount = 0;
+		if (!isTorchReadyForUpdate())
+			return;
 		
-		if (!getWorld().isRemote)
+		else if (!getWorld().isRemote)
 		{ 
 			if (torchFireHazardUpdate == true)
 				tryCatchFireOnNeighbour();
 			
-			if (updateCombustionDuration(SharedDefines.MAIN_UPDATE_INTERVAL * -1) <= 0)
+			if (updateTorchCombustionDuration(SharedDefines.MAIN_UPDATE_INTERVAL * -1) <= 0)
 				extinguishTorch();
 			
 			// Since we're not updating this data here handle light updates on client, we're done here.
-			else if (DIMINISH_LIGHT_TIME_MARK > 0 && getCombustionDuration() <= DIMINISH_LIGHT_TIME_MARK && !updatingLight)
+			else if (DIMINISH_LIGHT_TIME_MARK > 0 && getTorchCombustionDuration() <= DIMINISH_LIGHT_TIME_MARK && !updatingLight)
 			{
 				updatingLight = true;
 				markForUpdate();
@@ -86,7 +85,7 @@ public final class TileEntityTorchLit extends TileEntityTorch
 		    // When it's raining and the torch is directly exposed to rain it will start collecting humidity.
 		    if (getWorld().getWorldInfo().isRaining() && getWorld().canBlockSeeSky(pos))
 		    {
-			    if (updateHumidityLevel(SharedDefines.MAIN_UPDATE_INTERVAL) >= SharedDefines.HUMIDITY_THRESHOLD)		   
+			    if (updateTorchHumidityLevel(SharedDefines.MAIN_UPDATE_INTERVAL) >= SharedDefines.HUMIDITY_THRESHOLD)		   
 			    	extinguishTorch();
 		    }
 		}
@@ -187,12 +186,12 @@ public final class TileEntityTorchLit extends TileEntityTorch
 	@SideOnly(Side.CLIENT)
 	private void recalculateLightLevel()
 	{
-		if (DIMINISH_LIGHT_TIME_MARK < 0 || getCombustionDuration() < DIMINISH_LIGHT_TIME_MARK)
+		if (DIMINISH_LIGHT_TIME_MARK < 0 || getTorchCombustionDuration() < DIMINISH_LIGHT_TIME_MARK)
 		{
 		    @SuppressWarnings("unused")
 			short timeMark = (DIMINISH_LIGHT_TIME_MARK < 0) ? SharedDefines.MAX_TORCH_FLAME_DURATION : DIMINISH_LIGHT_TIME_MARK;
 			
-		    int ticksElapsed =  timeMark - getCombustionDuration();
+		    int ticksElapsed =  timeMark - getTorchCombustionDuration();
 			updateLightLevel(ticksElapsed / SharedDefines.MAIN_UPDATE_INTERVAL * DIMINISH_LIGHT_PER_INTERVAL);
 			
 			getWorld().checkLightFor(net.minecraft.world.EnumSkyBlock.BLOCK, pos);

@@ -15,32 +15,18 @@ import net.minecraft.entity.item.EntityItem;
 
 public final class EntityItemTorch extends EntityItem
 {
-	private byte updateTickCount = 0;
-	private short humidity;
-	
 	// This constructor is used when registering this custom entity with Forge
-	public EntityItemTorch(World worldIn) { super(worldIn); };
+	public EntityItemTorch(World worldIn)
+	{ 
+		super(worldIn);
+	}
 	
 	public EntityItemTorch(World worldIn, double x, double y, double z, ItemStack stack) 
 	{
 		super(worldIn, x, y, z, stack);
-		this.setDefaultPickupDelay();		
-		this.readDataFromStack();          // Initialize localized custom data
+		this.setDefaultPickupDelay();
 	}
 	
-	/**
-     * Called by a player entity when they collide with an entity. <br>
-     * <i>Save custom data to stack NBT before we destroy this entity.</i>
-     *
-     * @param entityIn player entity being collided with
-     */
-	@Override
-    public void onCollideWithPlayer(net.minecraft.entity.player.EntityPlayer entityIn)
-    {	
-    	this.saveDataToStack();
-    	super.onCollideWithPlayer(entityIn);
-    }
-
 	/**
      * Called to update the entity's position/logic.
      */
@@ -48,34 +34,30 @@ public final class EntityItemTorch extends EntityItem
 	public void onUpdate()
 	{
 		super.onUpdate();
-
+		final NBTTagCompound itemTagCompound = getEntityItem().getTagCompound();
+		
 		// TODO: Humidity should speed up item decay (decrease it's lifespan).
 		
 		// Update only at set intervals to reduce performance hits.   
 		// When it's raining and the torch is directly exposed to rain it will start collecting humidity.
 		
-		if (worldObj.isRemote || updateTickCount++ < SharedDefines.MAIN_UPDATE_INTERVAL)    
-			return; else updateTickCount = 0;
+		if (!ItemTorch.shouldUpdateItem(itemTagCompound, worldObj.getTotalWorldTime()))
+			return;
 		
 		// Currently we're only updating humidity and not combustion,
 		// so there is no need to go further if humidity is at maximum value.
 		
-		if (humidity >= SharedDefines.HUMIDITY_THRESHOLD)
+		if (ItemTorch.getItemHumidity(itemTagCompound) >= SharedDefines.HUMIDITY_THRESHOLD)
 			return;
 		
 		final boolean isTorchLit = ResourceLibrary.isItemLitTorch(getEntityItem().getItem());
-		final NBTTagCompound itemTagCompound = getEntityItem().getTagCompound();
 		
 		// Check if the entity is in water first because rain doesn't matter
 		// if we're submerged in a pool of water anyways.
 			
 		if (isInWater() /**&& isInsideOfMaterial(Material.water)*/)
 		{
-			if (isTorchLit == true)
-				getEntityItem().setItem(ResourceLibrary.TORCH_UNLIT.getItem());
-			       
-			ItemTorch.setItemHumidity(itemTagCompound, SharedDefines.HUMIDITY_THRESHOLD);
-			readDataFromStack();
+			ItemTorch.extinguishItemTorch(getEntityItem(), true);
 		}
 		else if (isTorchLit && ItemTorch.updateItemCombustion(itemTagCompound, SharedDefines.MAIN_UPDATE_INTERVAL * -1) < 1)
 		{
@@ -83,14 +65,8 @@ public final class EntityItemTorch extends EntityItem
 		}
 		else if (worldObj.isRaining() && worldObj.canBlockSeeSky(getPosition()))
 		{
-			if (updateHumidity() >= SharedDefines.HUMIDITY_THRESHOLD)
-			{
-				if (isTorchLit == true)
-					getEntityItem().setItem(ResourceLibrary.TORCH_UNLIT.getItem());
-				       
-				ItemTorch.setItemHumidity(itemTagCompound, SharedDefines.HUMIDITY_THRESHOLD);
-				readDataFromStack();
-			}
+			if (ItemTorch.updateItemHumidity(itemTagCompound, SharedDefines.MAIN_UPDATE_INTERVAL) >= SharedDefines.HUMIDITY_THRESHOLD)
+			    ItemTorch.extinguishItemTorch(getEntityItem(), false);
 		}
 	}
 	
@@ -207,43 +183,5 @@ public final class EntityItemTorch extends EntityItem
     	int iDuration = Integer.parseInt(sDuration.substring(Utilities.indexOfAnyBut(sDuration, "0")));
     	
     	return new int[]{iHumidity, iDuration};
-    }
-
-	/** 
-	 * Update torch entity item humidity level with a standard 'update interval' value.
-	 */
-	private short updateHumidity()
-	{
-		return humidity += SharedDefines.MAIN_UPDATE_INTERVAL;
-	}
-	
-    /** 
-     *  Update local variables with values read from item stack NBT.
-     */
-	private void readDataFromStack()
-	{
-		if (getEntityItem().hasTagCompound())
-			humidity = getEntityItem().getTagCompound().getShort("humidityLevel");
-	}
-	/**
-	 *  Save local variable values to item stack NBT.
-	 */
-	private void saveDataToStack()
-	{
-		if (getEntityItem().hasTagCompound())
-		    getEntityItem().getTagCompound().setShort("humidityLevel", humidity);
-	}
-    
-	@Override
-	public void readEntityFromNBT(NBTTagCompound tagCompound)
-    {
-		super.readEntityFromNBT(tagCompound);
-        readDataFromStack();
-    }
-	@Override
-	public void writeEntityToNBT(NBTTagCompound tagCompound)
-	{
-		super.writeEntityToNBT(tagCompound);
-		saveDataToStack();
     }
 }
