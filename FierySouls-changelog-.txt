@@ -1,3 +1,27 @@
+Version 1.3.6
+-----------------------------------------------------------------------
+Updated Features:
+- Torch blocks extinguish when right-clicked.
+- Torches can be ignited by right-clicking them with a lit torch equipped,
+  right-clicking ignited block torches with an unlit torch equipped, or using a matchbox.
+- Lit torch blocks produce a fixed value dim light.
+
+Fixes and Implementations:
+- All recipes imported and tested.
+- Fixed an alpha value issue that appeared on the edges of the matchbox item.
+- Decreased the number of matches per stack from 25 to 20.
+
+New Features:
+- Torches make a 'fiss' noise when extinguished.
+- Torch blocks produce a constant 'fire ambient' noise when lit.
+
+
+Version 1.3.5 - The first 1.10 update
+------------------------------------------------------------------------
+- Started working on making the code compatible with Minecraft 1.10.
+- The ResourceLibrary has a much more simpler and MC friendly design.
+- Most of the code had to be removed until I rewrite and integrate it into the new framework.
+
 Version 1.3.4
 
 - Slightly increased item torch range.
@@ -191,7 +215,7 @@ Version 1.1.3
 
 Changelog:
 
-- Implemented torch combustion, they will not extinguish after a defined period of time has passed.
+- Implemented torch combustion, they will now extinguish after a defined period of time has passed.
 - The torch will now actually burn out becoming a permanent unlit torch unable to be ignited by fire again.
 - Did a little bit of code formatting, nothing major.
 

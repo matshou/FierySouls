@@ -19,8 +19,9 @@ public class FierySouls
 {
 	public static final String MODID = "fierysouls";
 	public static final String NAME = "Fiery Souls";
+	public static final String VERSION = "1.3.6";
 
-	// Use this thingy to print in the console:
+	// Use this thing to print in the console:
 	public static final Logger logger = LogManager.getLogger(MODID);
 	
 	// This is where all our custom items should be listed in-game
