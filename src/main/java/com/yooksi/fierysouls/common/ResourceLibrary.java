@@ -1,163 +1,23 @@
 package com.yooksi.fierysouls.common;
 
-import com.yooksi.fierysouls.entity.item.EntityItemTorch;
-import com.yooksi.fierysouls.client.ClientProxy;
-import com.yooksi.fierysouls.tileentity.*;
-import com.yooksi.fierysouls.block.*;
 import com.yooksi.fierysouls.item.*;
+import com.yooksi.fierysouls.block.*;
 
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.block.Block;
-import net.minecraft.item.Item;
-
-/** 
- * List of all resources (items, blocks and entities) contained in this distribution. <p>
- * 
- * To create a new resource just create a new enumerator here and initialize the resource inside it. <br>
- * Be sure to invoke the right constructor depending on the resource type. Your resource instance will be <br>
- * registered with Forge in {@link CommonProxy} and it's renderers in {@link ClientProxy}. <p>
- *
- * <i><b>Optional</b> elements to register with this resource:</i>
- * <ul>
- * <li>TileEntities</li>
- * <li>ItemBlocks</li>
- * <li>EntityItems</li>
- * <li>Recipes</li></ul>
- * 
- * @see RecipeLibrary
- */
-public enum ResourceLibrary
+/** This class is a storage of unique block and item instances placed here for ease of access. */
+public class ResourceLibrary 
 {
-	TORCH_LIT(new BlockTorchLit(), "torch_lit", TileEntityTorchLit.class, ItemTorch.class, EntityItemTorch.class),
-	TORCH_UNLIT(new BlockTorchUnlit(), "torch_unlit", TileEntityTorchUnlit.class, ItemTorch.class, EntityItemTorch.class),
-	GLOWSTONE_CRYSTAL(new ItemGlowstoneCrystal(), "glowstone_crystal", null),
-	MATCHBOX(new ItemMatchbox(), "matchbox", null);
+	public static final BlockTorchLit TORCH_LIT;
+	public static final BlockTorchUnlit TORCH_UNLIT;
 	
-	private final Class tileEntityClass;
-	private final Class entityItemClass;
-	private final Class itemBlockClass;
+	public static final ItemMatchbox MATCHBOX;
+	public static final ItemGlowstoneCrystal GLOWSTONE_CRYSTAL;
 	
-	private final Object instance;
-	public final String name;
-	
-	// It's much more convenient if we write the recipes here, otherwise we have to run loop searches
-	public java.util.List<RecipeLibrary> recipeList;
-	
-	/** The main constructor for this class, invoked by blocks and items.
-	 *  @param resourceInstance Newly created instance of our resource; there is only one per resource.
-	 *  @param resourceName The name will be used to register the resource with Forge.
-	 *  @param entityClass The class of a TileEntity of this resource. Used to register said TileEntity with Forge.
-	 *  @param itemBlockClass The item type to register with it, used by blocks that have custom item classes.
-	 */
-	private ResourceLibrary(Object resource, String resourceName, Class<? extends TileEntity>tileEntity, Class<? extends ItemBlock>itemBlock, Class<? extends EntityItem>entityItem, java.util.List recipes)
+	static
 	{
-		tileEntityClass = tileEntity;
-		entityItemClass = entityItem;
-		itemBlockClass = itemBlock;
+		TORCH_LIT = BlockTorchLit.localInstance;
+		TORCH_UNLIT = BlockTorchUnlit.localInstance;
 		
-		recipeList = recipes;
-		instance = resource;
-		name = resourceName;		
+		MATCHBOX = ItemMatchbox.localInstance;
+		GLOWSTONE_CRYSTAL = ItemGlowstoneCrystal.localInstance;
 	}
-	/** 
-	 * This constructor is used by resources that initialize BLOCKS. 
-	 */
-	private ResourceLibrary(Object resourceInstance, String resourceName, Class tileEntity, Class itemBlockClass, Class entityItem)
-	{	
-		this(resourceInstance, resourceName, tileEntity, itemBlockClass, entityItem, new java.util.ArrayList());
-		getBlock().setUnlocalizedName(resourceName).setCreativeTab(FierySouls.tabTorches);
-	}
-	/** 
-	 * This constructor is used by resources that initialize ITEMS. 
-	 */
-	private ResourceLibrary(Object resourceInstance, String resourceName, Class entityItem)
-	{
-		this(resourceInstance, resourceName, null, null, entityItem, new java.util.ArrayList());
-		getItem().setUnlocalizedName(resourceName).setCreativeTab(FierySouls.tabTorches);
-	}
-	
-	/**
-	 *  Should only be called by the RecipeLibrary. <p>
-	 *  
-	 *  <i>I've tried adding this to the constructor but the problem is that the recipe library <br>
-	 *  uses resource library references before we're properly initialized it. <br>
-	 *  Have to call it from there after we initialize first. </i>
-	 *  
-	 * @param recipeToAdd
-	 */
-	public void addRecipeToLibrary(RecipeLibrary recipeToAdd)
-	{
-		this.recipeList.add(recipeToAdd);
-	}
-	
-	/** 
-	 * This will return the TileEntity class associated with this resource.
-	 * @return <i>if return value is null, this resource does not spawn a TileEntity
-	 */
-	public Class getTileEntityClass()
-	{
-		return tileEntityClass;
-	}
-	/** 
-	 * This will return the ItemBlock class associated with this resource.
-	 * @return <i>if return value is null, this resource does not drop an ItemBlock type item
-	 */
-	public Class getItemBlockClass()
-	{
-		return itemBlockClass;
-	}
-	/** 
-	 * This will return the EntityItem class associated with this resource.
-	 * @return <i>if return value is null, this resource does not have a custom EntityItem class
-	 */
-	public Class getEntityItemClass()
-	{
-		return entityItemClass;
-	}
-	
-	/** Find out if this object is a block */
-	public boolean isResourceBlock()
-	{
-		return this.instance instanceof Block;
-	}
-	/** Find out if this object is an item */
-	public boolean isResourceItem()
-	{
-		return this.instance instanceof Item;
-	}
-	
-	/**
-	 * Helper method to make this check look cleaner.
-	 * @param item Item to check for being a lit torch.
-	 * @return True if item is a <b><i>lit</i></b> torch of type Item or block that can be an item.
-	 */
-	public static boolean isItemLitTorch(Item item)
-	{
-		return item == ResourceLibrary.TORCH_LIT.getItem();
-	}
-	
-	/**
-	 * Helper method to make this check look cleaner.
-	 * @param item Item to check for being an unlit torch.
-	 * @return True if item is an <b><i>unlit</i></b> torch of type Item or block that can be an item.
-	 */
-	public static boolean isItemUnlitTorch(Item item)
-	{
-		return item == ResourceLibrary.TORCH_UNLIT.getItem();
-	}
-	
-    public final Block getBlock()
-    {	
-    	return (isResourceBlock()) ? (Block)instance : Block.getBlockFromItem((Item)instance); 
-    }
-    
-    public Item getItem()
-    {
-    	// In some cases we might want to call this function to get an item instance of a block.
-    	// For example this would be needed when adding recipes.
-    	
-    	return (isResourceItem()) ? (Item)instance : Item.getItemFromBlock((Block)instance);
-    }
 }

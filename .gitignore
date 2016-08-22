@@ -39,3 +39,4 @@ build
 # other
 eclipse
 run
+*.classpath
