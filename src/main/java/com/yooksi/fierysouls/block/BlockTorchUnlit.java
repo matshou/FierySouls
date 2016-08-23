@@ -4,10 +4,13 @@ import java.util.Random;
 import javax.annotation.Nullable;
 
 import com.yooksi.fierysouls.common.FierySouls;
-import com.yooksi.fierysouls.common.ResourceLibrary;
+import com.yooksi.fierysouls.tileentity.TileEntityTorch;
+import com.yooksi.fierysouls.tileentity.TileEntityTorchUnlit;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
@@ -16,7 +19,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class BlockTorchUnlit extends com.yooksi.fierysouls.block.BlockTorch
+public class BlockTorchUnlit extends com.yooksi.fierysouls.block.BlockTorch implements ITileEntityProvider
 {	
 	public static BlockTorchUnlit localInstance;
 	
@@ -26,6 +29,12 @@ public class BlockTorchUnlit extends com.yooksi.fierysouls.block.BlockTorch
 		localInstance = this;
 	}
 	
+	@Override
+	public TileEntity createNewTileEntity(World worldIn, int meta) 
+	{
+		return new TileEntityTorchUnlit(worldIn.getTotalWorldTime());
+	}
+	
 	/** This function will be called every 'random' tick and is usually used
 	 *  to spawn fire particles<br> from the top of the torch.
 	 */
@@ -33,7 +42,31 @@ public class BlockTorchUnlit extends com.yooksi.fierysouls.block.BlockTorch
     @SideOnly(Side.CLIENT)
 	public void randomDisplayTick(IBlockState stateIn, World worldIn, BlockPos pos, Random rand)
 	{
-		return;  // This will block the fire particle spawn on unlit torches.
+		// TODO: - Add some options from here to the configuration file
+        //       - Try to make the smoke appear more like it's coming from an extinguished torch then fire.
+		//       - Adjust smoke depending on which side does a torch face.
+				
+		// When a lit torch has been extinguished it starts smoldering, emitting smoke particles for a short time duration.
+		// Find the right tile entity and check if we should stop smoldering
+		
+		TileEntityTorchUnlit unlitTorch = (TileEntityTorchUnlit)TileEntityTorch.findTorchTileEntity(worldIn, pos);
+		if (!unlitTorch.isTorchSmoldering())
+			return;
+		
+		EnumFacing enumfacing = (EnumFacing)stateIn.getValue(FACING);
+		double d0 = (double)pos.getX() + 0.5D;
+	    double d1 = (double)pos.getY() + 0.7D;
+	    double d2 = (double)pos.getZ() + 0.5D;
+	        
+	    double d3 = 0.22D;// + rand.nextDouble();
+	    double d4 = 0.27D;
+
+	    if (enumfacing.getAxis().isHorizontal())
+	    {
+	    	EnumFacing enumfacing1 = enumfacing.getOpposite();
+	        worldIn.spawnParticle(net.minecraft.util.EnumParticleTypes.SMOKE_NORMAL, d0 + d4 * (double)enumfacing1.getFrontOffsetX(), d1 + d3, d2 + d4 * (double)enumfacing1.getFrontOffsetZ(), 0.0D, 0.0D, 0.0D, new int[0]);
+	    }
+	    else worldIn.spawnParticle(net.minecraft.util.EnumParticleTypes.SMOKE_NORMAL, d0, d1, d2, 0.0D, 0.0D, 0.0D, new int[0]);
 	}
 	
 	/** This function is called by Minecraft whenever a block is right-clicked.
@@ -51,7 +84,7 @@ public class BlockTorchUnlit extends com.yooksi.fierysouls.block.BlockTorch
 		
 		else if (BlockTorch.isItemTorchLit(heldItem.getItem()))
 		{	
-			lightTorch(worldIn, pos);
+			lightTorch(worldIn, pos);	
 			return true;               // Let the calling function know that this block was successfully used,
 			                          // and there is no need to spawn the item as block.
 		}
@@ -59,7 +92,7 @@ public class BlockTorchUnlit extends com.yooksi.fierysouls.block.BlockTorch
 		else return BlockTorch.isItemTorch(heldItem.getItem());
 	}
 	
-	/** Set the torch on fire by updating 'blockstate' at world coordinates.
+	/** Set the torch on fire. Find the torch tile entity and delegate the call.
 	 * 
 	 * @param world the instance of the world the torch is located in.
 	 * @param pos coordinates of the torch in the world.
@@ -67,15 +100,7 @@ public class BlockTorchUnlit extends com.yooksi.fierysouls.block.BlockTorch
 	 */
 	public static boolean lightTorch(World world, BlockPos pos)
 	{
-		// Find out the direction the torch is facing
-		EnumFacing facing = (EnumFacing)world.getBlockState(pos).getValue(BlockTorch.FACING);
-		
-		// If the torch is not facing up but is placed on the side of a block we have to take into
-		// account facing sides, otherwise the torch will detach from the wall and turn into an item.
-		
-		if (facing != EnumFacing.UP && facing != EnumFacing.DOWN) 
-			return world.setBlockState(pos, ResourceLibrary.TORCH_LIT.getBlockState().getBaseState().withProperty(BlockTorch.FACING, facing)); 
-	
-		else return world.setBlockState(pos, ResourceLibrary.TORCH_LIT.getDefaultState());
+		return ((TileEntityTorchUnlit)TileEntityTorch.findTorchTileEntity(world, pos)).lightTorch();
+
 	}
 }

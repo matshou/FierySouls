@@ -12,6 +12,7 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.oredict.OreDictionary;
 
 public class CommonProxy 
 {
@@ -43,6 +44,8 @@ public class CommonProxy
 	private void registerTileEntities()
 	{
 		GameRegistry.registerTileEntity(TileEntityTorch.class, "fierysouls:tile_entity_torch");
+		GameRegistry.registerTileEntity(TileEntityTorchLit.class, "fierysouls:tile_entity_torch_lit");
+		GameRegistry.registerTileEntity(TileEntityTorchUnlit.class, "fierysouls:tile_entity_torch_unlit");
 	}
 	
 	private <T extends net.minecraft.block.Block> void registerBlock(T block, String name) 
@@ -72,22 +75,22 @@ public class CommonProxy
 		recipesRemovedCount += removeRecipe(Item.getItemFromBlock(net.minecraft.init.Blocks.TORCH));
 		FierySouls.logger.info("Removed " + recipesRemovedCount + " vanilla recipes.");
 		
-		GameRegistry.addShapedRecipe(new ItemStack(ResourceLibrary.TORCH_UNLIT), new Object[]               // Unlit Torch standard recipe.
+		GameRegistry.addShapedRecipe(new ItemStack(ResourceLibrary.TORCH_UNLIT), new Object[]                      // Unlit Torch standard recipe.
 				{ "y", "x", 'x', Items.STICK, 'y', Items.COAL });   
 		
-		GameRegistry.addShapedRecipe(new ItemStack(ResourceLibrary.TORCH_UNLIT), new Object[]               // Unlit Torch crafted with CHARCOAL.
+		GameRegistry.addShapedRecipe(new ItemStack(ResourceLibrary.TORCH_UNLIT), new Object[]                      // Unlit Torch crafted with CHARCOAL.
 				{ "y", "x", 'x', Items.STICK, 'y', new ItemStack(Items.COAL, 1, 1) });  
 		
-		GameRegistry.addShapedRecipe(new ItemStack(Blocks.TORCH), new Object[]                              // Vanilla torch (permanently lit).
+		GameRegistry.addShapedRecipe(new ItemStack(Blocks.TORCH), new Object[]                                     // Vanilla torch (permanently lit).
 				{ "y", "x", 'x', Items.STICK, 'y', Items.GLOWSTONE_DUST });                                
 		
-        GameRegistry.addShapelessRecipe(new ItemStack(ResourceLibrary.MATCHBOX), new Object[]               // Matchbox standard recipe.
-        		{ Items.GUNPOWDER, Items.STICK, Items.PAPER });
+        GameRegistry.addShapelessRecipe(new ItemStack(ResourceLibrary.MATCHBOX), new Object[]                      // Matchbox recipe with ALL planks.
+        		{ Items.GUNPOWDER, new ItemStack(Blocks.PLANKS, 1, OreDictionary.WILDCARD_VALUE), Items.PAPER });
         
-        GameRegistry.addShapedRecipe(new ItemStack(ResourceLibrary.GLOWSTONE_CRYSTAL), new Object[]         // Glowstone Crystal standard recipe.
+        GameRegistry.addShapedRecipe(new ItemStack(ResourceLibrary.GLOWSTONE_CRYSTAL), new Object[]                // Glowstone Crystal standard recipe.
         		{ ".x.", "xyx", ".x.", 'x', Items.GLOWSTONE_DUST, 'y', Items.COAL });
         
-        GameRegistry.addShapedRecipe(new ItemStack(ResourceLibrary.GLOWSTONE_CRYSTAL), new Object[]         // Glowstone Crystal crafted with CHARCOAL.
+        GameRegistry.addShapedRecipe(new ItemStack(ResourceLibrary.GLOWSTONE_CRYSTAL), new Object[]                // Glowstone Crystal crafted with CHARCOAL.
         		{ ".x.", "xyx", ".x.", 'x', Items.GLOWSTONE_DUST, 'y', new ItemStack(Items.COAL, 1, 1) });
     }
 	

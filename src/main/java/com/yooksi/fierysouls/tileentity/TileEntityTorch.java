@@ -2,11 +2,15 @@ package com.yooksi.fierysouls.tileentity;
 
 import com.yooksi.fierysouls.common.SharedDefines;
 
-import net.minecraft.tileentity.TileEntity;
+import jline.internal.Nullable;
 import net.minecraft.util.ITickable;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 
-public final class TileEntityTorch extends TileEntity implements ITickable
+import net.minecraft.world.World;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
+
+public class TileEntityTorch extends TileEntity implements ITickable
 {
 	private short combustionTime;        // amount of ticks before the torch burns out.
 	public long timeCreated;             // 'totalWorldTime' this entity was created.
@@ -24,13 +28,17 @@ public final class TileEntityTorch extends TileEntity implements ITickable
 	}
 	
 	@Override
-	public void update() {}
+	public void update() 
+	{
+		if (!isTorchReadyForUpdate())
+			return;
+	}
 	
 	/**
 	 *  This method is intended to be used as a performance optimizer.<br>
 	 *  Update only at set intervals to reduce performance hits.
 	 */
-	protected boolean isTorchReadyForUpdate()
+	private boolean isTorchReadyForUpdate()
 	{
 		boolean ready = updateTickCount++ == SharedDefines.MAIN_UPDATE_INTERVAL;
 	    updateTickCount -= (ready) ? updateTickCount : 0;
@@ -67,12 +75,10 @@ public final class TileEntityTorch extends TileEntity implements ITickable
 	 *  
 	 *  @param value to increment the humidity level with.
 	 *  @return Updated torch entity humidity value for practical purposes. <br>
-	 *          <i>Note that the value is guaranteed to be kept unsigned for you</i>.
 	 */
 	protected short updateTorchHumidityLevel(short value)
 	{
-		// Remember to keep the value unsigned;
-		return humidityLevel += ((humidityLevel + value > 0) ? value : humidityLevel * -1);
+		return humidityLevel += value;
 	}
 	
 	/** 
@@ -88,9 +94,57 @@ public final class TileEntityTorch extends TileEntity implements ITickable
     	return (humidityLevel >= SharedDefines.HUMIDITY_THRESHOLD);
     }
 	
+    /** Helper method for finding a torch tile entity instance from World. */
+    public static TileEntity findTorchTileEntity(@Nullable World world, net.minecraft.util.math.BlockPos pos)
+    {
+    	// TODO: Add an error log here.
+    	TileEntity torchTE = world != null ? world.getTileEntity(pos) : null;
+    	return (torchTE != null && torchTE instanceof TileEntityTorch ? torchTE : null);
+    }
+    
+    // Creates and returns an updated NBTTagCompound for this TileEntity. 
+    // This method is by default called by 'getUpdatePacket()'.
+    @Override
+   	public NBTTagCompound getUpdateTag()    /** SERVER-side */
+   	{
+    	return this.writeToNBT(super.getUpdateTag());
+   	}
+    
+    // This method is called whenever a new TileEntity is created (not loaded in world).
+    // It will get an updated compound from server and send it to client.
+    @Override
+    public SPacketUpdateTileEntity getUpdatePacket()   /** SERVER-side */
+    {
+    	return new SPacketUpdateTileEntity(pos, getBlockMetadata(), getUpdateTag());
+    }
+    
+    // Called on CLIENT after a getUpdatePacket() call.
+    // Here we can receive a packet crafted by server on a sync call.
+    @Override
+    public void onDataPacket(net.minecraft.network.NetworkManager net, net.minecraft.network.play.server.SPacketUpdateTileEntity pkt)
+    {
+		readFromNBT(pkt.getNbtCompound());
+	}
+    
+    /** 
+     *  Saves all important information to a custom NBT packet. <br>
+     *  @return NBT packet containing all up-to-date torch data. 
+     */
+    public NBTTagCompound saveDataToPacket()
+    {	
+    	return this.writeToNBT(new NBTTagCompound());
+    }
+    
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound nbt)
-    {
+    {	
+		if (this instanceof TileEntityTorchUnlit)
+		{
+			TileEntityTorchUnlit unlitTorch = (TileEntityTorchUnlit)this;
+			nbt.setInteger("smolderingDuration", unlitTorch.smolderingDuration);
+			nbt.setLong("startedSmoldering", unlitTorch.startedSmoldering);
+		}
+		
 		nbt.setLong("timeCreated", timeCreated);
 		nbt.setShort("humidityLevel", humidityLevel);
 		nbt.setShort("combustionTime", combustionTime);
@@ -102,6 +156,14 @@ public final class TileEntityTorch extends TileEntity implements ITickable
     public void readFromNBT(NBTTagCompound nbt)
     {  
 		super.readFromNBT(nbt);
+		boolean result = nbt.hasKey("smolderingDuration") && nbt.hasKey("startedSmoldering");
+		
+		if (this instanceof TileEntityTorchUnlit && result == true)
+		{
+			TileEntityTorchUnlit unlitTorch = (TileEntityTorchUnlit)this;
+			unlitTorch.smolderingDuration = nbt.getInteger("smolderingDuration");
+			unlitTorch.startedSmoldering = nbt.getLong("startedSmoldering");
+		}
 		
 	    timeCreated = nbt.getLong("timeCreated");
         humidityLevel = nbt.getShort("humidityLevel");

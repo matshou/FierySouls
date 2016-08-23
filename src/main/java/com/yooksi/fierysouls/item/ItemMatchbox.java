@@ -37,6 +37,6 @@ public class ItemMatchbox extends Item
 		if (worldIn.getBlockState(pos).getBlock() == ResourceLibrary.TORCH_UNLIT)
 			BlockTorchUnlit.lightTorch(worldIn, pos);
 		
-		return EnumActionResult.PASS;  // Always allow the item to be used
+		return EnumActionResult.SUCCESS;  // Always allow the item to be used
 	}
 }

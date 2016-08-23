@@ -1,17 +1,20 @@
 package com.yooksi.fierysouls.block;
 
 import java.util.Random;
-
 import javax.annotation.Nullable;
 
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.ResourceLibrary;
+import com.yooksi.fierysouls.tileentity.TileEntityTorch;
+import com.yooksi.fierysouls.tileentity.TileEntityTorchLit;
 
+import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
@@ -20,7 +23,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch 
+public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch implements ITileEntityProvider
 {
 	public static BlockTorchLit localInstance;
 	
@@ -29,6 +32,12 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch
 		this.setCreativeTab(FierySouls.tabTorches);
 		this.setLightLevel((float)(13.0F / 15.0F));  // TODO: Move this to a config file.
 		localInstance = this;
+	}
+	
+	@Override
+	public TileEntity createNewTileEntity(World worldIn, int meta) 
+	{
+		return new TileEntityTorchLit(worldIn.getTotalWorldTime());
 	}
 	
 	/** This function will be called every 'random' tick and is usually used
@@ -62,8 +71,8 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch
 			heldItem = playerIn.inventory.getCurrentItem();
 		
 		if (heldItem == null)
-		{	
-			extinguishTorch(worldIn, pos);
+		{
+			((TileEntityTorchLit)TileEntityTorch.findTorchTileEntity(worldIn, pos)).extinguishTorch();
 			return true;
 		}
 		else if (heldItem.getItem() == torchUnlit)
@@ -86,7 +95,7 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch
 		else return BlockTorch.isItemTorch(heldItem.getItem());
 	}
 	
-	/** Extinguish the torch by updating 'blockstate' at world coordinates.
+	/** Extinguish the torch block. Find the torch tile entity and delegate the call.
 	 * 
 	 * @param world The instance of the world the torch is located in.
 	 * @param pos Coordinates of the torch in the world.
@@ -94,17 +103,6 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch
 	 */
 	public static boolean extinguishTorch(World world, BlockPos pos)
 	{
-		// Find out the direction the torch is facing
-		EnumFacing facing = (EnumFacing)world.getBlockState(pos).getValue(BlockTorch.FACING);
-					
-		// If the torch is not facing up but is placed on the side of a block we have to take into
-		// account facing sides, otherwise the torch will detach from the wall and turn into an item.
-		
-		world.playSound(pos.getX(), pos.getY(), pos.getZ(), SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, SoundCategory.AMBIENT, 0.15F, 0.5F, false);
-		
-		if (facing != EnumFacing.UP && facing != EnumFacing.DOWN) 
-			return world.setBlockState(pos, ResourceLibrary.TORCH_UNLIT.getBlockState().getBaseState().withProperty(BlockTorch.FACING, facing)); 
-	
-		else return world.setBlockState(pos, ResourceLibrary.TORCH_UNLIT.getDefaultState());
+		return ((TileEntityTorchLit)TileEntityTorch.findTorchTileEntity(world, pos)).extinguishTorch();
 	}
 }
