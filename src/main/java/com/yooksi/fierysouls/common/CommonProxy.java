@@ -2,6 +2,7 @@ package com.yooksi.fierysouls.common;
 
 import com.yooksi.fierysouls.block.*;
 import com.yooksi.fierysouls.item.*;
+import com.yooksi.fierysouls.tileentity.*;
 
 import net.minecraft.item.Item;
 import net.minecraft.init.Blocks;
@@ -18,13 +19,14 @@ public class CommonProxy
 	public void preInit(FMLPreInitializationEvent event) 
 	{
 	    registerResources();
+	    registerTileEntities();
 	}
 	
 	/** 
 	 *  Register all items and blocks from the resource library with Forge. <br>
 	 *  This is called when the mod is passing the pre-initialization phase.
 	 */
-	private static void registerResources() 
+	private void registerResources() 
 	{
 		FierySouls.logger.info("Preparing to register item and block instances...");
 		
@@ -37,7 +39,13 @@ public class CommonProxy
 		FierySouls.logger.info("Finished registering object instances. ");
 	}
 	
-	private static <T extends net.minecraft.block.Block> void registerBlock(T block, String name) 
+	/** Register all custom tile entities with Forge. */
+	private void registerTileEntities()
+	{
+		GameRegistry.registerTileEntity(TileEntityTorch.class, "fierysouls:tile_entity_torch");
+	}
+	
+	private <T extends net.minecraft.block.Block> void registerBlock(T block, String name) 
 	{	
 		block.setUnlocalizedName(name);
 		block.setRegistryName(name);
@@ -46,7 +54,7 @@ public class CommonProxy
 		GameRegistry.register(new net.minecraft.item.ItemBlock(block).setRegistryName(name));
 	}
 	
-	private static <T extends net.minecraft.item.Item> void registerItem(T item, String name) 
+	private <T extends net.minecraft.item.Item> void registerItem(T item, String name) 
 	{
 		item.setUnlocalizedName(name);
 		item.setRegistryName(name);
@@ -92,7 +100,7 @@ public class CommonProxy
 	 *  @throws java.lang.NullPointerException <br>
 	 *          if either the crafting manager or the recipe list are not found.
 	 */ 
-	private static int removeRecipe(Item toRemove)
+	private int removeRecipe(Item toRemove)
 	{
 		int recipesRemoved = 0;
 		java.util.List<IRecipe> recipeList = net.minecraft.item.crafting.CraftingManager.getInstance().getRecipeList();

@@ -1,3 +1,9 @@
+Version 1.3.7
+
+- Added a tile entity registering function.
+- Implemeneted Tile Entities for torch blocks.
+- SharedDefines have been added for future config purposes.
+
 Version 1.3.6
 -----------------------------------------------------------------------
 Updated Features:

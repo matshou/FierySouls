@@ -1,20 +1,22 @@
 package com.yooksi.fierysouls.block;
 
 import com.yooksi.fierysouls.common.ResourceLibrary;
+import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 
-import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.block.Block;
 import net.minecraft.world.World;
+import net.minecraft.item.Item;
 
-public abstract class BlockTorch extends net.minecraft.block.BlockTorch implements net.minecraft.block.ITileEntityProvider
+import net.minecraft.block.ITileEntityProvider;
+import net.minecraft.tileentity.TileEntity;
+
+public abstract class BlockTorch extends net.minecraft.block.BlockTorch implements ITileEntityProvider
 {
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) 
 	{
-		// Auto-generated method stub, will be overridden by child classes
-		return null;
+		return new TileEntityTorch(worldIn.getTotalWorldTime());
 	}
 	
 	/** Check to see if an item is a real torch (both custom or vanilla torch). */
