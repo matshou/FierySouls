@@ -10,27 +10,38 @@ import com.yooksi.fierysouls.tileentity.TileEntityTorchLit;
 
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
+
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.entity.player.EntityPlayer;
+
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch implements ITileEntityProvider
 {
 	public static BlockTorchLit localInstance;
+	public static int MAX_TORCH_LIGHT_LEVEL;
+	
+	/** 
+	 * If the block has changed internal light value then this should be set to true
+	 * so we make a global light update for every lit torch in the world. 
+	 */ 
+	private boolean shouldUpdateLight = false;
 	
 	public BlockTorchLit() 
 	{	
 		this.setCreativeTab(FierySouls.tabTorches);
-		this.setLightLevel((float)(13.0F / 15.0F));  // TODO: Move this to a config file.
+		updateBlockLightLevel();
 		localInstance = this;
 	}
 	
@@ -38,6 +49,23 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch implem
 	public TileEntity createNewTileEntity(World worldIn, int meta) 
 	{
 		return new TileEntityTorchLit(worldIn.getTotalWorldTime());
+	}
+	
+    /** 
+     * Primarily used to update light level after config values have changed. <br>
+     * <b>Note:</b> <i>this will only update the light value of the blocks themselves, not those around them.</i>
+     * 
+     * @param newLightLevel the value is not checked for min-max, but make sure it's between 0 - 15.
+     */
+	public void updateBlockLightLevel(int newLightLevel)
+	{
+		MAX_TORCH_LIGHT_LEVEL = newLightLevel;
+		updateBlockLightLevel();
+		shouldUpdateLight = true;
+	}
+	private void updateBlockLightLevel()
+	{
+		this.setLightLevel((float)(MAX_TORCH_LIGHT_LEVEL / 15.0F));
 	}
 	
 	/** This function will be called every 'random' tick and is usually used
@@ -54,6 +82,18 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch implem
 			// TODO: The sound volume needs further testing here, I have a feeling like it's a bit too loud at times.
             worldIn.playSound(pos.getX(), pos.getY(), pos.getZ(), SoundEvents.BLOCK_FIRE_AMBIENT, SoundCategory.BLOCKS, rand.nextFloat() / 4.0F,  rand.nextFloat() * 0.7F + 0.3F, false);
         }
+		
+		/* Check to see if we need to update the light values of adjacent blocks. 	
+		 * Every lit torch will be affected by this and their lights will be updated.
+		 * If the player is entering the world and we update like this there will be a 
+		 * short time delay before the update takes affect on client side. */
+		 
+		if (shouldUpdateLight == true)
+		{
+			// TODO: Make the light update much faster.
+			worldIn.checkLightFor(EnumSkyBlock.BLOCK, pos);
+			shouldUpdateLight = false;
+		}
 		
 		return;  // This will block the fire particle spawn on unlit torches.
 	}

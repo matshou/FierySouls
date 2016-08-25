@@ -98,7 +98,7 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 	 * @param pos coordinates of the torch in the world.
 	 * @return true if we successfully lit the torch on fire.
 	 */
-    private boolean lightTorch(net.minecraft.world.World world, net.minecraft.util.math.BlockPos pos)
+    private static boolean lightTorch(net.minecraft.world.World world, net.minecraft.util.math.BlockPos pos)
     {
     	// Find out the direction the torch is facing
         EnumFacing facing = (EnumFacing)world.getBlockState(pos).getValue(BlockTorch.FACING);

@@ -19,6 +19,8 @@ public class CommonProxy
 	/** Called by {@link FierySouls#preInit } in the preInit phase of mod loading. */
 	public void preInit(FMLPreInitializationEvent event) 
 	{
+		FSConfiguration.preInit();
+		
 	    registerResources();
 	    registerTileEntities();
 	}
@@ -48,7 +50,7 @@ public class CommonProxy
 		GameRegistry.registerTileEntity(TileEntityTorchUnlit.class, "fierysouls:tile_entity_torch_unlit");
 	}
 	
-	private <T extends net.minecraft.block.Block> void registerBlock(T block, String name) 
+	private static <T extends net.minecraft.block.Block> void registerBlock(T block, String name) 
 	{	
 		block.setUnlocalizedName(name);
 		block.setRegistryName(name);
@@ -57,7 +59,7 @@ public class CommonProxy
 		GameRegistry.register(new net.minecraft.item.ItemBlock(block).setRegistryName(name));
 	}
 	
-	private <T extends net.minecraft.item.Item> void registerItem(T item, String name) 
+	private static <T extends net.minecraft.item.Item> void registerItem(T item, String name) 
 	{
 		item.setUnlocalizedName(name);
 		item.setRegistryName(name);
@@ -103,7 +105,7 @@ public class CommonProxy
 	 *  @throws java.lang.NullPointerException <br>
 	 *          if either the crafting manager or the recipe list are not found.
 	 */ 
-	private int removeRecipe(Item toRemove)
+	private static int removeRecipe(Item toRemove)
 	{
 		int recipesRemoved = 0;
 		java.util.List<IRecipe> recipeList = net.minecraft.item.crafting.CraftingManager.getInstance().getRecipeList();

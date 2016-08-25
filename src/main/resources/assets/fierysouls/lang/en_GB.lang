@@ -3,3 +3,7 @@ item.glowstone_crystal.name=Glowstone Crystal
 tile.torch_unlit.name=Torch
 tile.torch_lit.name=Torch
 itemGroup.FierySouls=Fiery Souls
+
+gui.fs_configuration.ctgy.torches=Torch Configurations
+gui.fs_configuration.ctgy.torches.tooltip=Configuration options for Fiery Souls torches.
+gui.fs_configuration.mainTitle=Fiery Souls Configuration

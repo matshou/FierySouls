@@ -15,6 +15,9 @@ public class ClientProxy extends CommonProxy
 	{
 		super.preInit(event);
 		
+		// Used to set up an event handler for the GUI so that the altered values are saved back to disk.
+		com.yooksi.fierysouls.common.FSConfiguration.clientPreInit();
+		
 		// This step is necessary in order to make your block render properly when it is an item (i.e. in the inventory or in your hand or thrown on the ground).
 	    // It must be done on client only, and must be done after the block has been created in Common.preinit().
 		

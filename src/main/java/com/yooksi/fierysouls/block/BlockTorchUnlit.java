@@ -101,6 +101,5 @@ public class BlockTorchUnlit extends com.yooksi.fierysouls.block.BlockTorch impl
 	public static boolean lightTorch(World world, BlockPos pos)
 	{
 		return ((TileEntityTorchUnlit)TileEntityTorch.findTorchTileEntity(world, pos)).lightTorch();
-
 	}
 }

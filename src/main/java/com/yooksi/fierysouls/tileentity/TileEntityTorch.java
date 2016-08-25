@@ -12,7 +12,10 @@ import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 
 public class TileEntityTorch extends TileEntity implements ITickable
 {
-	private short combustionTime;        // amount of ticks before the torch burns out.
+	/** Maximum amount of time (in ticks) this torch is allowed to be exposed to rain before extinguishing. */ 
+	public static int HUMIDITY_THRESHOLD;
+	
+	private int combustionTime;          // amount of ticks before the torch burns out.
 	public long timeCreated;             // 'totalWorldTime' this entity was created.
 	
 	private byte updateTickCount = 0;    // used to keep track of passed updates per interval.
@@ -23,7 +26,7 @@ public class TileEntityTorch extends TileEntity implements ITickable
 	
 	public TileEntityTorch(long totalWorldTime) 
 	{
-		combustionTime = SharedDefines.MAX_TORCH_FLAME_DURATION;
+		combustionTime = TileEntityTorchLit.MAX_TORCH_FLAME_DURATION;
 		timeCreated = totalWorldTime;
 	}
 	
@@ -53,7 +56,7 @@ public class TileEntityTorch extends TileEntity implements ITickable
 	 *  @return Updated combustion duration value for practical purposes. <br>
 	 *          <i>Note that the value is guaranteed to be kept unsigned for you</i>.
 	 */
-	protected short updateTorchCombustionTime(int value) 
+	protected int updateTorchCombustionTime(int value) 
 	{
 		// Remember to keep the value unsigned;
 		return combustionTime += ((combustionTime + value > 0) ? value : combustionTime * -1);
@@ -62,7 +65,7 @@ public class TileEntityTorch extends TileEntity implements ITickable
 	/** 
 	 *  Returns the remaining combustion time <i>(expressed in ticks)</i> of this torch entity.
 	 */
-	protected short getTorchCombustionTime() 
+	protected int getTorchCombustionTime() 
 	{
 		return combustionTime;
 	}
@@ -91,7 +94,7 @@ public class TileEntityTorch extends TileEntity implements ITickable
 
     protected boolean isTorchInHighHumidity()
     {
-    	return (humidityLevel >= SharedDefines.HUMIDITY_THRESHOLD);
+    	return (humidityLevel >= HUMIDITY_THRESHOLD);
     }
 	
     /** Helper method for finding a torch tile entity instance from World. */
@@ -147,7 +150,7 @@ public class TileEntityTorch extends TileEntity implements ITickable
 		
 		nbt.setLong("timeCreated", timeCreated);
 		nbt.setShort("humidityLevel", humidityLevel);
-		nbt.setShort("combustionTime", combustionTime);
+		nbt.setInteger("combustionTime", combustionTime);
 		
 	    return super.writeToNBT(nbt);
     }
@@ -167,6 +170,6 @@ public class TileEntityTorch extends TileEntity implements ITickable
 		
 	    timeCreated = nbt.getLong("timeCreated");
         humidityLevel = nbt.getShort("humidityLevel");
-        combustionTime = nbt.getShort("combustionTime");
+        combustionTime = nbt.getInteger("combustionTime");
     }
 }

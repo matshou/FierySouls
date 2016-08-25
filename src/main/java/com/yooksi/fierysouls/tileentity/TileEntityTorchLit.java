@@ -10,6 +10,9 @@ import net.minecraft.util.SoundCategory;
 
 public class TileEntityTorchLit extends TileEntityTorch
 {
+	/** The amount of ticks this torch will burn before extinguishing itself. */
+	public static int MAX_TORCH_FLAME_DURATION;    
+	
 	// This constructor is NEEDED during entity loading by FML:
 	public TileEntityTorchLit() {}
 	
@@ -29,7 +32,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 		    // When it's raining and the torch is directly exposed to rain it will start collecting humidity.
 		    if (getWorld().getWorldInfo().isRaining() && getWorld().canBlockSeeSky(pos))
 		    {
-			    if (updateTorchHumidityLevel(SharedDefines.MAIN_UPDATE_INTERVAL) >= SharedDefines.HUMIDITY_THRESHOLD)		   
+			    if (updateTorchHumidityLevel(SharedDefines.MAIN_UPDATE_INTERVAL) >= HUMIDITY_THRESHOLD)		   
 			    	extinguishTorch();
 		    }	
 		}
@@ -62,7 +65,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 	 * @param pos coordinates of the torch in the world.
 	 * @return true if we successfully extinguished the torch.
 	 */
-	private boolean extinguishTorch(net.minecraft.world.World world, net.minecraft.util.math.BlockPos pos)
+	private static boolean extinguishTorch(net.minecraft.world.World world, net.minecraft.util.math.BlockPos pos)
 	{
 		// Find out the direction the torch is facing
 		EnumFacing facing = (EnumFacing)world.getBlockState(pos).getValue(BlockTorch.FACING);
