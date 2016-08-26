@@ -5,6 +5,7 @@ import javax.annotation.Nullable;
 
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.ResourceLibrary;
+import com.yooksi.fierysouls.item.ItemTorch;
 import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 import com.yooksi.fierysouls.tileentity.TileEntityTorchLit;
 
@@ -132,7 +133,7 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch implem
                               // and there is no need to spawn the activation item as a block. 
 		}
 		// Never allow a torch to be placed like this...
-		else return BlockTorch.isItemTorch(heldItem.getItem());
+		else return ItemTorch.isItemTorch(heldItem.getItem());
 	}
 	
 	/** Extinguish the torch block. Find the torch tile entity and delegate the call.

@@ -5,6 +5,7 @@ import com.yooksi.fierysouls.item.*;
 import com.yooksi.fierysouls.tileentity.*;
 
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
@@ -33,8 +34,8 @@ public class CommonProxy
 	{
 		FierySouls.logger.info("Preparing to register item and block instances...");
 		
-		registerBlock(new BlockTorchLit(), "torch_lit");
-		registerBlock(new BlockTorchUnlit(), "torch_unlit");
+		registerBlock(new BlockTorchLit(), "torch_lit", new ItemTorch(BlockTorchLit.localInstance));
+		registerBlock(new BlockTorchUnlit(), "torch_unlit", new ItemTorch(BlockTorchUnlit.localInstance));
 		
 		registerItem(new ItemMatchbox(), "matchbox");
 		registerItem(new ItemGlowstoneCrystal(), "glowstone_crystal");
@@ -50,13 +51,13 @@ public class CommonProxy
 		GameRegistry.registerTileEntity(TileEntityTorchUnlit.class, "fierysouls:tile_entity_torch_unlit");
 	}
 	
-	private static <T extends net.minecraft.block.Block> void registerBlock(T block, String name) 
+	private static <T extends net.minecraft.block.Block> void registerBlock(T block, String name, ItemBlock itemBlock) 
 	{	
 		block.setUnlocalizedName(name);
 		block.setRegistryName(name);
 		
 		GameRegistry.register(block);
-		GameRegistry.register(new net.minecraft.item.ItemBlock(block).setRegistryName(name));
+		GameRegistry.register(itemBlock.setRegistryName(name));  // Forge says to register ItemBlock as item.
 	}
 	
 	private static <T extends net.minecraft.item.Item> void registerItem(T item, String name) 

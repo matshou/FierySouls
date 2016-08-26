@@ -4,6 +4,7 @@ import java.util.Random;
 import javax.annotation.Nullable;
 
 import com.yooksi.fierysouls.common.FierySouls;
+import com.yooksi.fierysouls.item.ItemTorch;
 import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 import com.yooksi.fierysouls.tileentity.TileEntityTorchUnlit;
 
@@ -82,14 +83,14 @@ public class BlockTorchUnlit extends com.yooksi.fierysouls.block.BlockTorch impl
 		if (heldItem == null) 
 			return false;
 		
-		else if (BlockTorch.isItemTorchLit(heldItem.getItem()))
+		else if (ItemTorch.isItemTorchLit(heldItem.getItem()))
 		{	
 			lightTorch(worldIn, pos);	
 			return true;               // Let the calling function know that this block was successfully used,
 			                          // and there is no need to spawn the item as block.
 		}
 		// Never allow a torch to be placed like this...
-		else return BlockTorch.isItemTorch(heldItem.getItem());
+		else return ItemTorch.isItemTorch(heldItem.getItem());
 	}
 	
 	/** Set the torch on fire. Find the torch tile entity and delegate the call.

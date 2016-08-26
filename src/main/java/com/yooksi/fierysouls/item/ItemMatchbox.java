@@ -4,14 +4,19 @@ import com.yooksi.fierysouls.block.BlockTorchUnlit;
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.ResourceLibrary;
 
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
+
 import net.minecraft.world.World;
+import net.minecraft.entity.player.EntityPlayer;
+
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ItemMatchbox extends Item
 {
@@ -38,5 +43,12 @@ public class ItemMatchbox extends Item
 			BlockTorchUnlit.lightTorch(worldIn, pos);
 		
 		return EnumActionResult.SUCCESS;  // Always allow the item to be used
+	}
+	
+	@SideOnly(Side.CLIENT)
+	@Override
+	public void addInformation(ItemStack stack, EntityPlayer player, java.util.List<String> info, boolean par4) 
+	{	
+		info.add(com.mojang.realmsclient.gui.ChatFormatting.ITALIC + "An efficient tool for starting a fire.");
 	}
 }
