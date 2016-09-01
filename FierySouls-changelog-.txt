@@ -1,3 +1,9 @@
+Version 1.4.2
+
+- Burning torches now have a chance to set fire to the block above them,
+  and under certain conditions those around them.
+- Torch TileEntities will now properly respect the rule of update intervals.  
+
 Version 1.4.1
 
 - Added in-game mouseover descriptions for all items.

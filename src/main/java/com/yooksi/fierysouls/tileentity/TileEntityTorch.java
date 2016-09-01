@@ -1,5 +1,6 @@
 package com.yooksi.fierysouls.tileentity;
 
+import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.SharedDefines;
 
 import jline.internal.Nullable;
@@ -24,25 +25,24 @@ public class TileEntityTorch extends TileEntity implements ITickable
 	// This constructor is NEEDED during entity loading by FML:
 	public TileEntityTorch() {};
 	
+	@Override
+	public void update() 
+	{
+		
+	}
+	
 	public TileEntityTorch(long totalWorldTime) 
 	{
 		combustionTime = TileEntityTorchLit.MAX_TORCH_FLAME_DURATION;
 		timeCreated = totalWorldTime;
 	}
 	
-	@Override
-	public void update() 
-	{
-		if (!isTorchReadyForUpdate())
-			return;
-	}
-	
 	/**
 	 *  This method is intended to be used as a performance optimizer.<br>
 	 *  Update only at set intervals to reduce performance hits.
 	 */
-	private boolean isTorchReadyForUpdate()
-	{
+	protected boolean isTorchReadyForUpdate()
+	{		
 		boolean ready = updateTickCount++ == SharedDefines.MAIN_UPDATE_INTERVAL;
 	    updateTickCount -= (ready) ? updateTickCount : 0;
 	    return ready;
@@ -81,6 +81,7 @@ public class TileEntityTorch extends TileEntity implements ITickable
 	 */
 	protected short updateTorchHumidityLevel(short value)
 	{
+		FierySouls.logger.info(humidityLevel);
 		return humidityLevel += value;
 	}
 	

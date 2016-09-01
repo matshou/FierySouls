@@ -25,6 +25,9 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 	@Override
 	public void update() 
 	{
+		if (!isTorchReadyForUpdate())
+			return;
+		
 		if (!getWorld().isRemote)
 		{
 			// When it's raining and the torch is directly exposed to rain it will start collecting humidity.
