@@ -62,13 +62,11 @@ public class FSConfiguration
 		/* By defining a property order we can control the order of the properties in the 
 		 * config file and GUI. This is defined on a per config-category basis. */
 		
-	    java.util.List<String> propOrderTorch = new java.util.ArrayList<String>();
-	    config.setCategoryPropertyOrder(TORCH_CATEGORY, propOrderTorch);
-	    
+	    java.util.List<String> propOrderTorch = new java.util.ArrayList<String>();  
 	    java.util.ArrayList<Property> configProperties = new java.util.ArrayList<Property>();
 	    
 		/* 
-		/* The following code is used to define the properties in the configuration file,
+		 * The following code is used to define the properties in the configuration file,
 	     * their name, type, default values and comment. These affect what is displayed on the GUI.
 	     * If the file already exists, the property values will already have been read from the file, otherwise they
 	     * will be assigned the default value. 
@@ -78,19 +76,17 @@ public class FSConfiguration
 
         String comment = "Defines the starting and maximum light value our custom torch will have.";
         Property configProperty = getFixedIntProperty(TORCH_CATEGORY, "maximum_torch_light_level", MAX_TORCH_LIGHT_LEVEL, comment, 0, 15);
-        
-        propOrderTorch.add(configProperty.getName());
         configProperties.add(configProperty);
         
         if (!loadConfigFromFile && readFieldsFromConfig && configProperty.getInt() != BlockTorchLit.MAX_TORCH_LIGHT_LEVEL)
         	ResourceLibrary.TORCH_LIT.updateBlockLightLevel(configProperty.getInt());
+        
+        else BlockTorchLit.MAX_TORCH_LIGHT_LEVEL = configProperty.getInt();
 		
 		final int MAX_TORCH_FLAME_DURATION_DEFAULT = 3500;     // Index - #1
 		
 		comment = "The amount of ticks this torch will burn before extinguishing itself.";
 		configProperty = getFixedIntProperty(TORCH_CATEGORY, "max_torch_flame_duration", MAX_TORCH_FLAME_DURATION_DEFAULT, comment, 0, 24000);
-        
-		propOrderTorch.add(configProperty.getName());
         configProperties.add(configProperty);
 		
         TileEntityTorchLit.MAX_TORCH_FLAME_DURATION = configProperty.getInt();
@@ -99,11 +95,17 @@ public class FSConfiguration
         
         comment = "Maximum amount of time (in ticks) this torch is allowed to be exposed to rain before extinguishing.";
         configProperty = getFixedIntProperty(TORCH_CATEGORY, "humidity_threshold", HUMIDITY_THRESHOLD_DEFAULT, comment, 0, 24000);
-        
-        propOrderTorch.add(configProperty.getName());
         configProperties.add(configProperty);
         
         TileEntityTorch.HUMIDITY_THRESHOLD = configProperty.getInt();
+        
+        final int CATCH_FIRE_CHANCE_MULTIPLIER = 5;           // Index - #3
+        
+        comment = "This multiplier affects the chances of blocks being set on fire by torches. The higher the number the LOWER the chances.";
+        configProperty = getFixedIntProperty(TORCH_CATEGORY, "catch_fire_chance_multiplier", CATCH_FIRE_CHANCE_MULTIPLIER, comment, 1, 100);
+        configProperties.add(configProperty);
+        
+        TileEntityTorchLit.CATCH_FIRE_CHANCE_BASE *= configProperty.getInt();
         
 		/* 
 		 * Write the class's variables back into the config properties and save to disk.
@@ -114,6 +116,7 @@ public class FSConfiguration
 		configProperties.get(0).set(BlockTorchLit.MAX_TORCH_LIGHT_LEVEL);
 		configProperties.get(1).set(TileEntityTorchLit.MAX_TORCH_FLAME_DURATION);
 		configProperties.get(2).set(TileEntityTorch.HUMIDITY_THRESHOLD);
+		//configProperties.get(3).set(TileEntityTorchLit.CATCH_FIRE_CHANCE_BASE);
 		
 		if (config.hasChanged())
 			config.save();
@@ -155,13 +158,9 @@ public class FSConfiguration
 	    @SubscribeEvent(priority = EventPriority.NORMAL)
 	    public void onEvent(ConfigChangedEvent.OnConfigChangedEvent event) 
 	    {
-	    	if (FierySouls.MODID.equals(event.getModID()) && event.getConfigID().equals(TORCH_CATEGORY))
-	    	{
-	    		// Don't update config if the world requires a restart.
-	    		boolean result = event.isWorldRunning() && !config.getCategory(TORCH_CATEGORY).requiresWorldRestart();
-	    		
-	    		if (result && !event.isRequiresMcRestart())
-	    			syncConfig(false, true);                     // save the GUI-altered values to disk.
+	    	if (FierySouls.MODID.equals(event.getModID()) && event.getConfigID().equals(TORCH_CATEGORY) && !event.isRequiresMcRestart())
+	    	{    			
+	    		syncConfig(false, true);                     // save the GUI-altered values to disk.
 	        }
 	    }
 	}

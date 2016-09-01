@@ -1,3 +1,17 @@
+# Minecraft #
+#############
+
+*.cfg
+config
+crash-reports
+logs
+saves
+screenshots
+options.txt
+usercache.json
+usernamecache.json
+.classpath
+
 # Forge Documents #
 ###################
 

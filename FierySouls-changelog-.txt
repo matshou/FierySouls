@@ -1,3 +1,9 @@
+Version 1.4.3
+
+- Resolved issue #8 (Duplicate elements in config...)
+- Fixed an unreported issue that was preventing the config file from getting updated on data change.
+- Added 'torch fire hazard' function main variable to config file. 
+
 Version 1.4.2
 
 - Burning torches now have a chance to set fire to the block above them,

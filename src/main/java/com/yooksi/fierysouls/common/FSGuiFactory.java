@@ -80,28 +80,12 @@ public class FSGuiFactory implements IModGuiFactory
 	                ConfigElement cat_general = new ConfigElement(configuration.getCategory(FSConfiguration.TORCH_CATEGORY));
 	                java.util.List<IConfigElement> propertiesOnThisScreen = cat_general.getChildElements();
 	                String windowTitle = configuration.toString();
+	               
+	                boolean worldRestart = this.configElement.requiresWorldRestart() ? true : this.owningScreen.allRequireWorldRestart;
+	                boolean mcRestart = this.configElement.requiresMcRestart() ? true : this.owningScreen.allRequireMcRestart;
 
-	                // For some reason we're getting duplicate config elements in our categories,
-	                // so check for that and remove the duplicates from the category.
-	                
-	               final java.util.Set<String> set1 = new java.util.HashSet<String>();
-	               
-	               java.util.List<IConfigElement> propertiesOnThisScreen2 = new java.util.ArrayList<IConfigElement>(propertiesOnThisScreen.size());
-	               propertiesOnThisScreen2.addAll(propertiesOnThisScreen);
-	               
-	               for (int i = 0; propertiesOnThisScreen2.size() > i; i++)
-	               {
-	            	   IConfigElement element = propertiesOnThisScreen2.get(i);
-	            	   String name = element.getName();
-	            	   if (!set1.add(name))
-	            		   propertiesOnThisScreen.remove(element);  
-	               }
-	               
-	               boolean worldRestart = this.configElement.requiresWorldRestart() ? true : this.owningScreen.allRequireWorldRestart;
-	               boolean mcRestart = this.configElement.requiresMcRestart() ? true : this.owningScreen.allRequireMcRestart;
-	        
-	               return new GuiConfig(this.owningScreen, propertiesOnThisScreen, this.owningScreen.modID,               
-	            		   FSConfiguration.TORCH_CATEGORY, worldRestart, mcRestart, windowTitle);
+	                return new GuiConfig(this.owningScreen, propertiesOnThisScreen, this.owningScreen.modID,               
+	                		FSConfiguration.TORCH_CATEGORY, worldRestart, mcRestart, windowTitle);
 				}
 			}
 		}
