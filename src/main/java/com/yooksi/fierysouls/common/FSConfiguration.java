@@ -91,7 +91,7 @@ public class FSConfiguration
 		
         TileEntityTorchLit.MAX_TORCH_FLAME_DURATION = configProperty.getInt();
         
-        final int HUMIDITY_THRESHOLD_DEFAULT = 300;           // Index - #2
+        final int HUMIDITY_THRESHOLD_DEFAULT = 150;           // Index - #2
         
         comment = "Maximum amount of time (in ticks) this torch is allowed to be exposed to rain before extinguishing.";
         configProperty = getFixedIntProperty(TORCH_CATEGORY, "humidity_threshold", HUMIDITY_THRESHOLD_DEFAULT, comment, 0, 24000);

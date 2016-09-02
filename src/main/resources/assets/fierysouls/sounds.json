@@ -1,0 +1,14 @@
+{	
+	"item.match_strike": {
+		"category": "item",
+		"sounds": [
+			{
+			    # Sound downloaded from https://www.freesound.org/people/HunteR4708/sounds/256804/
+	            # All credits got to user HunterR4708
+			
+				"name": "fierysouls:item/match_strike",
+				"stream": true
+			}
+		]
+	}
+}

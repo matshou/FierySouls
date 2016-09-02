@@ -24,6 +24,8 @@ public class CommonProxy
 		
 	    registerResources();
 	    registerTileEntities();
+	    
+	    CustomSoundEvents.registerSounds();
 	}
 	
 	/** 

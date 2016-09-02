@@ -1,8 +1,15 @@
+Version 1.4.4
+
+- Modified the torch humidity threshold value.
+- Created a new class for all new custom sound events.
+- Matchbox items will now produce a custom sound when used.
+
 Version 1.4.3
 
 - Resolved issue #8 (Duplicate elements in config...)
 - Fixed an unreported issue that was preventing the config file from getting updated on data change.
-- Added 'torch fire hazard' function main variable to config file. 
+- Added 'torch fire hazard' function main variable to config file.
+- Updated .classpath, .project and added some new rules to .gitignore.
 
 Version 1.4.2
 
