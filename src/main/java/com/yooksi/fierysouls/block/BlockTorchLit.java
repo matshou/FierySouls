@@ -1,14 +1,19 @@
 package com.yooksi.fierysouls.block;
 
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+
 import javax.annotation.Nullable;
 
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.ResourceLibrary;
+import com.yooksi.fierysouls.common.Utilities;
 import com.yooksi.fierysouls.item.ItemTorch;
 import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 import com.yooksi.fierysouls.tileentity.TileEntityTorchLit;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
 
@@ -21,7 +26,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.entity.player.EntityPlayer;
 
@@ -113,7 +120,7 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch implem
 		
 		if (heldItem == null)
 		{
-			((TileEntityTorchLit)TileEntityTorch.findTorchTileEntity(worldIn, pos)).extinguishTorch();
+			TileEntityTorchLit.findLitTorchTileEntity(worldIn, pos).extinguishTorch();
 			return true;
 		}
 		else if (heldItem.getItem() == torchUnlit)
@@ -144,6 +151,6 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch implem
 	 */
 	public static boolean extinguishTorch(World world, BlockPos pos)
 	{
-		return ((TileEntityTorchLit)TileEntityTorch.findTorchTileEntity(world, pos)).extinguishTorch();
+		return TileEntityTorchLit.findLitTorchTileEntity(world, pos).extinguishTorch();
 	}
 }

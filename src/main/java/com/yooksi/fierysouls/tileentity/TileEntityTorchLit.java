@@ -1,18 +1,25 @@
 package com.yooksi.fierysouls.tileentity;
 
-import com.yooksi.fierysouls.block.BlockTorch;
 import com.yooksi.fierysouls.common.Utilities;
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.ResourceLibrary;
-import com.yooksi.fierysouls.common.SharedDefines;
+import com.yooksi.fierysouls.block.BlockTorch;
+import com.yooksi.fierysouls.block.BlockTorchLit;
+import com.yooksi.fierysouls.tileentity.TileEntityTorch.TorchUpdateTypes;
+
+import jline.internal.Nullable;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.block.BlockFire;
+import net.minecraft.block.material.Material;
+import net.minecraft.client.Minecraft;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 public class TileEntityTorchLit extends TileEntityTorch
 {
@@ -29,7 +36,10 @@ public class TileEntityTorchLit extends TileEntityTorch
 	 *  
 	 * <i>Check {@link BlockFire#getFlammability} for a list of block flammability values.</i>
 	 *  */
-	public static int CATCH_FIRE_CHANCE_BASE = (int) (100 * (double)(20 / SharedDefines.MAIN_UPDATE_INTERVAL)); // Set the chance value to be 100 per second.
+	public static int CATCH_FIRE_CHANCE_BASE = (int) (100 * (double)(20 / TorchUpdateTypes.MAIN_UPDATE.interval)); // Set the chance value to be 100 per second.
+	
+	/** Multiplies the combustion rate based on how heavily enclosed the torch is.  */
+	public double o2CombustionMultiplier = 1;
 	
 	// This constructor is NEEDED during entity loading by FML:
 	public TileEntityTorchLit() {}
@@ -42,11 +52,11 @@ public class TileEntityTorchLit extends TileEntityTorch
 	@Override
 	public void update()
 	{
-		if (!isTorchReadyForUpdate())
+		if (!isTorchReadyForUpdate(TorchUpdateTypes.MAIN_UPDATE))
 			return;
 		
 		if (!getWorld().isRemote)
-		{
+		{		
 			// Game rule that defines whether fire should spread and naturally extinguish.
 			if (getWorld().getGameRules().getBoolean("doFireTick"))
 	        {
@@ -60,13 +70,16 @@ public class TileEntityTorchLit extends TileEntityTorch
 				}
 	        }
 			
-			if (updateTorchCombustionTime(SharedDefines.MAIN_UPDATE_INTERVAL * -1) <= 0)
+			if (isTorchReadyForUpdate(TorchUpdateTypes.OXYGEN_UPDATE))
+				checkIsTorchEnclosed();
+			
+			if (updateTorchCombustionTime(TorchUpdateTypes.MAIN_UPDATE.interval * o2CombustionMultiplier * -1) <= 0)
 				extinguishTorch();
 			
 		    // When it's raining and the torch is directly exposed to rain it will start collecting humidity.
 		    if (getWorld().isRaining() && getWorld().canBlockSeeSky(pos))
 		    {
-			    if (updateTorchHumidityLevel(SharedDefines.MAIN_UPDATE_INTERVAL) >= HUMIDITY_THRESHOLD)		   
+			    if (updateTorchHumidityLevel(TorchUpdateTypes.MAIN_UPDATE.interval) >= HUMIDITY_THRESHOLD)		   
 			    	extinguishTorch();
 		    }	
 		}
@@ -162,4 +175,53 @@ public class TileEntityTorchLit extends TileEntityTorch
 		
 		return false;
 	}
+	
+	/** Employ a pathfinding search to determine if the torch is enclosed in a small space. */
+	private void checkIsTorchEnclosed()
+	{
+		java.util.List <BlockPos> positions = new java.util.ArrayList();
+		positions.add(pos);
+		
+	    java.util.ListIterator<BlockPos> iter = positions.listIterator();
+	    iter.next();
+	    
+	    // Scan the block positions around each entry in the 'positions' array.
+	    // The iteration progress is going backwards while adding new elements in the same fashion.
+	    
+	    while (iter.hasPrevious())
+		{
+			BlockPos point = iter.previous();
+			int pastListSize = positions.size();
+			
+			for (EnumFacing face : EnumFacing.values())
+			{
+				BlockPos position = point.offset(face);
+				if (!positions.contains(position))
+				{
+					// The only exceptions to the 'isSolid' rule are liquids and snow blocks,
+					// because they obviously can't efficiently conduct oxygen. 
+					
+					Material material = getWorld().getBlockState(position).getMaterial();
+					if (!material.isSolid() && !material.isLiquid() && material != Material.SNOW)
+						iter.add(position);
+				}
+			}
+			
+			// Stop scanning after we reach the penalty requirement threshold.
+			if (positions.size() > 6)  
+				break;
+		}
+	    
+	    // Remove this position that was just added to start the scan.
+	    positions.remove(pos);
+
+	    // If more then six blocks of air are available to the torch no penalty should be applied.
+	    o2CombustionMultiplier = positions.size() < 6 ? 1 + (double) (6 - positions.size()) / 10 : 1;
+	}
+	
+	/** Helper method for finding a torch tile entity instance from World. */
+    public static TileEntityTorchLit findLitTorchTileEntity(@Nullable World world, net.minecraft.util.math.BlockPos pos)
+    {
+    	return (TileEntityTorchLit)TileEntityTorch.findTorchTileEntity(world, pos);
+    }
 }

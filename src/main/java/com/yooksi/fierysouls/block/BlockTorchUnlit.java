@@ -50,7 +50,7 @@ public class BlockTorchUnlit extends com.yooksi.fierysouls.block.BlockTorch impl
 		// When a lit torch has been extinguished it starts smoldering, emitting smoke particles for a short time duration.
 		// Find the right tile entity and check if we should stop smoldering
 		
-		TileEntityTorchUnlit unlitTorch = (TileEntityTorchUnlit)TileEntityTorch.findTorchTileEntity(worldIn, pos);
+		TileEntityTorchUnlit unlitTorch = TileEntityTorchUnlit.findUnlitTorchTileEntity(worldIn, pos);
 		if (!unlitTorch.isTorchSmoldering())
 			return;
 		
@@ -101,6 +101,6 @@ public class BlockTorchUnlit extends com.yooksi.fierysouls.block.BlockTorch impl
 	 */
 	public static boolean lightTorch(World world, BlockPos pos)
 	{
-		return ((TileEntityTorchUnlit)TileEntityTorch.findTorchTileEntity(world, pos)).lightTorch();
+		return TileEntityTorchUnlit.findUnlitTorchTileEntity(world, pos).lightTorch();
 	}
 }

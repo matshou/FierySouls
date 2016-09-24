@@ -3,9 +3,11 @@ package com.yooksi.fierysouls.tileentity;
 import com.yooksi.fierysouls.block.BlockTorch;
 import com.yooksi.fierysouls.block.BlockTorchUnlit;
 import com.yooksi.fierysouls.common.ResourceLibrary;
-import com.yooksi.fierysouls.common.SharedDefines;
+import com.yooksi.fierysouls.tileentity.TileEntityTorch.TorchUpdateTypes;
 
+import jline.internal.Nullable;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.world.World;
 
 public class TileEntityTorchUnlit extends TileEntityTorch
 {
@@ -25,7 +27,7 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 	@Override
 	public void update() 
 	{
-		if (!isTorchReadyForUpdate())
+		if (!isTorchReadyForUpdate(TorchUpdateTypes.MAIN_UPDATE))
 			return;
 		
 		if (!getWorld().isRemote)
@@ -33,7 +35,7 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 			// When it's raining and the torch is directly exposed to rain it will start collecting humidity.
 
 			if (getWorld().isRaining() && !isTorchInHighHumidity() && getWorld().canBlockSeeSky(pos))
-				updateTorchHumidityLevel(SharedDefines.MAIN_UPDATE_INTERVAL);
+				updateTorchHumidityLevel(TorchUpdateTypes.MAIN_UPDATE.interval);
 		}
 		
 		if (isTorchSmoldering() && didSmolderingExpire())				
@@ -87,7 +89,7 @@ public class TileEntityTorchUnlit extends TileEntityTorch
     	boolean result = !isTorchInHighHumidity() && getTorchCombustionTime() > 0;
     	if (!getWorld().isRemote && result == true && lightTorch(getWorld(), pos))
     	{	
-    		TileEntityTorchLit torchLit = (TileEntityTorchLit)findTorchTileEntity(getWorld(), pos);
+    		TileEntityTorchLit torchLit = TileEntityTorchLit.findLitTorchTileEntity(getWorld(), pos);
             torchLit.readFromNBT(saveDataToPacket());
             return true;
     	}
@@ -113,5 +115,11 @@ public class TileEntityTorchUnlit extends TileEntityTorch
     		return world.setBlockState(pos, ResourceLibrary.TORCH_LIT.getBlockState().getBaseState().withProperty(BlockTorch.FACING, facing)); 
     		
     	else return world.setBlockState(pos, ResourceLibrary.TORCH_LIT.getDefaultState());
+    }
+    
+    /** Helper method for finding a torch tile entity instance from World. */
+    public static TileEntityTorchUnlit findUnlitTorchTileEntity(@Nullable World world, net.minecraft.util.math.BlockPos pos)
+    {
+    	return (TileEntityTorchUnlit)TileEntityTorch.findTorchTileEntity(world, pos);
     }
 }
