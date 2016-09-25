@@ -54,3 +54,4 @@ build
 eclipse
 run
 *.classpath
+*.log

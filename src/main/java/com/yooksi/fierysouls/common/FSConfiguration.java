@@ -5,6 +5,7 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.Loader;
 
+import static net.minecraftforge.common.config.Property.Type.BOOLEAN;
 import static net.minecraftforge.common.config.Property.Type.INTEGER;
 
 import com.yooksi.fierysouls.block.BlockTorchLit;
@@ -58,11 +59,7 @@ public class FSConfiguration
 	{
 		if (loadConfigFromFile) 
 			config.load();       // load raw values from config file
-		
-		/* By defining a property order we can control the order of the properties in the 
-		 * config file and GUI. This is defined on a per config-category basis. */
-		
-	    java.util.List<String> propOrderTorch = new java.util.ArrayList<String>();  
+		  
 	    java.util.ArrayList<Property> configProperties = new java.util.ArrayList<Property>();
 	    
 		/* 
@@ -107,6 +104,14 @@ public class FSConfiguration
         
         TileEntityTorchLit.CATCH_FIRE_CHANCE_BASE *= configProperty.getInt();
         
+        final boolean IS_OXYGEN_UPDATE_ENABLED_DEFAULT = true;  // Index - #4
+        
+        comment = "Should the torch burn out faster when enclosed in a small space without oxygen?";
+        configProperty = config.get(TORCH_CATEGORY, "oxygen_update_enabled", IS_OXYGEN_UPDATE_ENABLED_DEFAULT, comment);
+        configProperties.add(configProperty);
+        
+        TileEntityTorchLit.isOxygenUpdateEnabled = configProperty.getBoolean();
+        
 		/* 
 		 * Write the class's variables back into the config properties and save to disk.
 		 * This is done even for a 'loadFromFile == true', because some of the properties 
@@ -117,6 +122,7 @@ public class FSConfiguration
 		configProperties.get(1).set(TileEntityTorchLit.MAX_TORCH_FLAME_DURATION);
 		configProperties.get(2).set(TileEntityTorch.HUMIDITY_THRESHOLD);
 		//configProperties.get(3).set(TileEntityTorchLit.CATCH_FIRE_CHANCE_BASE);
+		configProperties.get(4).set(TileEntityTorchLit.isOxygenUpdateEnabled);
 		
 		if (config.hasChanged())
 			config.save();

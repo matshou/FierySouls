@@ -1,17 +1,21 @@
 package com.yooksi.fierysouls.common;
 
 import com.yooksi.fierysouls.block.*;
+import com.yooksi.fierysouls.entity.item.*;
 import com.yooksi.fierysouls.item.*;
 import com.yooksi.fierysouls.tileentity.*;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.entity.EntityList;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.oredict.OreDictionary;
 
@@ -25,6 +29,8 @@ public class CommonProxy
 	    registerResources();
 	    registerTileEntities();
 	    
+//	    EntityRegistry.registerModEntity(EntityItemTorch.class, "entityItemTorch", 0, FierySouls.instance, 40, 40, false);
+	    
 	    CustomSoundEvents.registerSounds();
 	}
 	
@@ -35,9 +41,9 @@ public class CommonProxy
 	private void registerResources() 
 	{
 		FierySouls.logger.info("Preparing to register item and block instances...");
-		
-		registerBlock(new BlockTorchLit(), "torch_lit", new ItemTorch(BlockTorchLit.localInstance));
-		registerBlock(new BlockTorchUnlit(), "torch_unlit", new ItemTorch(BlockTorchUnlit.localInstance));
+
+		registerItem(new ItemTorchLit(registerBlock(new BlockTorchLit(), "torch_lit")), "torch_lit");
+		registerItem(new ItemTorchUnlit(registerBlock(new BlockTorchUnlit(), "torch_unlit")), "torch_unlit");
 		
 		registerItem(new ItemMatchbox(), "matchbox");
 		registerItem(new ItemGlowstoneCrystal(), "glowstone_crystal");
@@ -53,20 +59,18 @@ public class CommonProxy
 		GameRegistry.registerTileEntity(TileEntityTorchUnlit.class, "fierysouls:tile_entity_torch_unlit");
 	}
 	
-	private static <T extends net.minecraft.block.Block> void registerBlock(T block, String name, ItemBlock itemBlock) 
+	private static <T extends net.minecraft.block.Block> T registerBlock(T block, String name) 
 	{	
 		block.setUnlocalizedName(name);
 		block.setRegistryName(name);
-		
-		GameRegistry.register(block);
-		GameRegistry.register(itemBlock.setRegistryName(name));  // Forge says to register ItemBlock as item.
+		return GameRegistry.register(block);
 	}
 	
-	private static <T extends net.minecraft.item.Item> void registerItem(T item, String name) 
+	private static <T extends net.minecraft.item.Item> T registerItem(T item, String name) 
 	{
 		item.setUnlocalizedName(name);
 		item.setRegistryName(name);
-		GameRegistry.register(item);
+		return GameRegistry.register(item);
 	}
 	
 	/** 

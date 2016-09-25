@@ -3,14 +3,18 @@ package com.yooksi.fierysouls.network;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
 
+import com.yooksi.fierysouls.block.BlockTorchUnlit;
 import com.yooksi.fierysouls.common.CommonProxy;
 import com.yooksi.fierysouls.common.ResourceLibrary;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ClientProxy extends CommonProxy
 {
 	@Override
+	@SideOnly(Side.CLIENT)
 	public void preInit(FMLPreInitializationEvent event)
 	{
 		super.preInit(event);
