@@ -5,18 +5,17 @@ import javax.annotation.Nullable;
 
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.item.ItemTorch;
-import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 import com.yooksi.fierysouls.tileentity.TileEntityTorchUnlit;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.world.World;
+import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 

@@ -2,20 +2,12 @@ package com.yooksi.fierysouls.block;
 
 import javax.annotation.Nullable;
 
-import com.yooksi.fierysouls.common.ResourceLibrary;
-import com.yooksi.fierysouls.entity.item.EntityItemTorch;
 import com.yooksi.fierysouls.item.ItemTorch;
 import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Enchantments;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.stats.StatList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;

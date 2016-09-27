@@ -1,15 +1,13 @@
 package com.yooksi.fierysouls.tileentity;
 
-import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.SharedDefines;
 
 import jline.internal.Nullable;
-import net.minecraft.util.ITickable;
-import net.minecraft.tileentity.TileEntity;
-
-import net.minecraft.world.World;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ITickable;
+import net.minecraft.world.World;
 
 public class TileEntityTorch extends TileEntity implements ITickable
 {

@@ -1,21 +1,16 @@
 package com.yooksi.fierysouls.tileentity;
 
-import com.yooksi.fierysouls.common.Utilities;
-import com.yooksi.fierysouls.common.FierySouls;
-import com.yooksi.fierysouls.common.ResourceLibrary;
 import com.yooksi.fierysouls.block.BlockTorch;
-import com.yooksi.fierysouls.block.BlockTorchLit;
+import com.yooksi.fierysouls.common.ResourceLibrary;
 import com.yooksi.fierysouls.common.SharedDefines;
+import com.yooksi.fierysouls.common.Utilities;
 
 import jline.internal.Nullable;
-
 import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
 import net.minecraft.block.BlockFire;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.Minecraft;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.SoundEvents;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;

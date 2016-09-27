@@ -1,16 +1,14 @@
 package com.yooksi.fierysouls.common;
 
-import net.minecraft.creativetab.CreativeTabs;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.Mod;
-
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -21,7 +19,7 @@ public class FierySouls
 {
 	public static final String MODID = "fierysouls";
 	public static final String NAME = "Fiery Souls";
-	public static final String VERSION = "1.4.8";
+	public static final String VERSION = "1.4.9";
 	
 	public static final String GUIFACTORY = "com.yooksi.fierysouls.common.FSGuiFactory";
 

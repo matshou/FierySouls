@@ -1,19 +1,16 @@
 package com.yooksi.fierysouls.common;
 
-import net.minecraftforge.fml.client.event.ConfigChangedEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.Loader;
-
-import static net.minecraftforge.common.config.Property.Type.BOOLEAN;
 import static net.minecraftforge.common.config.Property.Type.INTEGER;
 
 import com.yooksi.fierysouls.block.BlockTorchLit;
-import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 import com.yooksi.fierysouls.tileentity.TileEntityTorchLit;
 
 import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.common.config.Property;	
+import net.minecraftforge.common.config.Property;
+import net.minecraftforge.fml.client.event.ConfigChangedEvent;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;	
 
 public class FSConfiguration 
 {

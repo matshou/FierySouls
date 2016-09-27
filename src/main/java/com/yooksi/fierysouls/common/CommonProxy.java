@@ -1,16 +1,19 @@
 package com.yooksi.fierysouls.common;
 
-import com.yooksi.fierysouls.block.*;
-import com.yooksi.fierysouls.entity.item.*;
-import com.yooksi.fierysouls.item.*;
-import com.yooksi.fierysouls.tileentity.*;
+import com.yooksi.fierysouls.block.BlockTorchLit;
+import com.yooksi.fierysouls.block.BlockTorchUnlit;
+import com.yooksi.fierysouls.entity.item.EntityItemTorch;
+import com.yooksi.fierysouls.item.ItemGlowstoneCrystal;
+import com.yooksi.fierysouls.item.ItemMatchbox;
+import com.yooksi.fierysouls.item.ItemTorchLit;
+import com.yooksi.fierysouls.item.ItemTorchUnlit;
+import com.yooksi.fierysouls.tileentity.TileEntityTorch;
+import com.yooksi.fierysouls.tileentity.TileEntityTorchLit;
+import com.yooksi.fierysouls.tileentity.TileEntityTorchUnlit;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.entity.EntityList;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
