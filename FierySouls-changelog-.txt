@@ -1,3 +1,7 @@
+Version 1.4.8
+
+- Resolves #9: Torch EntityItems are incorrectly displayed.
+
 Version 1.4.7
 
 - Brought back SharedDefines and moved some stuff there.

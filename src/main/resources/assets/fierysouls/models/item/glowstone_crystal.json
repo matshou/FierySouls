@@ -1,5 +1,5 @@
 {
-    "parent": "fierysouls:builtin/generated",
+    "parent": "item/generated",
     "textures": {
         "layer0": "fierysouls:items/glowstone_crystal"
     },
