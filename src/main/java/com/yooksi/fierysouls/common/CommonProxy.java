@@ -28,9 +28,8 @@ public class CommonProxy
 		
 	    registerResources();
 	    registerTileEntities();
-	    
-//	    EntityRegistry.registerModEntity(EntityItemTorch.class, "entityItemTorch", 0, FierySouls.instance, 40, 40, false);
-	    
+	    registerModEntities();
+	      
 	    CustomSoundEvents.registerSounds();
 	}
 	
@@ -52,11 +51,17 @@ public class CommonProxy
 	}
 	
 	/** Register all custom tile entities with Forge. */
-	private void registerTileEntities()
+	private static void registerTileEntities()
 	{
 		GameRegistry.registerTileEntity(TileEntityTorch.class, "fierysouls:tile_entity_torch");
 		GameRegistry.registerTileEntity(TileEntityTorchLit.class, "fierysouls:tile_entity_torch_lit");
 		GameRegistry.registerTileEntity(TileEntityTorchUnlit.class, "fierysouls:tile_entity_torch_unlit");
+	}
+	
+	/** Register all EntityItems and other Entities with Forge. */
+	private static void registerModEntities()
+	{
+		EntityRegistry.registerModEntity(EntityItemTorch.class, "entity_item_torch", 0, FierySouls.instance, 40, 40, false);
 	}
 	
 	private static <T extends net.minecraft.block.Block> T registerBlock(T block, String name) 

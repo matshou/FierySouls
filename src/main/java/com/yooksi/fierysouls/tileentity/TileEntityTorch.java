@@ -1,6 +1,7 @@
 package com.yooksi.fierysouls.tileentity;
 
 import com.yooksi.fierysouls.common.FierySouls;
+import com.yooksi.fierysouls.common.SharedDefines;
 
 import jline.internal.Nullable;
 import net.minecraft.util.ITickable;
@@ -12,33 +13,11 @@ import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 
 public class TileEntityTorch extends TileEntity implements ITickable
 {
-	/** Maximum amount of time (in ticks) this torch is allowed to be exposed to rain before extinguishing. */ 
-	public static int HUMIDITY_THRESHOLD;
-	
 	private int combustionTime;            // amount of ticks before the torch burns out.
 	public long timeCreated;               // 'totalWorldTime' this entity was created.
 	
 	private int[] updateTickCounts;        // used to keep track of passed updates per interval.  
 	private int humidityLevel = 0;         // amount of ticks the torch has been exposed to water.
-	 
-	static protected enum TorchUpdateTypes 
-	{
-		/* Note: if your update type is being called in the code somewhere after the MAIN_UPDATE,
-		 *       declare your interval with taking into account the main update interval.    
-		 */
-		
-		MAIN_UPDATE(0, 10),                // Used to validate entry into the whole torch update() block.
-		OXYGEN_UPDATE(1, 8);               // Used to schedule an 'checkIsTorchEnclosed()' update call.
-		
-		public final int index;
-		public final int interval;
-		
-		TorchUpdateTypes(int dex, int time) 
-		{ 
-			index = dex;
-			interval = time;
-		} 
-	}
 	
 	// This constructor is NEEDED during entity loading by FML:
 	public TileEntityTorch() { this(0); };
@@ -51,9 +30,9 @@ public class TileEntityTorch extends TileEntity implements ITickable
 	
 	public TileEntityTorch(long totalWorldTime) 
 	{
-		updateTickCounts = new int[TorchUpdateTypes.values().length];
+		updateTickCounts = new int[SharedDefines.TorchUpdateTypes.values().length];
 
-		combustionTime = TileEntityTorchLit.MAX_TORCH_FLAME_DURATION;
+		combustionTime = SharedDefines.MAX_TORCH_FLAME_DURATION;
 		timeCreated = totalWorldTime;
 	}
 	
@@ -61,7 +40,7 @@ public class TileEntityTorch extends TileEntity implements ITickable
 	 *  This method is intended to be used as a performance optimizer.<br>
 	 *  Update only at set intervals to reduce performance hits.
 	 */
-	protected boolean isTorchReadyForUpdate(TorchUpdateTypes type)
+	protected boolean isTorchReadyForUpdate(SharedDefines.TorchUpdateTypes type)
 	{	
 		if (updateTickCounts[type.index]++ == type.interval)
 		{
@@ -117,7 +96,7 @@ public class TileEntityTorch extends TileEntity implements ITickable
 
     protected boolean isTorchInHighHumidity()
     {
-    	return (humidityLevel >= HUMIDITY_THRESHOLD);
+    	return (humidityLevel >= SharedDefines.HUMIDITY_THRESHOLD);
     }
 	
     /** Helper method for finding a torch tile entity instance from World. */

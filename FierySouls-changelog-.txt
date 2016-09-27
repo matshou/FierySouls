@@ -1,6 +1,20 @@
+Version 1.4.7
+
+- Brought back SharedDefines and moved some stuff there.
+- Updated all of the EntityItemTorch functions to 1.10 standards.
+- Updated most of the ItemTorch functions to 1.10 standards.
+- Drastically improved on the original code base for the above changes.
+
+Note: The way we handle EntityItems inheriting NBT compound data from TileEntity is quite different now.
+      We simply intercept the stack just before the EntityItem is about to form and pass the data, and as 
+	  the entity is properly registered, everything else is properly handled by Forge.
+	  This gets rid of a lot of unnecessary code we used to use.
+
 Version 1.4.6
 
 - Added a configuration option for torch oxygen sensitivity.
+- Changed the way items and blocks are being registered with Forge.
+- Lit and unlit torch items now have dedicated classes.
 
 Version 1.4.5
 

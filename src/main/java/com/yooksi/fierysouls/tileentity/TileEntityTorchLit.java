@@ -5,7 +5,7 @@ import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.ResourceLibrary;
 import com.yooksi.fierysouls.block.BlockTorch;
 import com.yooksi.fierysouls.block.BlockTorchLit;
-import com.yooksi.fierysouls.tileentity.TileEntityTorch.TorchUpdateTypes;
+import com.yooksi.fierysouls.common.SharedDefines;
 
 import jline.internal.Nullable;
 
@@ -23,9 +23,6 @@ import net.minecraft.world.World;
 
 public class TileEntityTorchLit extends TileEntityTorch
 {
-	/** The amount of ticks this torch will burn before extinguishing itself. */
-	public static int MAX_TORCH_FLAME_DURATION;
-
 	/**
 	 * Base value for calculating chances that a block will be set on fire by a torch. It's used to generate  <br> 
 	 * a random number from 0 to this value. The higher this number, the lower the chances. <br>
@@ -36,11 +33,14 @@ public class TileEntityTorchLit extends TileEntityTorch
 	 *  
 	 * <i>Check {@link BlockFire#getFlammability} for a list of block flammability values.</i>
 	 *  */
-	public static int CATCH_FIRE_CHANCE_BASE = (int) (100 * (double)(20 / TorchUpdateTypes.MAIN_UPDATE.interval)); // Set the chance value to be 100 per second.
+	public static int CATCH_FIRE_CHANCE_BASE = (int) (100 * (double)(20 / SharedDefines.TorchUpdateTypes.MAIN_UPDATE.interval));
+	
+	/** Should the torch burn out faster when enclosed in a small space without oxygen? */
+	public static boolean isOxygenUpdateEnabled = true;
 	
 	/** Multiplies the combustion rate based on how heavily enclosed the torch is.  */
 	public double o2CombustionMultiplier = 1;
-	
+
 	// This constructor is NEEDED during entity loading by FML:
 	public TileEntityTorchLit() {}
 	
@@ -52,7 +52,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 	@Override
 	public void update()
 	{
-		if (!isTorchReadyForUpdate(TorchUpdateTypes.MAIN_UPDATE))
+		if (!isTorchReadyForUpdate(SharedDefines.TorchUpdateTypes.MAIN_UPDATE))
 			return;
 		
 		if (!getWorld().isRemote)
@@ -70,16 +70,16 @@ public class TileEntityTorchLit extends TileEntityTorch
 				}
 	        }
 			
-			if (isTorchReadyForUpdate(TorchUpdateTypes.OXYGEN_UPDATE))
+			if (isOxygenUpdateEnabled && isTorchReadyForUpdate(SharedDefines.TorchUpdateTypes.OXYGEN_UPDATE))
 				checkIsTorchEnclosed();
 			
-			if (updateTorchCombustionTime(TorchUpdateTypes.MAIN_UPDATE.interval * o2CombustionMultiplier * -1) <= 0)
+			if (updateTorchCombustionTime(SharedDefines.TorchUpdateTypes.MAIN_UPDATE.interval * o2CombustionMultiplier * -1) <= 0)
 				extinguishTorch();
 			
 		    // When it's raining and the torch is directly exposed to rain it will start collecting humidity.
 		    if (getWorld().isRaining() && getWorld().canBlockSeeSky(pos))
 		    {
-			    if (updateTorchHumidityLevel(TorchUpdateTypes.MAIN_UPDATE.interval) >= HUMIDITY_THRESHOLD)		   
+			    if (updateTorchHumidityLevel(SharedDefines.TorchUpdateTypes.MAIN_UPDATE.interval) >= SharedDefines.HUMIDITY_THRESHOLD)		   
 			    	extinguishTorch();
 		    }	
 		}

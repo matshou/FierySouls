@@ -83,14 +83,14 @@ public class BlockTorchUnlit extends com.yooksi.fierysouls.block.BlockTorch impl
 		if (heldItem == null) 
 			return false;
 		
-		else if (ItemTorch.isItemTorchLit(heldItem.getItem()))
+		else if (ItemTorch.isItemTorchLit(heldItem.getItem(), true))
 		{	
 			lightTorch(worldIn, pos);	
 			return true;               // Let the calling function know that this block was successfully used,
 			                          // and there is no need to spawn the item as block.
 		}
 		// Never allow a torch to be placed like this...
-		else return ItemTorch.isItemTorch(heldItem.getItem());
+		else return ItemTorch.isItemTorch(heldItem.getItem(), true);
 	}
 	
 	/** Set the torch on fire. Find the torch tile entity and delegate the call.
