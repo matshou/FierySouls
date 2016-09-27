@@ -1,3 +1,13 @@
+Version 1.4.10
+
+- Fixed an issue that caused unlit torch items to not light when used on lit torch blocks.
+- Reverted back to not using registrations for EntityItems, check notes for more info.
+- Torches can now be used for digging without interrupting the block breaking progress.
+
+Notes: Reverted back to an unregistered EntityItem setup because the tossed/dropped item was behaving very strange.
+       I've tried many things to fix this but nothing really work. I am currently awaiting response from the Forge
+	   community after asking for help on their forum: http://www.minecraftforge.net/forum/index.php?topic=42391.0
+
 Version 1.4.9
 
 - Organized imports for all classes in the project.
@@ -13,10 +23,10 @@ Version 1.4.7
 - Updated most of the ItemTorch functions to 1.10 standards.
 - Drastically improved on the original code base for the above changes.
 
-Note: The way we handle EntityItems inheriting NBT compound data from TileEntity is quite different now.
-      We simply intercept the stack just before the EntityItem is about to form and pass the data, and as 
-	  the entity is properly registered, everything else is properly handled by Forge.
-	  This gets rid of a lot of unnecessary code we used to use.
+Notes: The way we handle EntityItems inheriting NBT compound data from TileEntity is quite different now.
+       We simply intercept the stack just before the EntityItem is about to form and pass the data, and as 
+	   the entity is properly registered, everything else is properly handled by Forge.
+	   This gets rid of a lot of unnecessary code we used to use.
 
 Version 1.4.6
 

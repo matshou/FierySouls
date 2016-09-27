@@ -2,10 +2,13 @@ package com.yooksi.fierysouls.block;
 
 import javax.annotation.Nullable;
 
+import com.yooksi.fierysouls.entity.item.EntityItemTorch;
 import com.yooksi.fierysouls.item.ItemTorch;
 import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.stats.StatList;
@@ -33,7 +36,7 @@ public abstract class BlockTorch extends net.minecraft.block.BlockTorch
 		player.addStat(StatList.getBlockStats(this));
         player.addExhaustion(0.025F);
 		
-		if (!worldIn.isRemote && te != null && te instanceof TileEntityTorch)
+		if (te != null && te instanceof TileEntityTorch)
 		{
         	TileEntityTorch torchEntity = (TileEntityTorch)te;
 			java.util.List<ItemStack> items = new java.util.ArrayList<ItemStack>();
@@ -62,7 +65,7 @@ public abstract class BlockTorch extends net.minecraft.block.BlockTorch
     {
 		TileEntityTorch teTorch = (TileEntityTorch) TileEntityTorch.findTorchTileEntity(worldIn, pos);
     
-		 if (!worldIn.isRemote && !worldIn.restoringBlockSnapshots) // do not drop items while restoring blockstates, prevents item dupe
+		 if (!worldIn.restoringBlockSnapshots) // do not drop items while restoring blockstates, prevents item dupe
 		 {
 			 java.util.List<ItemStack> items = getDrops(worldIn, pos, state, fortune);
 			 chance = net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(items, worldIn, pos, state, fortune, chance, false, harvesters.get());
@@ -70,12 +73,38 @@ public abstract class BlockTorch extends net.minecraft.block.BlockTorch
 			 for (ItemStack item : items)
 			 {
 				// This is where we pass our custom NBT from TileEntity to the new ItemStack.
-				 if (ItemTorch.isItemTorch(item.getItem(), false) && teTorch != null)
-					 ItemTorch.createCustomItemNBTFromExisting(item, teTorch.saveDataToPacket(), worldIn.getTotalWorldTime());
-				 
-				 if (worldIn.rand.nextFloat() <= chance)
+				if (ItemTorch.isItemTorch(item.getItem(), false) && teTorch != null)
+				{
+					ItemTorch.createCustomItemNBTFromExisting(item, teTorch.saveDataToPacket(), worldIn.getTotalWorldTime());
+					if (worldIn.rand.nextFloat() <= chance)
+						spawnAsTorchEntity(worldIn, pos, item);
+				}
+				else if (worldIn.rand.nextFloat() <= chance)
 					 spawnAsEntity(worldIn, pos, item);			 
 			 }
 		 }
     }
+	
+	/** 
+	 *  A slightly modified version of {@link Block#spawnAsEntity} designed to create <br>
+	 *  and spawn our own custom torch entity. 
+	 */
+	private void spawnAsTorchEntity(World worldIn, BlockPos pos, ItemStack stack)
+	{
+		if (!worldIn.isRemote && worldIn.getGameRules().getBoolean("doTileDrops") && !worldIn.restoringBlockSnapshots) // do not drop items while restoring blockstates, prevents item dupe
+        {
+            if (!captureDrops.get())
+            {
+            	float f = 0.5F;
+                double d0 = (double)(worldIn.rand.nextFloat() * 0.5F) + 0.25D;
+                double d1 = (double)(worldIn.rand.nextFloat() * 0.5F) + 0.25D;
+                double d2 = (double)(worldIn.rand.nextFloat() * 0.5F) + 0.25D;
+                
+                EntityItem entityitem = new EntityItemTorch(worldIn, (double)pos.getX() + d0, (double)pos.getY() + d1, (double)pos.getZ() + d2, stack);
+                entityitem.setDefaultPickupDelay();
+                worldIn.spawnEntityInWorld(entityitem);
+            }
+            else capturedDrops.get().add(stack);
+        }
+	}
 }

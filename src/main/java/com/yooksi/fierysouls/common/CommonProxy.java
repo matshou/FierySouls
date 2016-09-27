@@ -62,9 +62,9 @@ public class CommonProxy
 	}
 	
 	/** Register all EntityItems and other Entities with Forge. */
-	private static void registerModEntities()
+	private void registerModEntities()
 	{
-		EntityRegistry.registerModEntity(EntityItemTorch.class, "entity_item_torch", 0, FierySouls.instance, 40, 40, false);
+//		EntityRegistry.registerModEntity(EntityItemTorch.class, "torch_lit", 0, FierySouls.instance, 40, 40, false);
 	}
 	
 	private static <T extends net.minecraft.block.Block> T registerBlock(T block, String name) 

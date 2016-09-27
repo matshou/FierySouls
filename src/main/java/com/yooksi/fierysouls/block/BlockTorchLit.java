@@ -118,16 +118,7 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch implem
 			// If the equipped stack has more then one item, keep one item, light it on fire
 	    	// and move the rest of the stack in a different inventory slot (auto-assigned)
 	    	
-			ItemStack newTorchLit = new ItemStack(Item.getItemFromBlock(ResourceLibrary.TORCH_LIT));
-			ItemTorch.createCustomItemNBTFromExisting(newTorchLit, heldItem.getTagCompound(), worldIn.getTotalWorldTime());
-			
-			playerIn.replaceItemInInventory(playerIn.inventory.currentItem, newTorchLit);
-			
-	    	if (heldItem.stackSize > 1)
-	    	{
-	    		heldItem.stackSize -= 1; 
-	    		playerIn.inventory.addItemStackToInventory(heldItem);
-	    	}
+			ItemTorch.lightItemTorch(heldItem, playerIn, heldItem.getTagCompound());
 	    	
 	    	return true;      // Let the calling function know that this block was successfully used,
                               // and there is no need to spawn the activation item as a block. 
