@@ -91,7 +91,7 @@ public class FSConfiguration
         configProperty = getFixedIntProperty(TORCH_CATEGORY, "humidity_threshold", HUMIDITY_THRESHOLD_DEFAULT, comment, 0, 24000);
         configProperties.add(configProperty);
         
-        SharedDefines.HUMIDITY_THRESHOLD = configProperty.getInt();
+        SharedDefines.TORCH_HUMIDITY_THRESHOLD = configProperty.getInt();
         
         final int CATCH_FIRE_CHANCE_MULTIPLIER = 5;           // Index - #3
         
@@ -117,7 +117,7 @@ public class FSConfiguration
 		
 		configProperties.get(0).set(BlockTorchLit.MAX_TORCH_LIGHT_LEVEL);
 		configProperties.get(1).set(SharedDefines.MAX_TORCH_FLAME_DURATION);
-		configProperties.get(2).set(SharedDefines.HUMIDITY_THRESHOLD);
+		configProperties.get(2).set(SharedDefines.TORCH_HUMIDITY_THRESHOLD);
 		//configProperties.get(3).set(TileEntityTorchLit.CATCH_FIRE_CHANCE_BASE);
 		configProperties.get(4).set(TileEntityTorchLit.isOxygenUpdateEnabled);
 		

@@ -1,3 +1,12 @@
+Version 1.4.11
+
+- Changed names of some objects and methods in SharedDefines.
+- Refactored and optimized some code blocks in the ItemTorch class.
+
+- Fixed a bug that caused lighting a torch in an off-hand slot to add a new lit torch
+  without removing the old one in the off-hand slot.
+- Fixed another bug that caused duplicate torches to spawn when ItemTossEvent was called.
+
 Version 1.4.10
 
 - Fixed an issue that caused unlit torch items to not light when used on lit torch blocks.

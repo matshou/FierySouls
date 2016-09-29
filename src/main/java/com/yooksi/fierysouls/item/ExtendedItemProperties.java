@@ -18,7 +18,6 @@ public class ExtendedItemProperties extends NBTTagCompound
 	 *  Fingerprint is an object used to identify different item custom NBT tag compounds. <br>
 	 *  It <i>should</i> be unique to every item NBT so use them to recognize items apart. <br>
 	 *  Every fingerprint is expected to be found in item NBT values for comparison.
-	 * 
 	 */
 	private static class Fingerprint
 	{

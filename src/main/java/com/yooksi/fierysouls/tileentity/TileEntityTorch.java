@@ -1,6 +1,7 @@
 package com.yooksi.fierysouls.tileentity;
 
 import com.yooksi.fierysouls.common.SharedDefines;
+import com.yooksi.fierysouls.common.SharedDefines.TorchUpdateType;
 
 import jline.internal.Nullable;
 import net.minecraft.nbt.NBTTagCompound;
@@ -28,7 +29,7 @@ public class TileEntityTorch extends TileEntity implements ITickable
 	
 	public TileEntityTorch(long totalWorldTime) 
 	{
-		updateTickCounts = new int[SharedDefines.TorchUpdateTypes.values().length];
+		updateTickCounts = new int[TorchUpdateType.values().length];
 
 		combustionTime = SharedDefines.MAX_TORCH_FLAME_DURATION;
 		timeCreated = totalWorldTime;
@@ -38,9 +39,9 @@ public class TileEntityTorch extends TileEntity implements ITickable
 	 *  This method is intended to be used as a performance optimizer.<br>
 	 *  Update only at set intervals to reduce performance hits.
 	 */
-	protected boolean isTorchReadyForUpdate(SharedDefines.TorchUpdateTypes type)
+	protected boolean isTorchReadyForUpdate(TorchUpdateType type)
 	{	
-		if (updateTickCounts[type.index]++ == type.interval)
+		if (updateTickCounts[type.index]++ == type.getInterval())
 		{
 			updateTickCounts[type.index] = 0;
 			return true;
@@ -94,7 +95,7 @@ public class TileEntityTorch extends TileEntity implements ITickable
 
     protected boolean isTorchInHighHumidity()
     {
-    	return (humidityLevel >= SharedDefines.HUMIDITY_THRESHOLD);
+    	return (humidityLevel >= SharedDefines.TORCH_HUMIDITY_THRESHOLD);
     }
 	
     /** Helper method for finding a torch tile entity instance from World. */

@@ -2,6 +2,7 @@ package com.yooksi.fierysouls.entity.item;
 
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.SharedDefines;
+import com.yooksi.fierysouls.common.SharedDefines.TorchUpdateType;
 import com.yooksi.fierysouls.item.ItemTorch;
 
 import net.minecraft.entity.item.EntityItem;
@@ -26,7 +27,6 @@ public final class EntityItemTorch extends EntityItem
 		super.onUpdate();
         final NBTTagCompound itemTagCompound = getEntityItem().getTagCompound();
         
-        
 		// TODO: Humidity should speed up item decay (decrease it's lifespan).
 		
 		// Update only at set intervals to reduce performance hits.   
@@ -38,7 +38,7 @@ public final class EntityItemTorch extends EntityItem
 		// Currently we're only updating humidity and not combustion,
 		// so there is no need to go further if humidity is at maximum value.
 
-		if (ItemTorch.getItemHumidity(itemTagCompound) >= SharedDefines.HUMIDITY_THRESHOLD)
+		if (ItemTorch.getItemHumidity(itemTagCompound) >= SharedDefines.TORCH_HUMIDITY_THRESHOLD)
 			return;
 		
 		final boolean isTorchLit = ItemTorch.isItemTorchLit(getEntityItem().getItem(), false);
@@ -50,13 +50,13 @@ public final class EntityItemTorch extends EntityItem
 		{
 			ItemTorch.extinguishItemTorch(getEntityItem(), true, itemTagCompound);
 		}
-		else if (isTorchLit && ItemTorch.updateItemCombustionTime(itemTagCompound, SharedDefines.TorchUpdateTypes.MAIN_UPDATE.interval * -1) < 1)
+		else if (isTorchLit && ItemTorch.updateItemCombustionTime(itemTagCompound, TorchUpdateType.MAIN_UPDATE.getInterval() * -1) < 1)
 		{
 			ItemTorch.extinguishItemTorch(getEntityItem(), false, itemTagCompound);
 		}
 		else if (worldObj.isRaining() && worldObj.canBlockSeeSky(getPosition()))
 		{
-			if (ItemTorch.updateItemHumidity(itemTagCompound, SharedDefines.TorchUpdateTypes.MAIN_UPDATE.interval) >= SharedDefines.HUMIDITY_THRESHOLD)
+			if (ItemTorch.updateItemHumidity(itemTagCompound, TorchUpdateType.MAIN_UPDATE.getInterval()) >= SharedDefines.TORCH_HUMIDITY_THRESHOLD)
 			    ItemTorch.extinguishItemTorch(getEntityItem(), false, itemTagCompound);
 		}
 	}

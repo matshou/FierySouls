@@ -4,6 +4,7 @@ import com.yooksi.fierysouls.block.BlockTorch;
 import com.yooksi.fierysouls.block.BlockTorchUnlit;
 import com.yooksi.fierysouls.common.ResourceLibrary;
 import com.yooksi.fierysouls.common.SharedDefines;
+import com.yooksi.fierysouls.common.SharedDefines.TorchUpdateType;
 
 import jline.internal.Nullable;
 import net.minecraft.util.EnumFacing;
@@ -27,7 +28,7 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 	@Override
 	public void update() 
 	{
-		if (!isTorchReadyForUpdate(SharedDefines.TorchUpdateTypes.MAIN_UPDATE))
+		if (!isTorchReadyForUpdate(TorchUpdateType.MAIN_UPDATE))
 			return;
 		
 		if (!getWorld().isRemote)
@@ -35,7 +36,7 @@ public class TileEntityTorchUnlit extends TileEntityTorch
 			// When it's raining and the torch is directly exposed to rain it will start collecting humidity.
 
 			if (getWorld().isRaining() && !isTorchInHighHumidity() && getWorld().canBlockSeeSky(pos))
-				updateTorchHumidityLevel(SharedDefines.TorchUpdateTypes.MAIN_UPDATE.interval);
+				updateTorchHumidityLevel(TorchUpdateType.MAIN_UPDATE.getInterval());
 		}
 		
 		if (isTorchSmoldering() && didSmolderingExpire())				

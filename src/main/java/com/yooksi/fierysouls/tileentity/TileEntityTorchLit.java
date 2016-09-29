@@ -3,6 +3,7 @@ package com.yooksi.fierysouls.tileentity;
 import com.yooksi.fierysouls.block.BlockTorch;
 import com.yooksi.fierysouls.common.ResourceLibrary;
 import com.yooksi.fierysouls.common.SharedDefines;
+import com.yooksi.fierysouls.common.SharedDefines.TorchUpdateType;
 import com.yooksi.fierysouls.common.Utilities;
 
 import jline.internal.Nullable;
@@ -28,7 +29,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 	 *  
 	 * <i>Check {@link BlockFire#getFlammability} for a list of block flammability values.</i>
 	 *  */
-	public static int CATCH_FIRE_CHANCE_BASE = (int) (100 * (double)(20 / SharedDefines.TorchUpdateTypes.MAIN_UPDATE.interval));
+	public static int CATCH_FIRE_CHANCE_BASE = (int) (100 * (double)(20 / TorchUpdateType.MAIN_UPDATE.getInterval()));
 	
 	/** Should the torch burn out faster when enclosed in a small space without oxygen? */
 	public static boolean isOxygenUpdateEnabled = true;
@@ -47,7 +48,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 	@Override
 	public void update()
 	{
-		if (!isTorchReadyForUpdate(SharedDefines.TorchUpdateTypes.MAIN_UPDATE))
+		if (!isTorchReadyForUpdate(TorchUpdateType.MAIN_UPDATE))
 			return;
 		
 		if (!getWorld().isRemote)
@@ -65,16 +66,16 @@ public class TileEntityTorchLit extends TileEntityTorch
 				}
 	        }
 			
-			if (isOxygenUpdateEnabled && isTorchReadyForUpdate(SharedDefines.TorchUpdateTypes.OXYGEN_UPDATE))
+			if (isOxygenUpdateEnabled && isTorchReadyForUpdate(TorchUpdateType.OXYGEN_UPDATE))
 				checkIsTorchEnclosed();
 			
-			if (updateTorchCombustionTime(SharedDefines.TorchUpdateTypes.MAIN_UPDATE.interval * o2CombustionMultiplier * -1) <= 0)
+			if (updateTorchCombustionTime(TorchUpdateType.MAIN_UPDATE.getInterval()* o2CombustionMultiplier * -1) <= 0)
 				extinguishTorch();
 			
 		    // When it's raining and the torch is directly exposed to rain it will start collecting humidity.
 		    if (getWorld().isRaining() && getWorld().canBlockSeeSky(pos))
 		    {
-			    if (updateTorchHumidityLevel(SharedDefines.TorchUpdateTypes.MAIN_UPDATE.interval) >= SharedDefines.HUMIDITY_THRESHOLD)		   
+			    if (updateTorchHumidityLevel(TorchUpdateType.MAIN_UPDATE.getInterval()) >= SharedDefines.TORCH_HUMIDITY_THRESHOLD)		   
 			    	extinguishTorch();
 		    }	
 		}

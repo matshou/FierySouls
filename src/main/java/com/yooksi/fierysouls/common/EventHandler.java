@@ -22,8 +22,10 @@ public class EventHandler
 	@SubscribeEvent
 	public void itemEvent(net.minecraftforge.event.entity.item.ItemTossEvent event)
 	{
-		net.minecraft.item.ItemStack droppedStack = event.getEntityItem().getEntityItem();	
-		if (droppedStack.stackSize > 0 && Block.getBlockFromItem(droppedStack.getItem()) instanceof BlockTorch)
+		net.minecraft.item.ItemStack droppedStack = event.getEntityItem().getEntityItem();
+		boolean isItemCustomTorch = Block.getBlockFromItem(droppedStack.getItem()) instanceof BlockTorch;
+		
+		if (!event.getEntity().worldObj.isRemote && droppedStack.stackSize > 0 && isItemCustomTorch)
 		{
 			if (!droppedStack.hasTagCompound())
 				ItemTorch.createCustomItemNBT(droppedStack, event.getEntity().worldObj.getWorldTime());
