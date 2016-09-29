@@ -58,66 +58,54 @@ public class ItemTorch extends ItemBlock
     	// without a proper custom NBT, so we do it here. Find a better way of handling this...
     	
     	if (!stack.hasTagCompound())
-    		createCustomItemNBT(stack, worldIn.getTotalWorldTime());
+    		createCustomItemNBT(stack, worldIn);
 
     	else if (worldIn.isRemote == false)
     	{
     		/*  Periodic item NBT updates seem to reset the block breaking progress.
-    		 *  If for some reason the player decided to dig with a torch he would not be
-    		 *  able to do what without some code magic. We will reroute all NBT updates to
-    		 *  extended item properties and pull the data after the player stops digging.   
+    		 *  If for some reason the player decided to dig with a torch he would 
+    		 *  not be able to do what without some code magic.
     		 */
-    		ExtendedItemProperties extendedProperties = null;
+    		
+    		final ExtendedItemProperties extendedProperties = ExtendedItemProperties.findExtendedPropertiesForItem(stack, worldIn);	
+    		NBTTagCompound itemTagCompound = stack.getTagCompound();
+
     		final boolean isTorchItemLit = ItemTorch.isItemTorchLit(stack.getItem(), false);
 
     		if (isSelected)
     		{	
-    			if (!stack.getTagCompound().getBoolean("updateReroute"))
+    			if (!extendedProperties.getBoolean("updateReroute")) 
     		    {
-    				/* The player has just STARTED breaking the block,
-    				 * create new extended properties and start 're-routing' NBT updates to it. 
-    				 */
-    			    if (Utilities.isPlayerBreakingBlock())
+    			    if (Utilities.isPlayerBreakingBlock()) // The player has just STARTED breaking the block.
     			    {
-    			    	stack.getTagCompound().setBoolean("updateReroute", true);
-    			    	extendedProperties = ExtendedItemProperties.createExtendedPropertiesForItem(stack);
-    			    
+    			    	extendedProperties.setLong("timeStartedBreakingBlock", worldIn.getTotalWorldTime());
+    			    	extendedProperties.setBoolean("updateReroute", true);
+    			    	itemTagCompound = extendedProperties;
+ 
     			        // Check if player is trying to break a block located underwater or behind a waterfall.
     			        this.useItemTorchInWorld(getItemTorchUseResult(entityIn, worldIn, null, null), stack, worldIn, (EntityPlayer) entityIn, null, extendedProperties);
     			    }
     		    }
-   		        else if (!Utilities.isPlayerBreakingBlock())
+   		        else if (!Utilities.isPlayerBreakingBlock())  // The player has just STOPPPED breaking the block.
 		        {
-		    	    /*  The player has just STOPPPED breaking the block,
-		    	     *  Pull updates from extended properties to the native stack NBT and disable 'rerouting'.
-		    	     */
-			        ExtendedItemProperties properties = ExtendedItemProperties.findExtendedPropertiesForItem(stack);
-			        if (properties != null)
-			        {
-				        stack.getTagCompound().merge(properties);
-				        ExtendedItemProperties.unregisterExtendedPropertyForItem(stack);
-			        }
-			        stack.getTagCompound().setBoolean("updateReroute", false);
+   		        	updateCustomItemNBTFromExisting(stack, extendedProperties);
+			        extendedProperties.setBoolean("updateReroute", false);
 		        }
-    		    /*
-			     *  Block breaking by player is currently IN PROGRESS,
-			     *  find belonging extended item properties and reroute data to it. 
-			     *  If we're breaking a block with a lit torch put the flame out after a few update intervals.
-			     */
-		        else 
+		        else  // Block breaking by player is currently IN PROGRESS,
 		        {
-		    	    extendedProperties = ExtendedItemProperties.findExtendedPropertiesForItem(stack);
+		        	itemTagCompound = extendedProperties;
+		        	
+		        	// If we're breaking a block with a lit torch put the flame out after a few update intervals.
 		            if (isTorchItemLit == true)
 		            {
-		        	    long lastUpdate = stack.getTagCompound().getLong("lastUpdateTime");
+		        	    long lastUpdate = extendedProperties.getLong("timeStartedBreakingBlock");
 		        	    if (lastUpdate > 0 && worldIn.getTotalWorldTime() - lastUpdate > TorchUpdateType.MAIN_UPDATE.getInterval() * 3)
 		        		    extinguishItemTorch(stack, false, extendedProperties);
 		            }
 		        }
     		}
-    		final NBTTagCompound itemTagCompound = (extendedProperties == null) ? stack.getTagCompound() : extendedProperties;
     		
-    		if (!shouldUpdateItem(itemTagCompound, worldIn.getTotalWorldTime()))
+    		if (!shouldUpdateItem(extendedProperties, worldIn.getTotalWorldTime()))
     			return;
     	
     		/*  Currently we're only updating humidity and not combustion,
@@ -132,7 +120,7 @@ public class ItemTorch extends ItemBlock
     	
 			if (isTorchItemLit == true)
 			{
-				/*  When lit torches are not placed in the hotbar, but in storage slots
+				/*  When lit torches are not placed in the hotbar, but in other slots;
 			     *  they should be extinguished - adds realism.
 			     */
 				if (itemSlot > 8 || updateItemCombustionTime(itemTagCompound, TorchUpdateType.MAIN_UPDATE.getInterval() * -1) < 1)
@@ -394,7 +382,7 @@ public class ItemTorch extends ItemBlock
     	    	// and move the rest of the stack in a different inventory slot (auto-assigned)
     	    	
 				ItemStack newTorchLit = new ItemStack(Item.getItemFromBlock(ResourceLibrary.TORCH_LIT));
-				ItemTorch.createCustomItemNBTFromExisting(newTorchLit, tagCompound, playerIn.worldObj.getTotalWorldTime());
+				ItemTorch.createCustomItemNBTFromExisting(newTorchLit, playerIn.worldObj, tagCompound);
 
 				// An off-hand item has the same inventory slot designation as the first hotbar slot,
 				// and the 'inventory.currentItem' variable holds the value of the currently selected slot in the hotbar.
@@ -485,7 +473,7 @@ public class ItemTorch extends ItemBlock
      * Get combustion time value for this item from NBT storage.
      * 
      * @throws java.lang.NullPointerException if item tag compound is <code>null</code>
-     * @param stack ItemStack to get the information from <b>(unchecked)</b>
+     * @param stack ItemStack to get the information from
      * @return Returns combustion duration value from item NBT
      */
     protected static short getItemcombustionTime(ItemStack stack)
@@ -546,13 +534,12 @@ public class ItemTorch extends ItemBlock
 	 *  
 	 * @param stack ItemStack to create a new NBT for
 	 * @param tagCompound Existing NBT tag compound to extract data from
-	 * @param totalWorldTime Total world time since the world was created
 	 */
-	public static void createCustomItemNBTFromExisting(ItemStack stack, NBTTagCompound tagCompound, long totalWorldTime)
+	public static void createCustomItemNBTFromExisting(ItemStack stack, World world, NBTTagCompound tagCompound)
 	{
 		if (tagCompound != null && stack != null)
 		{
-			createCustomItemNBT(stack, totalWorldTime);
+			createCustomItemNBT(stack, world);
 			updateCustomItemNBTFromExisting(stack, tagCompound);
 		}
 	}
@@ -561,23 +548,19 @@ public class ItemTorch extends ItemBlock
 	 * Create a custom item NBT tag compound for a specific item stack. <br>
 	 * All the values will be initialized to default standards.<p>
 	 * 
-	 * <i>Use #createCustomItemNBTFromExisting if you already have NBT data for this item to inherit.</i>
-	 *
-	 * @see {@link #createCustomItemNBTFromExisting}
-	 * @param totalWorldTime Total world time since the world was created
-	 * @param stack ItemStack to create a new NBT for <b>(unchecked)</b>
+	 * <i>Use {@link #createCustomItemNBTFromExisting} if you already have NBT data for this item to inherit.</i>
 	 */
-	public static void createCustomItemNBT(ItemStack stack, long totalWorldTime)
+	public static void createCustomItemNBT(ItemStack stack, World world)
 	{	
-		final short sNull = (short) 0;
 		NBTTagCompound tagCompound = new NBTTagCompound();
 		stack.setTagCompound(tagCompound);
 		
 		tagCompound.setInteger("humidityLevel", 0);
-		tagCompound.setLong("lastUpdateTime", totalWorldTime);
-		
 		tagCompound.setShort("torchItemDamage", (short) 0);
 		tagCompound.setInteger("combustionTime", SharedDefines.MAX_TORCH_FLAME_DURATION);
+		
+		if (!world.isRemote)  // Do only on Server to avoid duplicates.	
+			ExtendedItemProperties.createExtendedPropertiesForItem(stack, world);
 	}
     
    /**

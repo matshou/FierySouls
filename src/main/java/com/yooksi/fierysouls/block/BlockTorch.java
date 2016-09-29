@@ -49,7 +49,7 @@ public abstract class BlockTorch extends net.minecraft.block.BlockTorch
             {
             	// This is where we pass our custom NBT from TileEntity to the new ItemStack.
             	if (ItemTorch.isItemTorch(item.getItem(), false) && torchEntity != null)
-					 ItemTorch.createCustomItemNBTFromExisting(item, torchEntity.saveDataToPacket(), worldIn.getTotalWorldTime());
+					 ItemTorch.createCustomItemNBTFromExisting(item, worldIn, torchEntity.saveDataToPacket());
           
             	spawnAsEntity(worldIn, pos, item);
             }
@@ -75,7 +75,7 @@ public abstract class BlockTorch extends net.minecraft.block.BlockTorch
 				// This is where we pass our custom NBT from TileEntity to the new ItemStack.
 				if (ItemTorch.isItemTorch(item.getItem(), false) && teTorch != null)
 				{
-					ItemTorch.createCustomItemNBTFromExisting(item, teTorch.saveDataToPacket(), worldIn.getTotalWorldTime());
+					ItemTorch.createCustomItemNBTFromExisting(item, worldIn, teTorch.saveDataToPacket());
 					if (worldIn.rand.nextFloat() <= chance)
 						spawnAsTorchEntity(worldIn, pos, item);
 				}

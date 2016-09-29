@@ -3,6 +3,7 @@ package com.yooksi.fierysouls.entity.item;
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.common.SharedDefines.TorchUpdateType;
+import com.yooksi.fierysouls.item.ExtendedItemProperties;
 import com.yooksi.fierysouls.item.ItemTorch;
 
 import net.minecraft.entity.item.EntityItem;
@@ -24,15 +25,17 @@ public final class EntityItemTorch extends EntityItem
 	@Override
 	public void onUpdate()
 	{
-		super.onUpdate();
+		super.onUpdate();  
+		
+		final ExtendedItemProperties properties = ExtendedItemProperties.findExtendedPropertiesForItem(getEntityItem(), worldObj);
         final NBTTagCompound itemTagCompound = getEntityItem().getTagCompound();
-        
+		
 		// TODO: Humidity should speed up item decay (decrease it's lifespan).
 		
 		// Update only at set intervals to reduce performance hits.   
 		// When it's raining and the torch is directly exposed to rain it will start collecting humidity.
 		
-		if (getEntityWorld().isRemote || !ItemTorch.shouldUpdateItem(itemTagCompound, worldObj.getTotalWorldTime()))
+		if (getEntityWorld().isRemote || !ItemTorch.shouldUpdateItem(properties, worldObj.getTotalWorldTime()))
 			return;
 		
 		// Currently we're only updating humidity and not combustion,

@@ -11,6 +11,7 @@ public class ItemTorchUnlit extends ItemTorch
 	public ItemTorchUnlit(Block block) 
 	{
 		super(block);
+		this.setMaxStackSize(10);
 	}
 	
 	@SideOnly(Side.CLIENT)

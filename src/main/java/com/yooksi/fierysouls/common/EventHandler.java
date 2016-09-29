@@ -2,14 +2,23 @@ package com.yooksi.fierysouls.common;
 
 import com.yooksi.fierysouls.block.BlockTorch;
 import com.yooksi.fierysouls.entity.item.EntityItemTorch;
+import com.yooksi.fierysouls.item.ExtendedItemProperties;
 import com.yooksi.fierysouls.item.ItemTorch;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
+
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
+
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 
 public class EventHandler 
 {
+	/** Used to optimize execution of code in {@link #onWorldTick}. */ 
+	private static int serverTickCounter = 0;
+	
 	/**
 	 * Event that is fired whenever a player tosses (Q) an item or drag-n-drops a
 	 * stack of items outside the inventory GUI screens. Canceling the event will
@@ -28,7 +37,7 @@ public class EventHandler
 		if (!event.getEntity().worldObj.isRemote && droppedStack.stackSize > 0 && isItemCustomTorch)
 		{
 			if (!droppedStack.hasTagCompound())
-				ItemTorch.createCustomItemNBT(droppedStack, event.getEntity().worldObj.getWorldTime());
+				ItemTorch.createCustomItemNBT(droppedStack, event.getEntity().worldObj);
 			
 			// We're going to create a custom EntityItem and do all the work needed here.
 			// The entity will then spawn in the world as being tossed in front of the player.
@@ -38,6 +47,24 @@ public class EventHandler
             
             // We created and added the EntityItem to the world here, override default event action. 
             event.setCanceled(true);    
+		}
+	}
+	
+	/** 
+	 * This event will be called around three to four times per tick.<br>
+	 * <i>Note: eventy.type will always be WORLD and event.side will always be SERVER.</i>
+	 */
+	@SubscribeEvent
+	public void onWorldTick(TickEvent.WorldTickEvent event) 
+	{
+		if (event.side == Side.SERVER && event.phase == Phase.END)
+		{	
+			if (serverTickCounter > 160)   //  40 calls per second here
+			{
+				ExtendedItemProperties.callPropertiesGarbageCollector(event.world);
+	    	    serverTickCounter = 0;
+			}
+	        else serverTickCounter++;
 		}
 	}
 }

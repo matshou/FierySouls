@@ -1,11 +1,15 @@
 package com.yooksi.fierysouls.item;
 
-import java.util.HashMap;
+import com.yooksi.fierysouls.common.FierySouls;
+import com.yooksi.fierysouls.common.SharedDefines;
+
 import java.util.Iterator;
+import java.util.HashMap;
 import java.util.Map;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.World;
 
 /** Use these extended properties when you want to store information that for some reason
  *  you are <br> unable to store in the regular ItemStack NBTTagCompounds.
@@ -13,6 +17,37 @@ import net.minecraft.nbt.NBTTagCompound;
 public class ExtendedItemProperties extends NBTTagCompound
 {
 	private static HashMap<ExtendedItemProperties, Fingerprint> ItemPropertiesMap = new HashMap();
+	
+	private ExtendedItemProperties(ItemStack stack, World world)
+	{ 
+		/*  Manually copy contents from the stack NBTTagCompound for speed and safety.
+		 *  Block code copied from ItemTorch.updateCustomItemNBTFromExisting.
+		 */
+		
+		NBTTagCompound itemTagCompound = stack.getTagCompound();
+		this.setInteger("humidityLevel", itemTagCompound.getInteger("humidityLevel"));	
+		
+		int combustion = itemTagCompound.getInteger("combustionTime");
+		short itemDamage = (short) (SharedDefines.MAX_TORCH_FLAME_DURATION - combustion);
+		
+		this.setInteger("combustionTime", combustion);
+		this.setShort("torchItemDamage", itemDamage);
+		
+		this.setLong("lastUpdateTime", world.getTotalWorldTime());
+	}
+	
+	@Override 
+	public int hashCode()
+	{
+		/*
+		 *  If the hashCode() value of an object has changed since it was added to the HashSet, 
+		 *  it seems to render the object unremovable. If we don't override this and return a constant 
+		 *  value like identityHashCode we will not be able to remove elements from ItemPropertiesMap.
+		 *  The value NBTTagCompound returns as hashCode seems to change after some time and that's not good.
+		 */
+		
+    	return System.identityHashCode(this);
+    }
 	
 	/**
 	 *  Fingerprint is an object used to identify different item custom NBT tag compounds. <br>
@@ -57,10 +92,10 @@ public class ExtendedItemProperties extends NBTTagCompound
 	 *  @param item ItemStack to create and register new extended properties for
 	 *  @return Newly created extended properties, or <code>null</code> if item already has registered properties  
 	 */
-	public static ExtendedItemProperties createExtendedPropertiesForItem(final ItemStack item)
+	public static ExtendedItemProperties createExtendedPropertiesForItem(ItemStack item, World world)
 	{
 		ExtendedItemProperties createdProperties = null;
-		if (item != null && item.hasTagCompound() && findExtendedPropertiesForItem(item) == null)
+		if (item != null && item.hasTagCompound())
 		{
 			// A new NBT fingerprint is imprinted in the item NBT the first time
 			// the item creates personal extended properties.
@@ -68,27 +103,31 @@ public class ExtendedItemProperties extends NBTTagCompound
 			final Fingerprint fingerprint = new Fingerprint(item);
 			item.getTagCompound().setString("fingerprint", fingerprint.sFingerprint);
 			
-			createdProperties = new ExtendedItemProperties();
-			createdProperties.merge(item.getTagCompound());
+			createdProperties = new ExtendedItemProperties(item, world);
 			ItemPropertiesMap.put(createdProperties, fingerprint);
 		}
 		
 		return createdProperties;
 	}
 	
-	/**
-	 *  Remove extended properties from the global properties registry for the selected item. <br>
-	 *  <i><b>Note</b> that the property itself will not be destroyed, only removed from the registry.
+	/** 
+	 *  Our own custom garbage collector used for cleaning straggling NBTTagCompounds in <br>
+	 *  <i>ItemPropertiesMap</i>. belonging to ItemStacks that have been removed from world. <p>
 	 *  
-	 *  @param item ItemStack to remove properties for
+	 *  The elements will be removed after they've not been updated for a certain amount of time.
+	 * 
+	 * @param world instance of the currently active world
 	 */
-	public static void unregisterExtendedPropertyForItem(final ItemStack item)
-	{		
+	public static void callPropertiesGarbageCollector(World world)
+	{
+		if (ItemPropertiesMap.isEmpty())
+			return;
+		
 		for (Iterator<Map.Entry<ExtendedItemProperties, Fingerprint>> i = ItemPropertiesMap.entrySet().iterator(); i.hasNext();)
 		{
-		    Map.Entry<ExtendedItemProperties, Fingerprint> entry = i.next();
-		    if (entry.getValue().validate(item.getTagCompound().getString("fingerprint")))
-		        i.remove();
+			Map.Entry<ExtendedItemProperties, Fingerprint> entry = i.next();
+			if (world.getTotalWorldTime() - entry.getKey().getLong("lastUpdateTime") > 100)
+				i.remove();
 		}
 	}
 	
@@ -96,18 +135,17 @@ public class ExtendedItemProperties extends NBTTagCompound
 	 *  Try to find extended properties belonging to the argument item. <br>
 	 *  Map entries will be compared using custom NBT <i>Fingerprints</i>.
 	 *  
-	 *  @param item ItemStack we're trying to find properties for <i>(null-safe)</i>
-	 *  @return A reference to found properties, or <code>null</code> if no properties were found
+	 *  @param item ItemStack we're trying to find properties for
+	 *  @return A reference to found properties, or a newly created properties if no properties were found
 	 */
-	public static ExtendedItemProperties findExtendedPropertiesForItem(final ItemStack item)
+	public static ExtendedItemProperties findExtendedPropertiesForItem(final ItemStack item, World world)
 	{
-		ExtendedItemProperties foundProperties = null;
 		for (Map.Entry<ExtendedItemProperties, Fingerprint> entry : ItemPropertiesMap.entrySet())
 		{
 			if (entry.getValue().validate(item.getTagCompound().getString("fingerprint")))
-				foundProperties = entry.getKey();
+				return entry.getKey();
 		}
 		
-		return foundProperties;
+		return createExtendedPropertiesForItem(item, world);
 	}
 }
