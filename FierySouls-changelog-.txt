@@ -1,3 +1,11 @@
+Version 1.5.0
+
+- A secondary mod log file system has been implemented.
+  
+Notes: A secondary log system means that we now have a separate log file that we can write to in addition 
+       to the log4j logger. We can periodically take a look in that log file and it will give us the exact
+	   time and date an event happened. Then we use that info to find the stack trace in the FML-client log.
+    
 Version 1.4.12
 
 - Torch items now properly stack, both in player's inventory and in the world as EntityItems.

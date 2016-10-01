@@ -42,7 +42,7 @@ public class CommonProxy
 	 */
 	private void registerResources() 
 	{
-		FierySouls.logger.info("Preparing to register item and block instances...");
+		Logger.info("Preparing to register item and block instances...");
 
 		registerItem(new ItemTorchLit(registerBlock(new BlockTorchLit(), "torch_lit")), "torch_lit");
 		registerItem(new ItemTorchUnlit(registerBlock(new BlockTorchUnlit(), "torch_unlit")), "torch_unlit");
@@ -50,7 +50,7 @@ public class CommonProxy
 		registerItem(new ItemMatchbox(), "matchbox");
 		registerItem(new ItemGlowstoneCrystal(), "glowstone_crystal");
 		
-		FierySouls.logger.info("Finished registering object instances. ");
+		Logger.info("Finished registering object instances. ");
 	}
 	
 	/** Register all custom tile entities with Forge. */
@@ -64,7 +64,7 @@ public class CommonProxy
 	/** Register all EntityItems and other Entities with Forge. */
 	private void registerModEntities()
 	{
-//		EntityRegistry.registerModEntity(EntityItemTorch.class, "torch_lit", 0, FierySouls.instance, 40, 40, false);
+		// EntityRegistry.registerModEntity(EntityItemTorch.class, "torch_lit", 0, FierySouls.instance, 40, 40, false);
 	}
 	
 	private static <T extends net.minecraft.block.Block> T registerBlock(T block, String name) 
@@ -90,7 +90,7 @@ public class CommonProxy
 		// Remove vanilla recipes here
 		int recipesRemovedCount = 0;
 		recipesRemovedCount += removeRecipe(Item.getItemFromBlock(net.minecraft.init.Blocks.TORCH));
-		FierySouls.logger.info("Removed " + recipesRemovedCount + " vanilla recipes.");
+		Logger.info("Removed " + recipesRemovedCount + " vanilla recipes.");
 		
 		GameRegistry.addShapedRecipe(new ItemStack(ResourceLibrary.TORCH_UNLIT), new Object[]                      // Unlit Torch standard recipe.
 				{ "y", "x", 'x', Items.STICK, 'y', Items.COAL });   

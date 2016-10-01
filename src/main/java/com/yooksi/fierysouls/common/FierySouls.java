@@ -1,7 +1,6 @@
 package com.yooksi.fierysouls.common;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import java.io.IOException;
 
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraftforge.fml.common.Mod;
@@ -19,12 +18,9 @@ public class FierySouls
 {
 	public static final String MODID = "fierysouls";
 	public static final String NAME = "Fiery Souls";
-	public static final String VERSION = "1.4.12";
+	public static final String VERSION = "1.5.0";
 	
 	public static final String GUIFACTORY = "com.yooksi.fierysouls.common.FSGuiFactory";
-
-	// Use this thing to print in the console:
-	public static final Logger logger = LogManager.getLogger(MODID);
 	
 	// This is where all our custom items should be listed in-game
 	public static final CreativeTabs tabTorches = new CreativeTabs("FierySouls") 
@@ -44,10 +40,14 @@ public class FierySouls
 	
 	public static CommonProxy proxy;
 	
-	/** Run before anything else. Read your config, create blocks, items, etc, and register them with the GameRegistry. */
+	/** Run before anything else. Read your config, create blocks, items, etc, and register them with the GameRegistry. 
+	 * @throws IOException */
 	@Mod.EventHandler
-	public void preInit(FMLPreInitializationEvent event) 
+	public void preInit(FMLPreInitializationEvent event) throws IOException 
 	{
+		Logger.setLogger(event.getModLog());
+		Logger.createModLogFile();
+		
 		proxy.preInit(event);   
 	}
 	
