@@ -4,6 +4,8 @@ tile.torch_unlit.name=Torch
 tile.torch_lit.name=Torch
 itemGroup.FierySouls=Fiery Souls
 
+gui.fs_configuration.mainTitle=Fiery Souls Configuration
 gui.fs_configuration.ctgy.torches=Torch Configurations
 gui.fs_configuration.ctgy.torches.tooltip=Configuration options for Fiery Souls torches.
-gui.fs_configuration.mainTitle=Fiery Souls Configuration
+gui.fs_configuration.ctgy.utilities=Utility Configurations
+gui.fs_configuration.ctgy.utilities.tooltip=Configuration options for various mod utilities.

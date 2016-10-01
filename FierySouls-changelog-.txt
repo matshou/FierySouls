@@ -1,3 +1,8 @@
+Version 1.5.1
+
+- Added a new config category called "Utility Configurations".
+- Added the mod logger threshold option to config.
+
 Version 1.5.0
 
 - A secondary mod log file system has been implemented.

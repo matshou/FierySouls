@@ -8,11 +8,9 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.logging.LogManager;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
 
 /**
  * A custom wrapper for the log4j Logger. It also has an implementation <br>
@@ -22,20 +20,21 @@ import org.apache.logging.log4j.MarkerManager;
  */
 public class Logger 
 {
-	public static final Marker MOD_MARKER = MarkerManager.getMarker(FierySouls.MODID);
-	
-	static final java.text.DateFormat dateFormat = new java.text.SimpleDateFormat("[dd/MM/yyyy][HH:mm:ss]");
-
-    public static final String modLogFileName = "fiery-souls-logger.log";
-    public static final String modLogFileDirName = "logs";
-	
 	private static org.apache.logging.log4j.Logger logger;
 	
-	/** A string representation of the mod log Path, here for convenience. */
+	static final java.text.DateFormat dateFormat = new java.text.SimpleDateFormat("[dd/MM/yyyy][HH:mm:ss]");
+    public static final String modLogFileName = "fiery-souls-logger.log";
+    public static final String modLogFileDirName = "logs";
+	    
+    /** A string representation of the mod log Path, here for convenience. */
 	private static String modLogFilePath;
 	/** A file instance of the mod log file. Used to access file properties. */
 	private static File modLogFile;
-    
+	
+	/** Any event level that has a value below this will not be logged. */
+	private static Level threshold = Level.DEBUG;
+	
+	
 	private static void log(Level level, String format, Object... data) 
 	{
 		logger.printf(level, format, data);
@@ -154,6 +153,12 @@ public class Logger
 		Logger.logger = logger;
 	}
 	
+	/** Sets the maximum event level that will be logged in the secondary mod log file. */
+	public static void setLevel(Level level)
+	{
+		threshold = level;
+	}
+	
 	/**
 	 * Create a log file for this mod, if one doesn't already exist.
 	 * 
@@ -196,7 +201,7 @@ public class Logger
 	 */
 	private static void writeToModLogFile(Level level, String message, Throwable throwable)
 	{
-		if (!modLogFile.exists())  // Log file was initialized properly.
+		if (!modLogFile.exists() || level.intLevel() > threshold.intLevel())
 			return;
 
 		java.io.BufferedReader buffReader = null;

@@ -61,6 +61,8 @@ public class FSGuiFactory implements IModGuiFactory
 				java.util.List<IConfigElement> list = new java.util.ArrayList<IConfigElement>();
 				//Add the two buttons that will go to each config category edit screen
 				list.add(new DummyCategoryElement("mainCfg", "gui.fs_configuration.ctgy.torches", (Class<? extends IConfigEntry>) CategoryEntryTorches.class));
+				list.add(new DummyCategoryElement("mainCfg", "gui.fs_configuration.ctgy.utilities", (Class<? extends IConfigEntry>) CategoryEntryUtilities.class));
+				
 				return list;
 			}
 		    
@@ -86,6 +88,31 @@ public class FSGuiFactory implements IModGuiFactory
 
 	                return new GuiConfig(this.owningScreen, propertiesOnThisScreen, this.owningScreen.modID,               
 	                		FSConfiguration.TORCH_CATEGORY, worldRestart, mcRestart, windowTitle);
+				}
+			}
+			
+			public static class CategoryEntryUtilities extends CategoryEntry
+			{
+				public CategoryEntryUtilities(GuiConfig owningScreen, GuiConfigEntries owningEntryList, IConfigElement prop)
+				{
+					super(owningScreen, owningEntryList, prop);
+				}
+				
+				@Override
+				protected GuiScreen buildChildScreen() 
+				{
+					// Find all the config options that are going to be displayed in the GUI.
+					
+	                Configuration configuration = FSConfiguration.config;
+	                ConfigElement cat_general = new ConfigElement(configuration.getCategory(FSConfiguration.UTILITY_CATEGORY));
+	                java.util.List<IConfigElement> propertiesOnThisScreen = cat_general.getChildElements();
+	                String windowTitle = configuration.toString();
+	               
+	                boolean worldRestart = this.configElement.requiresWorldRestart() ? true : this.owningScreen.allRequireWorldRestart;
+	                boolean mcRestart = this.configElement.requiresMcRestart() ? true : this.owningScreen.allRequireMcRestart;
+
+	                return new GuiConfig(this.owningScreen, propertiesOnThisScreen, this.owningScreen.modID,               
+	                		FSConfiguration.UTILITY_CATEGORY, worldRestart, mcRestart, windowTitle);
 				}
 			}
 		}

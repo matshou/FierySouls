@@ -2,6 +2,8 @@ package com.yooksi.fierysouls.common;
 
 import static net.minecraftforge.common.config.Property.Type.INTEGER;
 
+import org.apache.logging.log4j.Level;
+
 import com.yooksi.fierysouls.block.BlockTorchLit;
 import com.yooksi.fierysouls.tileentity.TileEntityTorchLit;
 
@@ -18,6 +20,7 @@ public class FSConfiguration
 	protected static Configuration config = null;
 	
 	public static final String TORCH_CATEGORY = "torch_category";
+	public static final String UTILITY_CATEGORY = "utility_category";
 	
 	public static void preInit() 
 	{
@@ -77,7 +80,7 @@ public class FSConfiguration
         
         else BlockTorchLit.MAX_TORCH_LIGHT_LEVEL = configProperty.getInt();
 		
-		final int MAX_TORCH_FLAME_DURATION_DEFAULT = 3500;     // Index - #1
+		final int MAX_TORCH_FLAME_DURATION_DEFAULT = 3500;      // Index - #1
 		
 		comment = "The amount of ticks this torch will burn before extinguishing itself.";
 		configProperty = getFixedIntProperty(TORCH_CATEGORY, "max_torch_flame_duration", MAX_TORCH_FLAME_DURATION_DEFAULT, comment, 0, 24000);
@@ -85,7 +88,7 @@ public class FSConfiguration
 		
         SharedDefines.MAX_TORCH_FLAME_DURATION = configProperty.getInt();
         
-        final int HUMIDITY_THRESHOLD_DEFAULT = 150;           // Index - #2
+        final int HUMIDITY_THRESHOLD_DEFAULT = 150;             // Index - #2
         
         comment = "Maximum amount of time (in ticks) this torch is allowed to be exposed to rain before extinguishing.";
         configProperty = getFixedIntProperty(TORCH_CATEGORY, "humidity_threshold", HUMIDITY_THRESHOLD_DEFAULT, comment, 0, 24000);
@@ -93,7 +96,7 @@ public class FSConfiguration
         
         SharedDefines.TORCH_HUMIDITY_THRESHOLD = configProperty.getInt();
         
-        final int CATCH_FIRE_CHANCE_MULTIPLIER = 5;           // Index - #3
+        final int CATCH_FIRE_CHANCE_MULTIPLIER = 5;             // Index - #3
         
         comment = "This multiplier affects the chances of blocks being set on fire by torches. The higher the number the LOWER the chances.";
         configProperty = getFixedIntProperty(TORCH_CATEGORY, "catch_fire_chance_multiplier", CATCH_FIRE_CHANCE_MULTIPLIER, comment, 1, 100);
@@ -109,6 +112,17 @@ public class FSConfiguration
         
         TileEntityTorchLit.isOxygenUpdateEnabled = configProperty.getBoolean();
         
+        final int EVENT_THRESHOLD_DEFAULT = 5;                  // Index - #5
+        
+        comment = "Sets the threshold level for the mod event logger \n"
+        		+ "0 - Off, Fatal, Error, Warn, Info, Debug, Trace, 7 - All";
+        
+        configProperty = getFixedIntProperty(UTILITY_CATEGORY, "secondary_logger_threshold", EVENT_THRESHOLD_DEFAULT, comment, 0, 7);
+        configProperties.add(configProperty);
+        
+        int thresholdLevel = configProperty.getInt(); 
+        Logger.setLevel(Level.toLevel(Integer.toString(thresholdLevel)));
+        
 		/* 
 		 * Write the class's variables back into the config properties and save to disk.
 		 * This is done even for a 'loadFromFile == true', because some of the properties 
@@ -120,6 +134,7 @@ public class FSConfiguration
 		configProperties.get(2).set(SharedDefines.TORCH_HUMIDITY_THRESHOLD);
 		//configProperties.get(3).set(TileEntityTorchLit.CATCH_FIRE_CHANCE_BASE);
 		configProperties.get(4).set(TileEntityTorchLit.isOxygenUpdateEnabled);
+		configProperties.get(5).set(thresholdLevel);
 		
 		if (config.hasChanged())
 			config.save();
