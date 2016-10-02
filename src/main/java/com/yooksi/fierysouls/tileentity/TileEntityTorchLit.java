@@ -69,7 +69,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 			if (isOxygenUpdateEnabled && isTorchReadyForUpdate(TorchUpdateType.OXYGEN_UPDATE))
 				checkIsTorchEnclosed();
 			
-			if (updateTorchCombustionTime(TorchUpdateType.MAIN_UPDATE.getInterval()* o2CombustionMultiplier * -1) <= 0)
+			if (updateTorchCombustionTime(TorchUpdateType.MAIN_UPDATE.getInterval() * o2CombustionMultiplier * -1) <= 0)
 				extinguishTorch();
 			
 		    // When it's raining and the torch is directly exposed to rain it will start collecting humidity.
@@ -93,7 +93,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 	    {
 	    	// Find the newly created unlit torch entity and transfer all important data to it.
 	    	
-	    	TileEntityTorchUnlit unlitTorch = (TileEntityTorchUnlit)findTorchTileEntity(getWorld(), pos);
+	    	TileEntityTorchUnlit unlitTorch = (TileEntityTorchUnlit)findTorchTileEntity(getWorld(), pos, true);
 	    	unlitTorch.setTorchSmoldering(true, getWorld().getTotalWorldTime());
 	    	unlitTorch.readFromNBT(saveDataToPacket());
 	    	return true;
@@ -216,8 +216,8 @@ public class TileEntityTorchLit extends TileEntityTorch
 	}
 	
 	/** Helper method for finding a torch tile entity instance from World. */
-    public static TileEntityTorchLit findLitTorchTileEntity(@Nullable World world, net.minecraft.util.math.BlockPos pos)
+    public static TileEntityTorchLit findLitTorchTileEntity(@Nullable World world, net.minecraft.util.math.BlockPos pos, boolean log)
     {
-    	return (TileEntityTorchLit)TileEntityTorch.findTorchTileEntity(world, pos);
+    	return (TileEntityTorchLit)TileEntityTorch.findTorchTileEntity(world, pos, log);
     }
 }

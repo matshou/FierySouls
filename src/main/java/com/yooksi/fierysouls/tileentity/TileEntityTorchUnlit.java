@@ -90,7 +90,7 @@ public class TileEntityTorchUnlit extends TileEntityTorch
     	boolean result = !isTorchInHighHumidity() && getTorchCombustionTime() > 0;
     	if (!getWorld().isRemote && result == true && lightTorch(getWorld(), pos))
     	{	
-    		TileEntityTorchLit torchLit = TileEntityTorchLit.findLitTorchTileEntity(getWorld(), pos);
+    		TileEntityTorchLit torchLit = TileEntityTorchLit.findLitTorchTileEntity(getWorld(), pos, true);
             torchLit.readFromNBT(saveDataToPacket());
             return true;
     	}
@@ -119,8 +119,8 @@ public class TileEntityTorchUnlit extends TileEntityTorch
     }
     
     /** Helper method for finding a torch tile entity instance from World. */
-    public static TileEntityTorchUnlit findUnlitTorchTileEntity(@Nullable World world, net.minecraft.util.math.BlockPos pos)
+    public static TileEntityTorchUnlit findUnlitTorchTileEntity(@Nullable World world, net.minecraft.util.math.BlockPos pos, boolean log)
     {
-    	return (TileEntityTorchUnlit)TileEntityTorch.findTorchTileEntity(world, pos);
+    	return (TileEntityTorchUnlit)TileEntityTorch.findTorchTileEntity(world, pos, log);
     }
 }

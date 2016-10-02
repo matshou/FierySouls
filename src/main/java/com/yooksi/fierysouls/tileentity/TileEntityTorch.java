@@ -1,5 +1,6 @@
 package com.yooksi.fierysouls.tileentity;
 
+import com.yooksi.fierysouls.common.Logger;
 import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.common.SharedDefines.TorchUpdateType;
 
@@ -8,6 +9,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class TileEntityTorch extends TileEntity implements ITickable
@@ -98,12 +100,25 @@ public class TileEntityTorch extends TileEntity implements ITickable
     	return (humidityLevel >= SharedDefines.TORCH_HUMIDITY_THRESHOLD);
     }
 	
-    /** Helper method for finding a torch tile entity instance from World. */
-    public static TileEntity findTorchTileEntity(@Nullable World world, net.minecraft.util.math.BlockPos pos)
+    /** 
+     * Find a torch tile entity instance in World.
+     *   
+     * @param world World instance where to search for the entity.
+     * @param pos BlockPos where the entity is suppose to be in World.
+     * @param throwException should the method throw an exception if we didn't find the entity.
+     * @throws NullPointerException if <code>throwException</code> is true and no TorchTileEntity was found.
+     */
+    public static TileEntity findTorchTileEntity(@Nullable World world, BlockPos pos, boolean throwException)
     {
-    	// TODO: Add an error log here.
     	TileEntity torchTE = world != null ? world.getTileEntity(pos) : null;
-    	return (torchTE != null && torchTE instanceof TileEntityTorch ? torchTE : null);
+    	TileEntity result = torchTE != null && torchTE instanceof TileEntityTorch ? torchTE : null; 
+    	
+    	if (throwException && result == null)
+    	{
+    		Logger.fatal("TileEntityTorch was not found in World, it returned a null value.");
+    		throw new NullPointerException();
+    	}
+    	return result;
     }
     
     // Creates and returns an updated NBTTagCompound for this TileEntity. 

@@ -32,7 +32,7 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch implem
 	
 	/** 
 	 * If the block has changed internal light value then this should be set to true
-	 * so we make a global light update for every lit torch in the world. 
+	 * so we make <br> a global light update for every lit torch in the world. 
 	 */ 
 	private boolean shouldUpdateLight = false;
 	
@@ -110,7 +110,7 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch implem
 		
 		if (heldItem == null)
 		{
-			TileEntityTorchLit.findLitTorchTileEntity(worldIn, pos).extinguishTorch();
+			TileEntityTorchLit.findLitTorchTileEntity(worldIn, pos, true).extinguishTorch();
 			return true;
 		}
 		else if (heldItem.getItem() == torchUnlit)
@@ -135,6 +135,6 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch implem
 	 */
 	public static boolean extinguishTorch(World world, BlockPos pos)
 	{
-		return TileEntityTorchLit.findLitTorchTileEntity(world, pos).extinguishTorch();
+		return TileEntityTorchLit.findLitTorchTileEntity(world, pos, true).extinguishTorch();
 	}
 }

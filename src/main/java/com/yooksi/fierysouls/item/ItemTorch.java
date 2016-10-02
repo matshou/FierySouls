@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 
 import com.yooksi.fierysouls.block.BlockTorch;
 import com.yooksi.fierysouls.common.FierySouls;
+import com.yooksi.fierysouls.common.Logger;
 import com.yooksi.fierysouls.common.ResourceLibrary;
 import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.common.Utilities;
@@ -67,7 +68,7 @@ public class ItemTorch extends ItemBlock
     		 *  not be able to do what without some code magic.
     		 */
     		
-    		final ExtendedItemProperties extendedProperties = ExtendedItemProperties.findExtendedPropertiesForItem(stack, worldIn);	
+    		final ExtendedItemProperties extendedProperties = ExtendedItemProperties.findOrCreateExtendedPropertiesForItem(stack, worldIn);	
     		NBTTagCompound itemTagCompound = stack.getTagCompound();
 
     		final boolean isTorchItemLit = ItemTorch.isItemTorchLit(stack.getItem(), false);
@@ -83,7 +84,8 @@ public class ItemTorch extends ItemBlock
     			    	itemTagCompound = extendedProperties;
  
     			        // Check if player is trying to break a block located underwater or behind a waterfall.
-    			        this.useItemTorchInWorld(getItemTorchUseResult(entityIn, worldIn, null, null), stack, worldIn, (EntityPlayer) entityIn, null, extendedProperties);
+    			    	TorchActionType type = getItemTorchUseResult(entityIn, worldIn, null, null);
+    			        useItemTorchInWorld(type, stack, worldIn, (EntityPlayer) entityIn, null, extendedProperties);
     			    }
     		    }
    		        else if (!Utilities.isPlayerBreakingBlock())  // The player has just STOPPPED breaking the block.
@@ -146,9 +148,9 @@ public class ItemTorch extends ItemBlock
      * Check to see if we should perform a full item update.<br>
      * Written specifically to be at the disposal of <b>onUpdate</b> in ItemTorch and EntityItemTorch.
      *
-     * @throws java.lang.NullPointerException if item tag compound is <code>null</code>
      * @param itemNBT Map of item's custom data used for updating.
      * @param totalWorldTime Total time elapsed from the creation of the world. 
+     * @throws NullPointerException if item tag compound is <code>null</code>
      * @return True if enough world time has elapsed.
      */
     public static boolean shouldUpdateItem(NBTTagCompound itemNBT, long totalWorldTime)
@@ -361,20 +363,28 @@ public class ItemTorch extends ItemBlock
     	if (stack != null && ItemTorch.isItemTorch(stack.getItem(), false))
     		stack.setItem(Item.getItemFromBlock(ResourceLibrary.TORCH_UNLIT));
 
+    	else Logger.error("Failed to extinguish ItemTorch.", stack == null ? 
+    			new NullPointerException("ItemStack was passed as null,") : new java.lang.TypeNotPresentException("ItemTorch", null));
+    	
     	if (extinguishByWater == true)
     		setItemHumidity(tagCompound, SharedDefines.TORCH_HUMIDITY_THRESHOLD);
     }
 	
     /**
      *  Set this item torch on fire. Nothing will happen if the item is too wet or has already burned out.
+     *  
      *  @param stack ItemStack instance of our torch to set on fire.
      *  @param playerIn player that is holding the torch.
      *  @param tagCompound the NBTTagCompound to be used for updating data.
      */
     public static void lightItemTorch(ItemStack stack, EntityPlayer playerIn, NBTTagCompound tagCompound)
     {
-    	final boolean result = stack != null && tagCompound != null && stack.getItem() instanceof ItemTorch;
-    	if (result && getItemHumidity(tagCompound) < SharedDefines.TORCH_HUMIDITY_THRESHOLD)
+    	if (stack == null || !(stack.getItem() instanceof ItemTorch) || tagCompound == null)
+    	{
+    		Logger.error("Failed to light ItemTorch.", stack == null || tagCompound == null ? 
+    				new NullPointerException("ItemStack or TagCompound were passed as null,") : new IllegalArgumentException("ItemStack is not an instance of ItemTorch."));
+    	}
+    	else if (getItemHumidity(tagCompound) < SharedDefines.TORCH_HUMIDITY_THRESHOLD)
     	{
     		if (getItemcombustionTime(stack) > 0)
     		{
@@ -410,7 +420,10 @@ public class ItemTorch extends ItemBlock
      */
     public static int updateItemCombustionTime(NBTTagCompound itemNBT, int value)
     {
-    	if (itemNBT != null && value != 0)
+    	if (value == 0) 
+    		Logger.warn("Tried updating ItemTorch combustion time with a value that equaled 0.");
+    	
+    	if (itemNBT != null)
     	{	
     		int combustion = itemNBT.getInteger("combustionTime");
     		combustion += ((combustion + value > 0) ? value : combustion * -1);   // Keep the value unsigned; 
@@ -433,7 +446,10 @@ public class ItemTorch extends ItemBlock
      */
     public static int updateItemHumidity(NBTTagCompound itemNBT, int value)
     {
-    	if (itemNBT != null && value != 0)
+    	if (value == 0) 
+    		Logger.warn("Tried updating ItemTorch humidity with a value that equaled 0.");
+    	
+    	if (itemNBT != null)
     	{
     		int humidity = getItemHumidity(itemNBT);
     		humidity += ((humidity + value < SharedDefines.TORCH_HUMIDITY_THRESHOLD) ?
@@ -524,6 +540,8 @@ public class ItemTorch extends ItemBlock
 			itemTagCompound.setInteger("combustionTime", combustion);
 			itemTagCompound.setShort("torchItemDamage", itemDamage);
 		}
+		else Logger.error("Failed to update Item NBTTagCompound from an existing one.", newTagCompound == null ? 
+				new NullPointerException("The NBTTagCompound was passed as null.") : new java.util.NoSuchElementException("The ItemStack has no NBTTagCompound."));
 	}
 	
 	/** 
@@ -549,9 +567,20 @@ public class ItemTorch extends ItemBlock
 	 * All the values will be initialized to default standards.<p>
 	 * 
 	 * <i>Use {@link #createCustomItemNBTFromExisting} if you already have NBT data for this item to inherit.</i>
+	 * 
+	 * @throws NullPointerException if stack is passed as <code>null</code>.
+	 * @param stack the ItemStack for which we're creating the NBTTagCompound for
+	 * @param world World instance passed as an argument to {@link ExtendedItemProperties#createExtendedPropertiesForItem 
+	 *                                                             createExtendedPropertiesForItem}
 	 */
 	public static void createCustomItemNBT(ItemStack stack, World world)
 	{	
+		if (stack == null)
+		{
+			Logger.error("Failed to create custom Item NBTTagCompound for ItemTorch.");
+			throw new NullPointerException("ItemStack was passed as null.");
+		}
+		
 		NBTTagCompound tagCompound = new NBTTagCompound();
 		stack.setTagCompound(tagCompound);
 		

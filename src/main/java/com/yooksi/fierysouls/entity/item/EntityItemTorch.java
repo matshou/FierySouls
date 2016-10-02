@@ -27,7 +27,7 @@ public final class EntityItemTorch extends EntityItem
 	{
 		super.onUpdate();  
 		
-		final ExtendedItemProperties properties = ExtendedItemProperties.findExtendedPropertiesForItem(getEntityItem(), worldObj);
+		final ExtendedItemProperties properties = ExtendedItemProperties.findOrCreateExtendedPropertiesForItem(getEntityItem(), worldObj);
         final NBTTagCompound itemTagCompound = getEntityItem().getTagCompound();
 		
 		// TODO: Humidity should speed up item decay (decrease it's lifespan).

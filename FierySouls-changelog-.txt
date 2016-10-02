@@ -1,3 +1,8 @@
+Version 1.5.2
+
+- Refactored small bits of code.
+- Many unchecked exceptions will now be properly logged.
+
 Version 1.5.1
 
 - Added a new config category called "Utility Configurations".

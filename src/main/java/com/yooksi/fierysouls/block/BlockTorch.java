@@ -63,7 +63,7 @@ public abstract class BlockTorch extends net.minecraft.block.BlockTorch
 	@Override
 	public void dropBlockAsItemWithChance(World worldIn, BlockPos pos, IBlockState state, float chance, int fortune)
     {
-		TileEntityTorch teTorch = (TileEntityTorch) TileEntityTorch.findTorchTileEntity(worldIn, pos);
+		TileEntityTorch teTorch = (TileEntityTorch) TileEntityTorch.findTorchTileEntity(worldIn, pos, true);
     
 		 if (!worldIn.restoringBlockSnapshots) // do not drop items while restoring blockstates, prevents item dupe
 		 {

@@ -1,6 +1,7 @@
 package com.yooksi.fierysouls.item;
 
 import com.yooksi.fierysouls.common.FierySouls;
+import com.yooksi.fierysouls.common.Logger;
 import com.yooksi.fierysouls.common.SharedDefines;
 
 import java.util.Iterator;
@@ -106,6 +107,8 @@ public class ExtendedItemProperties extends NBTTagCompound
 			createdProperties = new ExtendedItemProperties(item, world);
 			ItemPropertiesMap.put(createdProperties, fingerprint);
 		}
+		else Logger.error("Failed to create extended item properties for ItemTorch.", item == null ? 
+				new NullPointerException("The ItemStack was passed as null.") : new java.util.NoSuchElementException("The ItemStack has no TagCompound."));
 		
 		return createdProperties;
 	}
@@ -138,7 +141,7 @@ public class ExtendedItemProperties extends NBTTagCompound
 	 *  @param item ItemStack we're trying to find properties for
 	 *  @return A reference to found properties, or a newly created properties if no properties were found
 	 */
-	public static ExtendedItemProperties findExtendedPropertiesForItem(final ItemStack item, World world)
+	public static ExtendedItemProperties findOrCreateExtendedPropertiesForItem(final ItemStack item, World world)
 	{
 		for (Map.Entry<ExtendedItemProperties, Fingerprint> entry : ItemPropertiesMap.entrySet())
 		{
