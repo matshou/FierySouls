@@ -33,6 +33,8 @@ public class TileEntityTorchLit extends TileEntityTorch
 	
 	/** Should the torch burn out faster when enclosed in a small space without oxygen? */
 	public static boolean isOxygenUpdateEnabled = true;
+	/** Can custom torches catch neighbor blocks on fire? */
+	public static boolean canTorchCatchBlockOnFire = true;
 	
 	/** Multiplies the combustion rate based on how heavily enclosed the torch is.  */
 	public double o2CombustionMultiplier = 1;
@@ -54,7 +56,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 		if (!getWorld().isRemote)
 		{		
 			// Game rule that defines whether fire should spread and naturally extinguish.
-			if (getWorld().getGameRules().getBoolean("doFireTick"))
+			if (getWorld().getGameRules().getBoolean("doFireTick") && canTorchCatchBlockOnFire)
 	        {
 				BlockPos neighborPos = getPos().offset(EnumFacing.UP);
 				Block neighborBlock = getWorld().getBlockState(neighborPos).getBlock();
@@ -71,9 +73,8 @@ public class TileEntityTorchLit extends TileEntityTorch
 			
 			if (updateTorchCombustionTime(TorchUpdateType.MAIN_UPDATE.getInterval() * o2CombustionMultiplier * -1) <= 0)
 				extinguishTorch();
-			
-		    // When it's raining and the torch is directly exposed to rain it will start collecting humidity.
-		    if (getWorld().isRaining() && getWorld().canBlockSeeSky(pos))
+		
+		    if (getWorld().isRainingAt(getPos()))  // When the torch is directly exposed to rain it will start collecting humidity.
 		    {
 			    if (updateTorchHumidityLevel(TorchUpdateType.MAIN_UPDATE.getInterval()) >= SharedDefines.TORCH_HUMIDITY_THRESHOLD)		   
 			    	extinguishTorch();

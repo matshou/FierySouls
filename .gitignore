@@ -16,7 +16,7 @@ usernamecache.json
 ###################
 
 gradle
-build.gradle
+# build.gradle
 CREDITS-fml.txt
 forge-1.8-11.14.4.1563-changelog.txt
 gradlew

@@ -96,7 +96,15 @@ public class FSConfiguration
         
         SharedDefines.TORCH_HUMIDITY_THRESHOLD = configProperty.getInt();
         
-        final int CATCH_FIRE_CHANCE_MULTIPLIER = 5;             // Index - #3
+        final boolean CAN_TORCH_CATCH_BLOCK_ON_FIRE = true;     // Index - #3
+        
+        comment = "Can custom torches catch neighbor blocks on fire?";
+        configProperty = config.get(TORCH_CATEGORY, "canTorchCatchBlockOnFire", CAN_TORCH_CATCH_BLOCK_ON_FIRE, comment);
+        configProperties.add(configProperty);
+        
+        TileEntityTorchLit.canTorchCatchBlockOnFire = configProperty.getBoolean();
+        
+        final int CATCH_FIRE_CHANCE_MULTIPLIER = 5;             // Index - #4
         
         comment = "This multiplier affects the chances of blocks being set on fire by torches. The higher the number the LOWER the chances.";
         configProperty = getFixedIntProperty(TORCH_CATEGORY, "catch_fire_chance_multiplier", CATCH_FIRE_CHANCE_MULTIPLIER, comment, 1, 100);
@@ -104,7 +112,7 @@ public class FSConfiguration
         
         TileEntityTorchLit.CATCH_FIRE_CHANCE_BASE *= configProperty.getInt();
         
-        final boolean IS_OXYGEN_UPDATE_ENABLED_DEFAULT = true;  // Index - #4
+        final boolean IS_OXYGEN_UPDATE_ENABLED_DEFAULT = true;  // Index - #5
         
         comment = "Should the torch burn out faster when enclosed in a small space without oxygen?";
         configProperty = config.get(TORCH_CATEGORY, "oxygen_update_enabled", IS_OXYGEN_UPDATE_ENABLED_DEFAULT, comment);
@@ -112,7 +120,7 @@ public class FSConfiguration
         
         TileEntityTorchLit.isOxygenUpdateEnabled = configProperty.getBoolean();
         
-        final int EVENT_THRESHOLD_DEFAULT = 5;                  // Index - #5
+        final int EVENT_THRESHOLD_DEFAULT = 5;                  // Index - #6
         
         comment = "Sets the threshold level for the mod event logger \n"
         		+ "0 - Off, Fatal, Error, Warn, Info, Debug, Trace, 7 - All";
@@ -132,9 +140,10 @@ public class FSConfiguration
 		configProperties.get(0).set(BlockTorchLit.MAX_TORCH_LIGHT_LEVEL);
 		configProperties.get(1).set(SharedDefines.MAX_TORCH_FLAME_DURATION);
 		configProperties.get(2).set(SharedDefines.TORCH_HUMIDITY_THRESHOLD);
-		//configProperties.get(3).set(TileEntityTorchLit.CATCH_FIRE_CHANCE_BASE);
-		configProperties.get(4).set(TileEntityTorchLit.isOxygenUpdateEnabled);
-		configProperties.get(5).set(thresholdLevel);
+		configProperties.get(3).set(TileEntityTorchLit.canTorchCatchBlockOnFire);
+		//configProperties.get(4).set(TileEntityTorchLit.CATCH_FIRE_CHANCE_BASE);
+		configProperties.get(5).set(TileEntityTorchLit.isOxygenUpdateEnabled);
+		configProperties.get(6).set(thresholdLevel);
 		
 		if (config.hasChanged())
 			config.save();

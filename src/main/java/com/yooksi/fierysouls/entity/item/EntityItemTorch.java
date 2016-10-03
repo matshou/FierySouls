@@ -57,7 +57,7 @@ public final class EntityItemTorch extends EntityItem
 		{
 			ItemTorch.extinguishItemTorch(getEntityItem(), false, itemTagCompound);
 		}
-		else if (worldObj.isRaining() && worldObj.canBlockSeeSky(getPosition()))
+		else if (worldObj.isRainingAt(getPosition()))
 		{
 			if (ItemTorch.updateItemHumidity(itemTagCompound, TorchUpdateType.MAIN_UPDATE.getInterval()) >= SharedDefines.TORCH_HUMIDITY_THRESHOLD)
 			    ItemTorch.extinguishItemTorch(getEntityItem(), false, itemTagCompound);

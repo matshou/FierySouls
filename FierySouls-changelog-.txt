@@ -1,3 +1,9 @@
+Version 1.5.3
+
+- Added a new torch configuration option.
+- Torches will no longer extinguish in desert when it's raining in world.
+- Added the project's build.gradle file to the repository.
+
 Version 1.5.2
 
 - Refactored small bits of code.

@@ -110,16 +110,13 @@ public class ItemTorch extends ItemBlock
     		if (!shouldUpdateItem(extendedProperties, worldIn.getTotalWorldTime()))
     			return;
     	
-    		/*  Currently we're only updating humidity and not combustion,
-		     *  so there is no need to go further if humidity is at maximum value.
-		     */
-    		if (getItemHumidity(itemTagCompound) >= SharedDefines.TORCH_HUMIDITY_THRESHOLD)
+    		int itemHumidity = getItemHumidity(itemTagCompound);
+    		if (itemHumidity >= SharedDefines.TORCH_HUMIDITY_THRESHOLD)
     			return;
 	    
-    		final int itemHumidity = (worldIn.isRaining() && worldIn.canBlockSeeSky(entityIn.getPosition())) ?
-    				updateItemHumidity(itemTagCompound, TorchUpdateType.MAIN_UPDATE.getInterval()) 
-    				: this.getItemHumidity(itemTagCompound);
-    	
+    		else if (worldIn.isRainingAt(entityIn.getPosition()))	
+    			updateItemHumidity(itemTagCompound, TorchUpdateType.MAIN_UPDATE.getInterval()); 
+    				
 			if (isTorchItemLit == true)
 			{
 				/*  When lit torches are not placed in the hotbar, but in other slots;
@@ -501,11 +498,11 @@ public class ItemTorch extends ItemBlock
    	 * Write NBT data to designated packet and return the updated data.<p>
    	 * <i>Note that if the packet passed does not exists a new one will be created.</i>
    	 * 
-   	 * @param stack ItemStack to be save data for <i>(cannot be null)</i>
-   	 * @param packet NBTTagCompound to save data to <i>(can be null)</i>
+   	 * @param stack ItemStack that has the data we want to save to a packet
+   	 * @param packet NBTTagCompound to save data to <i>(will be created if passed as null)</i>
    	 * @return The new and updated NBT tag compound
    	 */
-   	private static NBTTagCompound saveStackDataToPacket(ItemStack stack, NBTTagCompound packet)
+   	private static NBTTagCompound saveStackDataToPacket(ItemStack stack, @Nullable NBTTagCompound packet)
    	{
    		if (packet == null)
    			packet = new NBTTagCompound();    // If no packet was selected create a new one
