@@ -5,6 +5,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.yooksi.fierysouls.block.BlockTorchLight;
 import com.yooksi.fierysouls.block.BlockTorch;
 import com.yooksi.fierysouls.common.FierySouls;
 import com.yooksi.fierysouls.common.Logger;
@@ -45,7 +46,8 @@ public class ItemTorch extends ItemBlock
 	public ItemTorch(Block block) 
 	{
 		super(block);
-		this.setMaxDamage(-1);   // Disable vanilla damage and use "torchItemDamage" NBT value instead.
+		this.setMaxDamage(-1);      // Disable vanilla damage and use "torchItemDamage" NBT value instead.
+		new BlockTorchLight();  // Initialize torch light block.
 	}
 	
 	/**

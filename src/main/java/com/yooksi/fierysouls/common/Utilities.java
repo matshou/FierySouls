@@ -33,4 +33,13 @@ public class Utilities
     	
     	return isAttackKeyDown && isMouseOverBlock;
     }
+    
+    /** 
+     *  Create a readable String representation of BlockPos. <br>
+     *  Intended to help loggers when they need to print block positions.
+     */
+    public static String assembleBlockPositionLog(net.minecraft.util.math.BlockPos position)
+    {
+    	return "x: " + position.getX() + " y: " + position.getY() + " z: " + position.getZ();  
+    }
 }

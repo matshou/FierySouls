@@ -1,18 +1,28 @@
 package com.yooksi.fierysouls.common;
 
+import com.yooksi.fierysouls.block.BlockTorchLight;
 import com.yooksi.fierysouls.block.BlockTorch;
+import com.yooksi.fierysouls.block.BlockTorchLit;
 import com.yooksi.fierysouls.entity.item.EntityItemTorch;
 import com.yooksi.fierysouls.item.ExtendedItemProperties;
 import com.yooksi.fierysouls.item.ItemTorch;
+import com.yooksi.fierysouls.item.ItemTorchLit;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
-
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.EnumSkyBlock;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
 
 public class EventHandler 
 {
@@ -31,10 +41,12 @@ public class EventHandler
 	@SubscribeEvent
 	public void itemEvent(net.minecraftforge.event.entity.item.ItemTossEvent event)
 	{
+		// NOTE: This event gets called only on SERVER.
+		
 		net.minecraft.item.ItemStack droppedStack = event.getEntityItem().getEntityItem();
 		boolean isItemCustomTorch = Block.getBlockFromItem(droppedStack.getItem()) instanceof BlockTorch;
 		
-		if (!event.getEntity().worldObj.isRemote && droppedStack.stackSize > 0 && isItemCustomTorch)
+		if (droppedStack.stackSize > 0 && isItemCustomTorch)
 		{
 			if (!droppedStack.hasTagCompound())
 				ItemTorch.createCustomItemNBT(droppedStack, event.getEntity().worldObj);
@@ -47,6 +59,34 @@ public class EventHandler
             
             // We created and added the EntityItem to the world here, override default event action. 
             event.setCanceled(true);    
+		}
+	}
+	
+	/**
+	 * This event will be called on each tick while the player exists in the World. <br>
+	 * It is called both server and client side and only when the game is not paused.
+	 */
+	@SubscribeEvent
+	public void onPlayerTick(PlayerTickEvent event)
+	{
+		if (event.side == Side.CLIENT && event.phase == Phase.END && event.player != null)
+		{
+			net.minecraft.entity.player.EntityPlayer player = event.player;
+			Iterable<net.minecraft.item.ItemStack> equipment = player.getHeldEquipment();
+			for (net.minecraft.item.ItemStack stack : equipment)
+			{
+				if (stack != null && ItemTorch.isItemTorchLit(stack.getItem(), false))
+				{
+					/*  Torch light should be placed in the upper part of player's body.
+					 *  Make sure the block we're replacing is air, otherwise we end up removing ground blocks.
+					 */
+					BlockPos positionHead = player.getPosition().offset(EnumFacing.UP);
+					Block playerAsBlock = player.worldObj.getBlockState(positionHead).getBlock();
+					
+					if (!(playerAsBlock instanceof BlockTorchLight) && playerAsBlock == Blocks.AIR)
+						BlockTorchLight.createNewTorchLight(player, positionHead);
+				}
+			}
 		}
 	}
 	

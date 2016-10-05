@@ -38,6 +38,7 @@ public class BlockTorchLit extends com.yooksi.fierysouls.block.BlockTorch implem
 	
 	public BlockTorchLit() 
 	{	
+		this.setTickRandomly(true);
 		this.setCreativeTab(FierySouls.tabTorches);
 		updateBlockLightLevel();
 		localInstance = this;

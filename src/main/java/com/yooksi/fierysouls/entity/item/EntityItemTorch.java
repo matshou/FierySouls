@@ -1,6 +1,8 @@
 package com.yooksi.fierysouls.entity.item;
 
+import com.yooksi.fierysouls.block.BlockTorchLight;
 import com.yooksi.fierysouls.common.FierySouls;
+import com.yooksi.fierysouls.common.Logger;
 import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.common.SharedDefines.TorchUpdateType;
 import com.yooksi.fierysouls.item.ExtendedItemProperties;
@@ -20,7 +22,8 @@ public final class EntityItemTorch extends EntityItem
 	}
 
 	/**
-     * Called to update the entity's position/logic.
+     *  Called to update the entity's position/logic. <br>
+     *  <i>Gets called only on server for this entity.</i>
      */
 	@Override
 	public void onUpdate()
@@ -31,20 +34,21 @@ public final class EntityItemTorch extends EntityItem
         final NBTTagCompound itemTagCompound = getEntityItem().getTagCompound();
 		
 		// TODO: Humidity should speed up item decay (decrease it's lifespan).
-		
-		// Update only at set intervals to reduce performance hits.   
-		// When it's raining and the torch is directly exposed to rain it will start collecting humidity.
-		
-		if (getEntityWorld().isRemote || !ItemTorch.shouldUpdateItem(properties, worldObj.getTotalWorldTime()))
+
+		// Update only at set intervals to reduce performance hits.
+		if (!ItemTorch.shouldUpdateItem(properties, worldObj.getTotalWorldTime()))
 			return;
+		
+		final boolean isTorchLit = ItemTorch.isItemTorchLit(getEntityItem().getItem(), false);
+		
+		if (isTorchLit && !(worldObj.getBlockState(getPosition()).getBlock() instanceof BlockTorchLight))	
+			BlockTorchLight.createNewTorchLight(this, getPosition());
 		
 		// Currently we're only updating humidity and not combustion,
 		// so there is no need to go further if humidity is at maximum value.
 
 		if (ItemTorch.getItemHumidity(itemTagCompound) >= SharedDefines.TORCH_HUMIDITY_THRESHOLD)
 			return;
-		
-		final boolean isTorchLit = ItemTorch.isItemTorchLit(getEntityItem().getItem(), false);
 		
 		// Check if the entity is in water first because rain doesn't matter
 		// if we're submerged in a pool of water anyways.
