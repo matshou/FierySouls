@@ -1,11 +1,8 @@
 package com.yooksi.fierysouls.common;
 
 import java.io.File;
-import java.nio.file.Files;
-
 import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.NoSuchFileException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -15,6 +12,9 @@ import org.apache.logging.log4j.Marker;
 /**
  * A custom wrapper for the log4j Logger. It also has an implementation <br>
  * for creating and reading from a custom secondary mod log file. <p>
+ * 
+ * <i>Whenever you log an event (except INFO) using this logger, <br>
+ * a copy of that log will be stored in a custom mod log file. </i><p>
  * 
  * <i>Thanks to Choonster for writing the original wrapper.</i> 
  */

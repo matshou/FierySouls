@@ -1,7 +1,5 @@
 package com.yooksi.fierysouls.common;
 
-import java.io.IOException;
-
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -18,7 +16,7 @@ public class FierySouls
 {
 	public static final String MODID = "fierysouls";
 	public static final String NAME = "Fiery Souls";
-	public static final String VERSION = "1.5.4";
+	public static final String VERSION = "1.5.5";
 	
 	public static final String GUIFACTORY = "com.yooksi.fierysouls.common.FSGuiFactory";
 	
@@ -43,9 +41,9 @@ public class FierySouls
 	/** 
 	 * Run before anything else. Read your config, create blocks, items, etc, and register them with the GameRegistry. 
 	 * @throws IOException if a serious I/O error has occurred.
-	 * */
+	 */
 	@Mod.EventHandler
-	public void preInit(FMLPreInitializationEvent event) throws IOException 
+	public void preInit(FMLPreInitializationEvent event) throws java.io.IOException 
 	{
 		Logger.setLogger(event.getModLog());
 		Logger.createModLogFile();

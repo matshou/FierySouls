@@ -1,3 +1,8 @@
+Version 1.5.5
+
+- Did some minor code refactoring, import updating and comment adding.
+- Resolved issue #11 that caused ItemTorch light update problems.
+
 Version 1.5.4
 
 - Corrected version number in mcmod.info file.

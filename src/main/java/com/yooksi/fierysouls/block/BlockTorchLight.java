@@ -84,7 +84,7 @@ public class BlockTorchLight extends BlockAir
 	@SideOnly(Side.CLIENT)
 	private static void destroyTorchLight(Entity owner, World worldIn, BlockPos pos)
 	{
-		torchLightsInWorld.remove(owner);
+		torchLightsInWorld.remove(pos);
 		worldIn.setBlockToAir(pos);
 	}
 		
@@ -107,9 +107,9 @@ public class BlockTorchLight extends BlockAir
     	}
     	
     	boolean isPosValid = pos != null && !(pos.getX() == 0 && pos.getY() == 0 && pos.getZ() == 0);
-        BlockPos ownerPos = owner.getPosition();
+        BlockPos ownerPos = owner.getPosition().offset(EnumFacing.UP);
 
-    	if (!isPosValid || pos.getX() != ownerPos.getX() || pos.getY() != ownerPos.getY() + 1 || pos.getZ() != ownerPos.getZ())
+    	if (!isPosValid || pos.getX() != ownerPos.getX() || pos.getY() != ownerPos.getY() || pos.getZ() != ownerPos.getZ())
     	{
     		destroyTorchLight(owner, worldIn, pos);    // The entity is no longer at this position
     	}

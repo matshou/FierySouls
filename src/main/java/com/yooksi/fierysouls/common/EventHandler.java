@@ -27,7 +27,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
 public class EventHandler 
 {
 	/** Used to optimize execution of code in {@link #onWorldTick}. */ 
-	private static int serverTickCounter = 0;
+	private static int worldTickCounter = 0;
 	
 	/**
 	 * Event that is fired whenever a player tosses (Q) an item or drag-n-drops a
@@ -99,12 +99,12 @@ public class EventHandler
 	{
 		if (event.side == Side.SERVER && event.phase == Phase.END)
 		{	
-			if (serverTickCounter > 160)   //  40 calls per second here
+			if (worldTickCounter > 160)   //  40 calls per second here
 			{
 				ExtendedItemProperties.callPropertiesGarbageCollector(event.world);
-	    	    serverTickCounter = 0;
+	    	    worldTickCounter = 0;
 			}
-	        else serverTickCounter++;
+	        else worldTickCounter++;
 		}
 	}
 }
