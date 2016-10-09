@@ -22,7 +22,7 @@ public class Logger
 {
 	private static org.apache.logging.log4j.Logger logger;
 	
-	static final java.text.DateFormat dateFormat = new java.text.SimpleDateFormat("[dd/MM/yyyy][HH:mm:ss]");
+	static final java.text.DateFormat dateFormat = new java.text.SimpleDateFormat("[yyyy/MM/dd][HH:mm:ss]");
     public static final String modLogFileName = "fiery-souls-logger.log";
     public static final String modLogFileDirName = "logs";
 	    
