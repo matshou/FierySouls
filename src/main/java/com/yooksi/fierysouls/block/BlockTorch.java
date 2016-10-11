@@ -95,7 +95,6 @@ public abstract class BlockTorch extends net.minecraft.block.BlockTorch
         {
             if (!captureDrops.get())
             {
-            	float f = 0.5F;
                 double d0 = (double)(worldIn.rand.nextFloat() * 0.5F) + 0.25D;
                 double d1 = (double)(worldIn.rand.nextFloat() * 0.5F) + 0.25D;
                 double d2 = (double)(worldIn.rand.nextFloat() * 0.5F) + 0.25D;

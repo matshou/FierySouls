@@ -1,12 +1,11 @@
 package com.yooksi.fierysouls.item;
 
-import com.yooksi.fierysouls.common.FierySouls;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
 import com.yooksi.fierysouls.common.Logger;
 import com.yooksi.fierysouls.common.SharedDefines;
-
-import java.util.Iterator;
-import java.util.HashMap;
-import java.util.Map;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;

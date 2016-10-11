@@ -14,11 +14,9 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -43,7 +41,7 @@ public class BlockTorchLight extends BlockAir
 		setTickRandomly(false);
 		setLightLevel((float)(BlockTorchLit.MAX_TORCH_LIGHT_LEVEL / 15.0F));
 		
-		torchLightsInWorld = new java.util.HashMap();
+		torchLightsInWorld = new java.util.HashMap<BlockPos, Entity>();
 		localInstance = this;
 	}
 	

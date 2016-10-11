@@ -1,8 +1,6 @@
 package com.yooksi.fierysouls.entity.item;
 
 import com.yooksi.fierysouls.block.BlockTorchLight;
-import com.yooksi.fierysouls.common.FierySouls;
-import com.yooksi.fierysouls.common.Logger;
 import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.common.SharedDefines.TorchUpdateType;
 import com.yooksi.fierysouls.item.ExtendedItemProperties;

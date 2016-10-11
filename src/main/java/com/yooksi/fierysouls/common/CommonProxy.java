@@ -1,9 +1,14 @@
 package com.yooksi.fierysouls.common;
 
-import com.yooksi.fierysouls.block.*;
-import com.yooksi.fierysouls.entity.*;
-import com.yooksi.fierysouls.item.*;
-import com.yooksi.fierysouls.tileentity.*;
+import com.yooksi.fierysouls.block.BlockTorchLit;
+import com.yooksi.fierysouls.block.BlockTorchUnlit;
+import com.yooksi.fierysouls.item.ItemGlowstoneCrystal;
+import com.yooksi.fierysouls.item.ItemMatchbox;
+import com.yooksi.fierysouls.item.ItemTorchLit;
+import com.yooksi.fierysouls.item.ItemTorchUnlit;
+import com.yooksi.fierysouls.tileentity.TileEntityTorch;
+import com.yooksi.fierysouls.tileentity.TileEntityTorchLit;
+import com.yooksi.fierysouls.tileentity.TileEntityTorchUnlit;
 
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -12,7 +17,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.oredict.OreDictionary;
 
@@ -77,7 +81,7 @@ public class CommonProxy
 	
 	/** 
 	 *  Register new custom recipes and remove vanilla ones. <br>
-	 *  This is called when the mod is passing the pre-initialization phase.
+	 *  This is called when the mod is passing the initialization phase.
 	 */
 	private void handleRecipes() 
     {	
@@ -110,9 +114,6 @@ public class CommonProxy
 	 *  
 	 *  @param toRemove Item corresponding to the output of the recipe we want to remove.
 	 *  @return Number of recipes we removed from the recipe list.
-	 *  
-	 *  @throws java.lang.NullPointerException <br>
-	 *          if either the crafting manager or the recipe list are not found.
 	 */ 
 	private static int removeRecipe(Item toRemove)
 	{

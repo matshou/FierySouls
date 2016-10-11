@@ -1,6 +1,7 @@
 package com.yooksi.fierysouls.block;
 
 import java.util.Random;
+
 import javax.annotation.Nullable;
 
 import com.yooksi.fierysouls.common.FierySouls;

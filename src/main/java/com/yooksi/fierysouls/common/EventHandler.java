@@ -1,28 +1,21 @@
 package com.yooksi.fierysouls.common;
 
-import com.yooksi.fierysouls.block.BlockTorchLight;
 import com.yooksi.fierysouls.block.BlockTorch;
-import com.yooksi.fierysouls.block.BlockTorchLit;
+import com.yooksi.fierysouls.block.BlockTorchLight;
 import com.yooksi.fierysouls.entity.item.EntityItemTorch;
 import com.yooksi.fierysouls.item.ExtendedItemProperties;
 import com.yooksi.fierysouls.item.ItemTorch;
-import com.yooksi.fierysouls.item.ItemTorchLit;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.EnumSkyBlock;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.Side;
-
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
+import net.minecraftforge.fml.relauncher.Side;
 
 public class EventHandler 
 {

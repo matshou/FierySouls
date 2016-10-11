@@ -3,7 +3,6 @@ package com.yooksi.fierysouls.tileentity;
 import com.yooksi.fierysouls.block.BlockTorch;
 import com.yooksi.fierysouls.block.BlockTorchUnlit;
 import com.yooksi.fierysouls.common.ResourceLibrary;
-import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.common.SharedDefines.TorchUpdateType;
 
 import jline.internal.Nullable;

@@ -1,5 +1,7 @@
 package com.yooksi.fierysouls.common;
 
+import java.io.IOException;
+
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;

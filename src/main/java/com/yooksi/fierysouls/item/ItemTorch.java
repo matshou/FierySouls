@@ -5,25 +5,20 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import com.yooksi.fierysouls.block.BlockTorchLight;
 import com.yooksi.fierysouls.block.BlockTorch;
-import com.yooksi.fierysouls.common.FierySouls;
+import com.yooksi.fierysouls.block.BlockTorchLight;
 import com.yooksi.fierysouls.common.Logger;
 import com.yooksi.fierysouls.common.ResourceLibrary;
 import com.yooksi.fierysouls.common.SharedDefines;
-import com.yooksi.fierysouls.common.Utilities;
-import com.yooksi.fierysouls.entity.item.EntityItemTorch;
-import com.yooksi.fierysouls.tileentity.TileEntityTorch;
-
-import com.yooksi.fierysouls.common.SharedDefines.TorchUpdateType;
 import com.yooksi.fierysouls.common.SharedDefines.TorchActionType;
+import com.yooksi.fierysouls.common.SharedDefines.TorchUpdateType;
+import com.yooksi.fierysouls.common.Utilities;
+import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
@@ -35,11 +30,8 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ItemTorch extends ItemBlock
 {

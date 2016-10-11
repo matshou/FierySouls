@@ -1,7 +1,9 @@
 package com.yooksi.fierysouls.common;
 
-import com.yooksi.fierysouls.block.*;
-import com.yooksi.fierysouls.item.*;
+import com.yooksi.fierysouls.block.BlockTorchLit;
+import com.yooksi.fierysouls.block.BlockTorchUnlit;
+import com.yooksi.fierysouls.item.ItemGlowstoneCrystal;
+import com.yooksi.fierysouls.item.ItemMatchbox;
 
 /** This class is a storage of unique block and item instances placed here for ease of access. */
 public class ResourceLibrary 
