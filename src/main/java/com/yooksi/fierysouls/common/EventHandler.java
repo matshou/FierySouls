@@ -3,7 +3,6 @@ package com.yooksi.fierysouls.common;
 import com.yooksi.fierysouls.block.BlockTorch;
 import com.yooksi.fierysouls.block.BlockTorchLight;
 import com.yooksi.fierysouls.entity.item.EntityItemTorch;
-import com.yooksi.fierysouls.item.ExtendedItemProperties;
 import com.yooksi.fierysouls.item.ItemTorch;
 
 import net.minecraft.block.Block;
@@ -94,7 +93,6 @@ public class EventHandler
 		{	
 			if (worldTickCounter > 160)   //  40 calls per second here
 			{
-				ExtendedItemProperties.callPropertiesGarbageCollector(event.world);
 	    	    worldTickCounter = 0;
 			}
 	        else worldTickCounter++;

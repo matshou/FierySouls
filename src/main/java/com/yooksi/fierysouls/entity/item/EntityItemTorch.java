@@ -3,7 +3,6 @@ package com.yooksi.fierysouls.entity.item;
 import com.yooksi.fierysouls.block.BlockTorchLight;
 import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.common.SharedDefines.TorchUpdateType;
-import com.yooksi.fierysouls.item.ExtendedItemProperties;
 import com.yooksi.fierysouls.item.ItemTorch;
 
 import net.minecraft.entity.item.EntityItem;
@@ -28,13 +27,12 @@ public final class EntityItemTorch extends EntityItem
 	{
 		super.onUpdate();  
 		
-		final ExtendedItemProperties properties = ExtendedItemProperties.findOrCreateExtendedPropertiesForItem(getEntityItem(), worldObj);
-        final NBTTagCompound itemTagCompound = getEntityItem().getTagCompound();
+		final NBTTagCompound itemTagCompound = getEntityItem().getTagCompound();
 		
 		// TODO: Humidity should speed up item decay (decrease it's lifespan).
 
 		// Update only at set intervals to reduce performance hits.
-		if (!ItemTorch.shouldUpdateItem(properties, worldObj.getTotalWorldTime()))
+		if (!ItemTorch.shouldUpdateItem(itemTagCompound, worldObj.getTotalWorldTime()))
 			return;
 		
 		final boolean isTorchLit = ItemTorch.isItemTorchLit(getEntityItem().getItem(), false);
@@ -53,16 +51,16 @@ public final class EntityItemTorch extends EntityItem
 			
 		if (isInWater() /**&& isInsideOfMaterial(Material.water)*/)
 		{
-			ItemTorch.extinguishItemTorch(getEntityItem(), true, itemTagCompound);
+			ItemTorch.extinguishItemTorch(getEntityItem(), true);
 		}
 		else if (isTorchLit && ItemTorch.updateItemCombustionTime(itemTagCompound, TorchUpdateType.MAIN_UPDATE.getInterval() * -1) < 1)
 		{
-			ItemTorch.extinguishItemTorch(getEntityItem(), false, itemTagCompound);
+			ItemTorch.extinguishItemTorch(getEntityItem(), false);
 		}
 		else if (worldObj.isRainingAt(getPosition()))
 		{
 			if (ItemTorch.updateItemHumidity(itemTagCompound, TorchUpdateType.MAIN_UPDATE.getInterval()) >= SharedDefines.TORCH_HUMIDITY_THRESHOLD)
-			    ItemTorch.extinguishItemTorch(getEntityItem(), false, itemTagCompound);
+			    ItemTorch.extinguishItemTorch(getEntityItem(), false);
 		}
 	}
 	

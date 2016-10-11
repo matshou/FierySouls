@@ -12,7 +12,6 @@ import com.yooksi.fierysouls.common.ResourceLibrary;
 import com.yooksi.fierysouls.common.SharedDefines;
 import com.yooksi.fierysouls.common.SharedDefines.TorchActionType;
 import com.yooksi.fierysouls.common.SharedDefines.TorchUpdateType;
-import com.yooksi.fierysouls.common.Utilities;
 import com.yooksi.fierysouls.tileentity.TileEntityTorch;
 
 import net.minecraft.block.Block;
@@ -57,70 +56,26 @@ public class ItemTorch extends ItemBlock
 
     	else if (worldIn.isRemote == false)
     	{
-    		/*  Periodic item NBT updates seem to reset the block breaking progress.
-    		 *  If for some reason the player decided to dig with a torch he would 
-    		 *  not be able to do what without some code magic.
-    		 */
-    		
-    		final ExtendedItemProperties extendedProperties = ExtendedItemProperties.findOrCreateExtendedPropertiesForItem(stack, worldIn);	
-    		NBTTagCompound itemTagCompound = stack.getTagCompound();
-
-    		final boolean isTorchItemLit = ItemTorch.isItemTorchLit(stack.getItem(), false);
-
-    		if (isSelected)
-    		{	
-    			if (!extendedProperties.getBoolean("updateReroute")) 
-    		    {
-    			    if (Utilities.isPlayerBreakingBlock()) // The player has just STARTED breaking the block.
-    			    {
-    			    	extendedProperties.setLong("timeStartedBreakingBlock", worldIn.getTotalWorldTime());
-    			    	extendedProperties.setBoolean("updateReroute", true);
-    			    	itemTagCompound = extendedProperties;
- 
-    			        // Check if player is trying to break a block located underwater or behind a waterfall.
-    			    	TorchActionType type = getItemTorchUseResult(entityIn, worldIn, null, null);
-    			        useItemTorchInWorld(type, stack, worldIn, (EntityPlayer) entityIn, null, extendedProperties);
-    			    }
-    		    }
-   		        else if (!Utilities.isPlayerBreakingBlock())  // The player has just STOPPPED breaking the block.
-		        {
-   		        	updateCustomItemNBTFromExisting(stack, extendedProperties);
-			        extendedProperties.setBoolean("updateReroute", false);
-		        }
-		        else  // Block breaking by player is currently IN PROGRESS,
-		        {
-		        	itemTagCompound = extendedProperties;
-		        	
-		        	// If we're breaking a block with a lit torch put the flame out after a few update intervals.
-		            if (isTorchItemLit == true)
-		            {
-		        	    long lastUpdate = extendedProperties.getLong("timeStartedBreakingBlock");
-		        	    if (lastUpdate > 0 && worldIn.getTotalWorldTime() - lastUpdate > TorchUpdateType.MAIN_UPDATE.getInterval() * 3)
-		        		    extinguishItemTorch(stack, false, extendedProperties);
-		            }
-		        }
-    		}
-    		
-    		if (!shouldUpdateItem(extendedProperties, worldIn.getTotalWorldTime()))
+    		if (!shouldUpdateItem(stack.getTagCompound(), worldIn.getTotalWorldTime()))
     			return;
     	
-    		int itemHumidity = getItemHumidity(itemTagCompound);
+    		int itemHumidity = getItemHumidity(stack.getTagCompound());
     		if (itemHumidity >= SharedDefines.TORCH_HUMIDITY_THRESHOLD)
     			return;
 	    
     		else if (worldIn.isRainingAt(entityIn.getPosition()))	
-    			updateItemHumidity(itemTagCompound, TorchUpdateType.MAIN_UPDATE.getInterval()); 
-    				
+    			updateItemHumidity(stack.getTagCompound(), TorchUpdateType.MAIN_UPDATE.getInterval()); 
+    		
+    		final boolean isTorchItemLit = ItemTorch.isItemTorchLit(stack.getItem(), false);
 			if (isTorchItemLit == true)
 			{
+				int combustionTime = updateItemCombustionTime(stack.getTagCompound(), TorchUpdateType.MAIN_UPDATE.getInterval() * -1);
+				
 				/*  When lit torches are not placed in the hotbar, but in other slots;
 			     *  they should be extinguished - adds realism.
 			     */
-				if (itemSlot > 8 || updateItemCombustionTime(itemTagCompound, TorchUpdateType.MAIN_UPDATE.getInterval() * -1) < 1)
-					extinguishItemTorch(stack, false, itemTagCompound);
-		
-				else if (itemHumidity >= SharedDefines.TORCH_HUMIDITY_THRESHOLD)
-					extinguishItemTorch(stack, false, itemTagCompound);
+				if (itemSlot > 8 || combustionTime < 1 || itemHumidity >= SharedDefines.TORCH_HUMIDITY_THRESHOLD)
+					extinguishItemTorch(stack, false);
 			}
 
 			// Check 'isInWater' first to optimize the code a bit, boolean checks are the fastest. 
@@ -129,9 +84,9 @@ public class ItemTorch extends ItemBlock
 			if (entityIn.isInWater() && entityIn.isInsideOfMaterial(Material.WATER))
 			{
 				if (isTorchItemLit == true)
-					extinguishItemTorch(stack, true, itemTagCompound);	
+					extinguishItemTorch(stack, true);	
 			
-				else setItemHumidity(itemTagCompound, SharedDefines.TORCH_HUMIDITY_THRESHOLD); 
+				else setItemHumidity(stack.getTagCompound(), SharedDefines.TORCH_HUMIDITY_THRESHOLD); 
 			}
     	}
     }    
@@ -155,6 +110,15 @@ public class ItemTorch extends ItemBlock
     	else return false;
     }
 	
+    @Override
+    public boolean shouldCauseBlockBreakReset(ItemStack oldStack, ItemStack newStack)
+    {
+    	/*
+    	 *  Ignore NBT changes and only check if the item has changed.
+    	 */
+    	return !(newStack.getItem() == oldStack.getItem());
+    }
+    
     /**
      * Called when a this Item is right-clicked in the air. <br>
      * <i>This will many times be called when the item is used on a block.</i>
@@ -175,7 +139,7 @@ public class ItemTorch extends ItemBlock
 	    Vec3d destination = posVec.addVector(lookVec.xCoord * reach, lookVec.yCoord * reach, lookVec.zCoord * reach);
 
 		if (!worldIn.getBlockState(new BlockPos(destination)).getMaterial().blocksMovement())
-	    	useItemTorchInWorld(getItemTorchUseResult(playerIn, worldIn, null, null), itemStackIn, worldIn, playerIn, hand, null);
+	    	useItemTorchInWorld(getItemTorchUseResult(playerIn, worldIn, null, null), itemStackIn, worldIn, playerIn, hand);
     	
 	   // I don't know the difference in outcomes of return results in this method, 
 	   // so we should just return the default value.
@@ -196,7 +160,7 @@ public class ItemTorch extends ItemBlock
     	 *  and this means that we will not be able to check for material and extinguish/light torch.
     	 */
     	final TorchActionType action = getItemTorchUseResult(playerIn, worldIn, facing, pos.offset(facing));
-    	useItemTorchInWorld(action, stack, worldIn, playerIn, hand, null);
+    	useItemTorchInWorld(action, stack, worldIn, playerIn, hand);
     	
     	EnumActionResult result = (action == TorchActionType.NO_ACTION) ?
     		super.onItemUse(stack, playerIn, worldIn, pos, hand, facing, hitX, hitY, hitZ) : EnumActionResult.FAIL;
@@ -253,9 +217,8 @@ public class ItemTorch extends ItemBlock
      * @param action the type of action that the torch should perform.
      * @param playerIn the player carrying the torch in his inventory.
      * @param hand the hand the player is carrying the torch in <i>(will not do the arm swing if null)</i>
-     * @param tag specified NBTTagCompound to use for data updating.
      */
-    protected static void useItemTorchInWorld(TorchActionType action, ItemStack stack, World worldIn,  EntityPlayer playerIn, @Nullable EnumHand hand, @Nullable NBTTagCompound tag)
+    protected static void useItemTorchInWorld(TorchActionType action, ItemStack stack, World worldIn,  EntityPlayer playerIn, @Nullable EnumHand hand)
     {    	
         /*  If we're trying to use a torch on lava or fire light the torch on fire.
          *  On the other hand if it's water we're dipping the torch in, extinguish it.
@@ -265,12 +228,12 @@ public class ItemTorch extends ItemBlock
 	    	if (hand != null) playerIn.swingArm(hand);
 	    	
 		    if (stack.getItem() == Item.getItemFromBlock(ResourceLibrary.TORCH_UNLIT))
-			    lightItemTorch(stack, playerIn, tag != null ? tag : stack.getTagCompound());
+			    lightItemTorch(stack, playerIn);
 	    }
 	    else if (action == TorchActionType.TORCH_EXTINGUISHED)
 	    {
 	    	if (hand != null) playerIn.swingArm(hand);
-	    	extinguishItemTorch(stack, true, tag != null ? tag : stack.getTagCompound());
+	    	extinguishItemTorch(stack, true);
 	    }
     }
    	
@@ -345,9 +308,8 @@ public class ItemTorch extends ItemBlock
      * 
      * @param stack Torch ItemStack to extinguish
      * @param extinguishByWater If true; update the humidity value as well
-     * @param tagCompound the NBTTagCompound to be used for updating data.
      */
-    public static void extinguishItemTorch(ItemStack stack, boolean extinguishByWater, NBTTagCompound tagCompound)
+    public static void extinguishItemTorch(ItemStack stack, boolean extinguishByWater)
     {
     	if (stack != null && ItemTorch.isItemTorch(stack.getItem(), false))
     		stack.setItem(Item.getItemFromBlock(ResourceLibrary.TORCH_UNLIT));
@@ -356,7 +318,7 @@ public class ItemTorch extends ItemBlock
     			new NullPointerException("ItemStack was passed as null,") : new java.lang.TypeNotPresentException("ItemTorch", null));
     	
     	if (extinguishByWater == true)
-    		setItemHumidity(tagCompound, SharedDefines.TORCH_HUMIDITY_THRESHOLD);
+    		setItemHumidity(stack.getTagCompound(), SharedDefines.TORCH_HUMIDITY_THRESHOLD);
     }
 	
     /**
@@ -364,16 +326,15 @@ public class ItemTorch extends ItemBlock
      *  
      *  @param stack ItemStack instance of our torch to set on fire.
      *  @param playerIn player that is holding the torch.
-     *  @param tagCompound the NBTTagCompound to be used for updating data.
      */
-    public static void lightItemTorch(ItemStack stack, EntityPlayer playerIn, NBTTagCompound tagCompound)
+    public static void lightItemTorch(ItemStack stack, EntityPlayer playerIn)
     {
-    	if (stack == null || !(stack.getItem() instanceof ItemTorch) || tagCompound == null)
+    	if (stack == null || !(stack.getItem() instanceof ItemTorch))
     	{
-    		Logger.error("Failed to light ItemTorch.", stack == null || tagCompound == null ? 
-    				new NullPointerException("ItemStack or TagCompound were passed as null,") : new IllegalArgumentException("ItemStack is not an instance of ItemTorch."));
+    		Logger.error("Failed to light ItemTorch.", stack == null  ? new NullPointerException("ItemStack was passed as null,")
+    				 : new IllegalArgumentException("ItemStack is not an instance of ItemTorch."));
     	}
-    	else if (getItemHumidity(tagCompound) < SharedDefines.TORCH_HUMIDITY_THRESHOLD)
+    	else if (getItemHumidity(stack.getTagCompound()) < SharedDefines.TORCH_HUMIDITY_THRESHOLD)
     	{
     		if (getItemcombustionTime(stack) > 0)
     		{
@@ -381,7 +342,7 @@ public class ItemTorch extends ItemBlock
     	    	// and move the rest of the stack in a different inventory slot (auto-assigned)
     	    	
 				ItemStack newTorchLit = new ItemStack(Item.getItemFromBlock(ResourceLibrary.TORCH_LIT));
-				ItemTorch.createCustomItemNBTFromExisting(newTorchLit, playerIn.worldObj, tagCompound);
+				ItemTorch.createCustomItemNBTFromExisting(newTorchLit, playerIn.worldObj, stack.getTagCompound());
 
 				// An off-hand item has the same inventory slot designation as the first hotbar slot,
 				// and the 'inventory.currentItem' variable holds the value of the currently selected slot in the hotbar.
@@ -559,8 +520,6 @@ public class ItemTorch extends ItemBlock
 	 * 
 	 * @throws NullPointerException if stack is passed as <code>null</code>.
 	 * @param stack the ItemStack for which we're creating the NBTTagCompound for
-	 * @param world World instance passed as an argument to {@link ExtendedItemProperties#createExtendedPropertiesForItem 
-	 *                                                             createExtendedPropertiesForItem}
 	 */
 	public static void createCustomItemNBT(ItemStack stack, World world)
 	{	
@@ -576,9 +535,7 @@ public class ItemTorch extends ItemBlock
 		tagCompound.setInteger("humidityLevel", 0);
 		tagCompound.setShort("torchItemDamage", (short) 0);
 		tagCompound.setInteger("combustionTime", SharedDefines.MAX_TORCH_FLAME_DURATION);
-		
-		if (!world.isRemote)  // Do only on Server to avoid duplicates.	
-			ExtendedItemProperties.createExtendedPropertiesForItem(stack, world);
+		tagCompound.setLong("lastUpdateTime", world.getTotalWorldTime());
 	}
     
    /**

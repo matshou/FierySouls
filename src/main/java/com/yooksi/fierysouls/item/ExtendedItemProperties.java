@@ -13,7 +13,12 @@ import net.minecraft.world.World;
 
 /** Use these extended properties when you want to store information that for some reason
  *  you are <br> unable to store in the regular ItemStack NBTTagCompounds.
+ *  
+ *  @deprecated Forge 12.18.1.2021 has added a {@link ItemTorch#shouldCauseBlockBreakReset} <br>
+ *              callback to Item to prevent blocks from reseting on NBT updates. We no longer have any need <br>
+ *              for special NBT's and reroute updates, just override that method and return false.
  */
+@Deprecated
 public class ExtendedItemProperties extends NBTTagCompound
 {
 	private static HashMap<ExtendedItemProperties, Fingerprint> ItemPropertiesMap = new HashMap<ExtendedItemProperties, Fingerprint>();
