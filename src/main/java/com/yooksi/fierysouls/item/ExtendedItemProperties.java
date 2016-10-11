@@ -16,7 +16,7 @@ import net.minecraft.world.World;
  */
 public class ExtendedItemProperties extends NBTTagCompound
 {
-	private static HashMap<ExtendedItemProperties, Fingerprint> ItemPropertiesMap = new HashMap();
+	private static HashMap<ExtendedItemProperties, Fingerprint> ItemPropertiesMap = new HashMap<ExtendedItemProperties, Fingerprint>();
 	
 	private ExtendedItemProperties(ItemStack stack, World world)
 	{ 

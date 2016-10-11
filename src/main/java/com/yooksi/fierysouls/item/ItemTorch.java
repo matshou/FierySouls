@@ -179,7 +179,7 @@ public class ItemTorch extends ItemBlock
     	
 	   // I don't know the difference in outcomes of return results in this method, 
 	   // so we should just return the default value.
-	    return new ActionResult(EnumActionResult.PASS, itemStackIn);
+	    return new ActionResult<ItemStack>(EnumActionResult.PASS, itemStackIn);
     }
     
     /**
@@ -322,9 +322,7 @@ public class ItemTorch extends ItemBlock
 			Vec3d vec32 = posVec.addVector(factorVec.xCoord * i, factorVec.yCoord * i, factorVec.zCoord * i);
 		    BlockPos blockpos = new BlockPos(vec32.xCoord, vec32.yCoord, vec32.zCoord);
 
-		    Block thisBlock = world.getBlockState(blockpos).getBlock();
-		    Material blockMaterial = world.getBlockState(blockpos).getMaterial();
-		  
+		    Material blockMaterial = world.getBlockState(blockpos).getMaterial();		  
 		    if (materials.contains(blockMaterial))
 		    	return blockMaterial;
 		    
@@ -606,7 +604,7 @@ public class ItemTorch extends ItemBlock
    @Override
    public boolean showDurabilityBar(ItemStack stack)
    {
-	   return this.getTorchItemDamage(stack) > 0;
+	   return ItemTorch.getTorchItemDamage(stack) > 0;
    }
    
     /**
@@ -623,7 +621,7 @@ public class ItemTorch extends ItemBlock
     @Override
     public double getDurabilityForDisplay(ItemStack stack)
     {
-    	return (double)this.getTorchItemDamage(stack) / (double)SharedDefines.MAX_TORCH_FLAME_DURATION;
+    	return (double)ItemTorch.getTorchItemDamage(stack) / (double)SharedDefines.MAX_TORCH_FLAME_DURATION;
     }
     
     /**

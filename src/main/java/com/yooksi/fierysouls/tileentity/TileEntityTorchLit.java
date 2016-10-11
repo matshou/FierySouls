@@ -176,7 +176,7 @@ public class TileEntityTorchLit extends TileEntityTorch
 	/** Employ a pathfinding search to determine if the torch is enclosed in a small space. */
 	private void checkIsTorchEnclosed()
 	{
-		java.util.List <BlockPos> positions = new java.util.ArrayList();
+		java.util.List <BlockPos> positions = new java.util.ArrayList<BlockPos>();
 		positions.add(pos);
 		
 	    java.util.ListIterator<BlockPos> iter = positions.listIterator();
@@ -188,8 +188,6 @@ public class TileEntityTorchLit extends TileEntityTorch
 	    while (iter.hasPrevious())
 		{
 			BlockPos point = iter.previous();
-			int pastListSize = positions.size();
-			
 			for (EnumFacing face : EnumFacing.values())
 			{
 				BlockPos position = point.offset(face);
