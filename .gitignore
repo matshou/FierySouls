@@ -1,57 +1,19 @@
-# Minecraft #
-#############
+#eclipse
+/bin
+/.settings
+/.classpath
 
-*.cfg
-config
-crash-reports
-logs
-saves
-screenshots
-options.txt
-usercache.json
-usernamecache.json
-.classpath
+#gradle
+/build
+/.gradle
 
-# Forge Documents #
-###################
+#Minecraft
+/logs
+/config
+/saves
+/screenshots
+/crash-reports
 
-gradle
-# build.gradle
-CREDITS-fml.txt
-forge-1.8-11.14.4.1563-changelog.txt
-gradlew
-gradlew.bat
-LICENSE-fml.txt
-MinecraftForge-Credits.txt
-MinecraftForge-License.txt
-Paulscode IBXM Library License.txt
-Paulscode SoundSystem CodecIBXM License.txt
-README.txt
-
-# Original Forge rules #
-########################
-
-# eclipse
-bin
-*.launch
-.settings
-.metadata
-#.classpath
-#.project
-
-# idea
-out
-*.ipr
-*.iws
-*.iml
-.idea
-
-# gradle
-build
-.gradle
-
-# other
-eclipse
-run
-*.classpath
-*.log
+#generics
+/*.json
+/*.txt
