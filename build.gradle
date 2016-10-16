@@ -20,6 +20,10 @@ plugins {
     id "net.minecraftforge.gradle.forge" version "2.0.2"
 }
 */
+
+srcCompat = JavaVersion.VERSION_1_8
+targetCompat = JavaVersion.VERSION_1_8
+
 version = "1.10.2-1.4.3"
 group= "com.yooksi,fierysouls"    // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "FierySouls"
