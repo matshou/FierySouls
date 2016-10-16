@@ -355,7 +355,8 @@ public class ItemTorch extends ItemBlock
     			if (stack.stackSize > 1)
     	    	{
         			ItemStack oldTorchUnlit = new ItemStack(Item.getItemFromBlock(ResourceLibrary.TORCH_UNLIT), stack.stackSize - 1);
-        			playerIn.inventory.addItemStackToInventory(oldTorchUnlit);
+        			if (!playerIn.inventory.addItemStackToInventory(oldTorchUnlit))
+        				playerIn.dropItem(oldTorchUnlit, false);
     	    	}
     		}
     	}
