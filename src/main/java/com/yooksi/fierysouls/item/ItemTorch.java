@@ -60,11 +60,11 @@ public class ItemTorch extends ItemBlock
     			return;
     	
     		int itemHumidity = getItemHumidity(stack.getTagCompound());
-    		if (itemHumidity >= SharedDefines.TORCH_HUMIDITY_THRESHOLD)
+    		if (getItemHumidity(stack.getTagCompound()) >= SharedDefines.TORCH_HUMIDITY_THRESHOLD)
     			return;
 	    
     		else if (worldIn.isRainingAt(entityIn.getPosition()))	
-    			updateItemHumidity(stack.getTagCompound(), TorchUpdateType.MAIN_UPDATE.getInterval()); 
+    			itemHumidity = updateItemHumidity(stack.getTagCompound(), TorchUpdateType.MAIN_UPDATE.getInterval()); 
     		
     		final boolean isTorchItemLit = ItemTorch.isItemTorchLit(stack.getItem(), false);
 			if (isTorchItemLit == true)
