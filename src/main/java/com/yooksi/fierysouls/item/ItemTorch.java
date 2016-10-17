@@ -18,6 +18,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
@@ -54,7 +55,7 @@ public class ItemTorch extends ItemBlock
     	if (!stack.hasTagCompound())
     		createCustomItemNBT(stack, worldIn);
 
-    	else if (worldIn.isRemote == false)
+    	else if (worldIn.isRemote == false && entityIn instanceof EntityPlayer)
     	{
     		if (!shouldUpdateItem(stack.getTagCompound(), worldIn.getTotalWorldTime()))
     			return;
@@ -74,8 +75,8 @@ public class ItemTorch extends ItemBlock
 				/*  When lit torches are not placed in the hotbar, but in other slots;
 			     *  they should be extinguished - adds realism.
 			     */
-				if (itemSlot > 8 || combustionTime < 1 || itemHumidity >= SharedDefines.TORCH_HUMIDITY_THRESHOLD)
-					extinguishItemTorch(stack, false);
+				if (itemHumidity >= SharedDefines.TORCH_HUMIDITY_THRESHOLD || combustionTime == 0 || itemSlot > 8)
+					extinguishItemTorch(stack, entityIn, itemSlot, false);
 			}
 
 			// Check 'isInWater' first to optimize the code a bit, boolean checks are the fastest. 
@@ -84,7 +85,7 @@ public class ItemTorch extends ItemBlock
 			if (entityIn.isInWater() && entityIn.isInsideOfMaterial(Material.WATER))
 			{
 				if (isTorchItemLit == true)
-					extinguishItemTorch(stack, true);	
+					extinguishItemTorch(stack, entityIn, itemSlot, true);	
 			
 				else setItemHumidity(stack.getTagCompound(), SharedDefines.TORCH_HUMIDITY_THRESHOLD); 
 			}
@@ -233,7 +234,7 @@ public class ItemTorch extends ItemBlock
 	    else if (action == TorchActionType.TORCH_EXTINGUISHED)
 	    {
 	    	if (hand != null) playerIn.swingArm(hand);
-	    	extinguishItemTorch(stack, true);
+	    	extinguishItemTorch(stack, playerIn, -1, true);
 	    }
     }
    	
@@ -304,21 +305,76 @@ public class ItemTorch extends ItemBlock
 	
     /**
      * Called when the torch is submerged under water or is exposed to rain for too long. <p>
-     * <i>Unlike the <b>TileEntityTorch</b> version, this method will not order smoke particle spawning.</i>
+     * 
+     * <i>Notes: Unlike the <b>TileEntityTorch</b> version, this method will not order smoke particle spawning.<br>
+     * itemSlot should be passed if available for optimization purposes (don't have to search all player inventories).</i>
      * 
      * @param stack Torch ItemStack to extinguish
+     * @param owner entity that owns this torch (player or EntityItem).
+     * @param itemSlot location of item in player inventory (pass as -1 if unknown).
      * @param extinguishByWater If true; update the humidity value as well
      */
-    public static void extinguishItemTorch(ItemStack stack, boolean extinguishByWater)
+    public static boolean extinguishItemTorch(ItemStack stack, Entity owner, int itemSlot, boolean extinguishByWater)
     {
-    	if (stack != null && ItemTorch.isItemTorch(stack.getItem(), false))
-    		stack.setItem(Item.getItemFromBlock(ResourceLibrary.TORCH_UNLIT));
-
-    	else Logger.error("Failed to extinguish ItemTorch.", stack == null ? 
-    			new NullPointerException("ItemStack was passed as null,") : new java.lang.TypeNotPresentException("ItemTorch", null));
-    	
     	if (extinguishByWater == true)
     		setItemHumidity(stack.getTagCompound(), SharedDefines.TORCH_HUMIDITY_THRESHOLD);
+
+    	if (ItemTorch.isItemTorch(stack.getItem(), false))
+    	{
+    		ItemStack unlitTorch = new ItemStack(ResourceLibrary.TORCH_UNLIT, 1);
+    		ItemTorch.createCustomItemNBTFromExisting(unlitTorch, owner.worldObj, stack.getTagCompound());
+    		
+    		if (owner instanceof EntityPlayer)	
+    		{
+    			EntityPlayer playerOwner = (EntityPlayer) owner;
+    			final int mainInventorySize = playerOwner.inventory.mainInventory.length;
+    			
+    			if (itemSlot < 0)  // Search all player inventories to find the stack.
+    			{
+    				if (ItemStack.areItemStacksEqual(playerOwner.getHeldItemOffhand(), stack))
+    				{
+    					playerOwner.setHeldItem(EnumHand.OFF_HAND, unlitTorch);
+    					return true;
+    				}
+    				else for (int i = 0; i < mainInventorySize; i++)
+    				{
+    					if (ItemStack.areItemStacksEqual(playerOwner.inventory.getStackInSlot(i), stack))
+    					{
+    						if (playerOwner.replaceItemInInventory(i, unlitTorch))
+    							return true;
+    					}
+    				}
+    			}
+    			else if (itemSlot < mainInventorySize)  // Check for specific item slot
+    			{
+        			if (itemSlot == 0)   // Could be an OFF_HAND slot
+        			{
+        				if (ItemStack.areItemStacksEqual(playerOwner.getHeldItemOffhand(), stack))
+        				{
+        					playerOwner.setHeldItem(EnumHand.OFF_HAND, unlitTorch);
+        					return true; 
+        				}
+        			}
+        			
+        			if (ItemStack.areItemStacksEqual(playerOwner.inventory.getStackInSlot(itemSlot), stack))
+        			{
+    					if (owner.replaceItemInInventory(itemSlot, unlitTorch))
+    						return true;
+        			}
+        			else Logger.error("Failed to extinguish ItemTorch, item was not found in inventory.", new java.util.NoSuchElementException());
+    			}
+    			else Logger.error("Failed to extinguish ItemTorch, itemSlot value is invalid.", new java.lang.IllegalArgumentException());
+    		}
+    		else if (owner instanceof EntityItem)
+    		{
+    			((EntityItem) owner).setEntityItemStack(unlitTorch);
+    			return true;
+    		}
+    		else Logger.error("Failed to extinguish ItemTorch, owner is not EntityPlayer or EntityItem.", new java.lang.IllegalArgumentException());
+    	}
+    	else Logger.error("Failed to extinguish ItemTorch, item is not a torch.", new java.lang.TypeNotPresentException("ItemTorch", null)); 
+
+    	return false;
     }
 	
     /**

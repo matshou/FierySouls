@@ -51,16 +51,16 @@ public final class EntityItemTorch extends EntityItem
 			
 		if (isInWater() /**&& isInsideOfMaterial(Material.water)*/)
 		{
-			ItemTorch.extinguishItemTorch(getEntityItem(), true);
+			ItemTorch.extinguishItemTorch(getEntityItem(), this, -1, true);
 		}
 		else if (isTorchLit && ItemTorch.updateItemCombustionTime(itemTagCompound, TorchUpdateType.MAIN_UPDATE.getInterval() * -1) < 1)
 		{
-			ItemTorch.extinguishItemTorch(getEntityItem(), false);
+			ItemTorch.extinguishItemTorch(getEntityItem(), this, -1, false);
 		}
 		else if (worldObj.isRainingAt(getPosition()))
 		{
 			if (ItemTorch.updateItemHumidity(itemTagCompound, TorchUpdateType.MAIN_UPDATE.getInterval()) >= SharedDefines.TORCH_HUMIDITY_THRESHOLD)
-			    ItemTorch.extinguishItemTorch(getEntityItem(), false);
+			    ItemTorch.extinguishItemTorch(getEntityItem(), this, -1, false);
 		}
 	}
 	
