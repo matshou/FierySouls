@@ -31,7 +31,7 @@ public class EventHandler
 	 * because this is the only way to catch both player toss and drag-n-drop events.</i>
 	 */
 	@SubscribeEvent
-	public void itemEvent(net.minecraftforge.event.entity.item.ItemTossEvent event)
+	public void itemTossEvent(net.minecraftforge.event.entity.item.ItemTossEvent event)
 	{
 		// NOTE: This event gets called only on SERVER.
 		

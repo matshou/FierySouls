@@ -331,14 +331,14 @@ public class ItemTorch extends ItemBlock
     			
     			if (itemSlot < 0)  // Search all player inventories to find the stack.
     			{
-    				if (ItemStack.areItemStacksEqual(playerOwner.getHeldItemOffhand(), stack))
+    				if (stack == playerOwner.getHeldItemOffhand())
     				{
     					playerOwner.setHeldItem(EnumHand.OFF_HAND, unlitTorch);
     					return true;
     				}
     				else for (int i = 0; i < mainInventorySize; i++)
     				{
-    					if (ItemStack.areItemStacksEqual(playerOwner.inventory.getStackInSlot(i), stack))
+    					if (stack == playerOwner.inventory.getStackInSlot(i))
     					{
     						if (playerOwner.replaceItemInInventory(i, unlitTorch))
     							return true;
@@ -349,14 +349,14 @@ public class ItemTorch extends ItemBlock
     			{
         			if (itemSlot == 0)   // Could be an OFF_HAND slot
         			{
-        				if (ItemStack.areItemStacksEqual(playerOwner.getHeldItemOffhand(), stack))
+        				if (stack == playerOwner.getHeldItemOffhand())
         				{
         					playerOwner.setHeldItem(EnumHand.OFF_HAND, unlitTorch);
         					return true; 
         				}
         			}
         			
-        			if (ItemStack.areItemStacksEqual(playerOwner.inventory.getStackInSlot(itemSlot), stack))
+        			if (stack == playerOwner.inventory.getStackInSlot(itemSlot))
         			{
     					if (owner.replaceItemInInventory(itemSlot, unlitTorch))
     						return true;
